@@ -1,10 +1,12 @@
 # Integrity
 
+![Logo](app/src/main/res/mipmap-xxxhdpi/ic_launcher.png)
+
 Personal data archiving, search & analysis software.
 
 An Android app concept.
 
-#### Idea
+### Idea
 
 Information we care about comes from various websites,
 services or other sources that can add, update or even
@@ -70,7 +72,7 @@ non stop, user friendly, on the go - just joyful.
 Therefore this software is (primarily) a mobile app.
 
 
-#### App structure summary
+### App structure summary
 
 Data structure:
 
@@ -131,6 +133,6 @@ Storage destinations:
 * Dropbox
 
 
-#### License
+### License
 
-MIT? *Not defined yet.*
+*Not defined yet. TODO*

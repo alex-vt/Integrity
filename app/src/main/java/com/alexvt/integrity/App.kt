@@ -10,8 +10,8 @@ import android.util.Log
 import com.alexvt.integrity.core.*
 import com.alexvt.integrity.core.filesystem.LocalFolderLocation
 import com.alexvt.integrity.core.filesystem.LocalArchiveLocationUtil
-import com.alexvt.integrity.core.type.BlogTypeUtil
-import com.alexvt.integrity.core.type.BlogTypeMetadata
+import com.alexvt.integrity.core.type.blog.BlogTypeUtil
+import com.alexvt.integrity.core.type.blog.BlogTypeMetadata
 
 class App : android.app.Application() {
 

@@ -21,6 +21,13 @@ object DataCacheFolderUtil {
                 "_snapshot_" + date
     }
 
+    fun getSnapshotFileSimpleNames(artifactId: Long, date: String): Set<String> {
+        return getStorage().getFiles(getSnapshotFolderPath(artifactId, date))
+                .filter { it.isFile }
+                .map { it.nameWithoutExtension }
+                .toSet()
+    }
+
     fun createEmptyFolder(artifactId: Long, date: String): String {
         val snapshotDataDirectory = getSnapshotFolderPath(artifactId, date)
         getStorage().createDirectory(snapshotDataDirectory, true)

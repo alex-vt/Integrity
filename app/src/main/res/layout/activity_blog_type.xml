@@ -46,7 +46,47 @@
             android:orientation="vertical"
             >
 
+            <WebView
+                android:id="@+id/webView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+        android:id="@+id/llBottomSheet"
+        android:layout_width="match_parent"
+        android:layout_height="360dp"
+        android:background="@android:color/background_light"
+        android:orientation="vertical"
+        app:behavior_hideable="false"
+        app:behavior_peekHeight="58dp"
+        android:elevation="10dp"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+        >
+
+        <!-- Header of bottom sheet -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+
+            <View
+                android:id="@+id/vPullUpTab"
+                android:layout_width="50dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="6dp"
+                android:layout_centerHorizontal="true"
+                android:background="@android:color/darker_gray"
+                />
+
+            <!-- Part of header of Main -->
             <RelativeLayout
+                android:id="@+id/rlMainHeader"
+                android:layout_below="@+id/vPullUpTab"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 >
@@ -70,39 +110,77 @@
 
             </RelativeLayout>
 
-            <WebView
-                android:id="@+id/webView"
+            <!-- Part of header of CSS Selector -->
+            <RelativeLayout
+                android:visibility="gone"
+                android:id="@+id/rlRelatedLinkPatternHeader"
+                android:layout_below="@+id/vPullUpTab"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                />
+                android:layout_height="wrap_content"
+                >
 
-        </LinearLayout>
+                <ImageButton
+                    android:id="@+id/ibBackFromLinkPattern"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_centerVertical="true"
+                    android:src="?attr/homeAsUpIndicator"
+                    android:background="@null"
+                    />
 
-    </androidx.core.widget.NestedScrollView>
+                <EditText
+                    android:id="@+id/etLinkPattern"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Pattern to choose links below"
+                    android:inputType="text"
+                    android:layout_toRightOf="@+id/ibBackFromLinkPattern"
+                    android:layout_toLeftOf="@+id/bDone"
+                    />
 
-    <LinearLayout
-        android:id="@+id/llBottomSheet"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/background_light"
-        android:orientation="vertical"
-        app:behavior_hideable="false"
-        app:behavior_peekHeight="50dp"
-        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+                <Button
+                    android:id="@+id/bDone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Done"
+                    android:layout_alignParentRight="true"
+                    />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:background="@color/colorAccent"
-            android:gravity="center"
-            android:text="Snapshot saving options... (pull up)"
-            android:textColor="@android:color/white" />
+            </RelativeLayout>
 
+        </RelativeLayout>
+
+        <!-- The remainder of bottom sheet: Main -->
         <LinearLayout
+            android:id="@+id/llBottomSheetMainContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             >
+
+            <LinearLayout
+                android:id="@+id/llRelatedLinksPattern"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                >
+
+                <Button
+                    android:id="@+id/bRelatedLinksPattern"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Links..."
+                    />
+
+                <TextView
+                    android:id="@+id/tvRelatedLinksPattern"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Pattern of related links to save:\n(none)"
+                    />
+
+            </LinearLayout>
 
             <EditText
                 android:id="@+id/etName"
@@ -150,6 +228,24 @@
                 android:layout_height="wrap_content"
                 android:text="Save Snapshot"
                 android:layout_gravity="end"
+                />
+
+        </LinearLayout>
+
+        <!-- The remainder of bottom sheet: CSS Selector -->
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/llBottomSheetLinkPatternContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            >
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRelatedLinkList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 />
 
         </LinearLayout>

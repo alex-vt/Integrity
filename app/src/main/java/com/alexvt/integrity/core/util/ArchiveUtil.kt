@@ -8,7 +8,7 @@ package com.alexvt.integrity.core.util
 
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.SnapshotMetadata
-import com.alexvt.integrity.core.type.BlogTypeMetadata
+import com.alexvt.integrity.core.type.blog.BlogTypeMetadata
 import com.snatik.storage.Storage
 import org.zeroturnaround.zip.ZipUtil
 import java.io.File
@@ -36,7 +36,7 @@ object ArchiveUtil {
                 date = "",
                 description = "",
                 archiveFolderLocations = ArrayList(),
-                dataTypeSpecificMetadata = BlogTypeMetadata(ArrayList())
+                dataTypeSpecificMetadata = BlogTypeMetadata("", "")
         )
         return snapshotMetadata
     }

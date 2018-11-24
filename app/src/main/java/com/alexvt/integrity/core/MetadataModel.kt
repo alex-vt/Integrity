@@ -6,7 +6,7 @@
 
 package com.alexvt.integrity.core
 
-import com.alexvt.integrity.core.type.BlogTypeMetadata
+import com.alexvt.integrity.core.type.blog.BlogTypeMetadata
 
 /**
  * Metadata of snapshot (at a given date-time) of data from given source (artifact) valuable for user.
@@ -25,7 +25,7 @@ data class SnapshotMetadata(val artifactId: Long,
                             val dataTypeSpecificMetadata: TypeMetadata
 ) {
     constructor() : this(0, "", "",  "", arrayListOf(),
-            BlogTypeMetadata(arrayListOf()))
+            BlogTypeMetadata("", ""))
 }
 
 /**

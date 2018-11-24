@@ -57,8 +57,7 @@ object IntegrityCore {
     suspend fun createArtifact(title: String,
                                description: String,
                                dataArchiveLocations: ArrayList<FolderLocation>,
-                               dataTypeSpecificMetadata: TypeMetadata,
-                               webViewWithContent: WebView): SnapshotMetadata {
+                               dataTypeSpecificMetadata: TypeMetadata): SnapshotMetadata {
         val timestampMillis = System.currentTimeMillis()
 
         val snapshotMetadata = SnapshotMetadata(
@@ -70,7 +69,7 @@ object IntegrityCore {
                 dataTypeSpecificMetadata = dataTypeSpecificMetadata
         )
 
-        return createSnapshot(snapshotMetadata, webViewWithContent)
+        return createSnapshot(snapshotMetadata)
     }
 
     /**
@@ -83,15 +82,14 @@ object IntegrityCore {
      *
      * Returns metadata of the newly created snapshot.
      */
-    suspend fun createSnapshot(artifactId: Long,
-                               webViewWithContent: WebView): SnapshotMetadata {
+    suspend fun createSnapshot(artifactId: Long): SnapshotMetadata {
         val timestampMillis = System.currentTimeMillis()
         val newSnapshotDate = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(timestampMillis)
 
         val previousSnapshotMetadata = SimplePersistableMetadataRepository.getLatestSnapshotMetadata(artifactId)
         val newSnapshotMetadata = previousSnapshotMetadata.copy(date = newSnapshotDate)
 
-        return createSnapshot(newSnapshotMetadata, webViewWithContent)
+        return createSnapshot(newSnapshotMetadata)
     }
 
     /**
@@ -254,13 +252,11 @@ object IntegrityCore {
      * clears unneeded files (archives and hashes) from cache while keeping snapshot folders,
      * returns metadata.
      */
-    private suspend fun createSnapshot(snapshotMetadata: SnapshotMetadata,
-                                       webViewWithContent: WebView): SnapshotMetadata {
+    private suspend fun createSnapshot(snapshotMetadata: SnapshotMetadata): SnapshotMetadata {
         val dataFolderPath = getDataTypeUtil(snapshotMetadata.dataTypeSpecificMetadata)
                 .downloadData(snapshotMetadata.artifactId,
                         snapshotMetadata.date,
-                        snapshotMetadata.dataTypeSpecificMetadata,
-                        webViewWithContent)
+                        snapshotMetadata.dataTypeSpecificMetadata)
         val archivePath = ArchiveUtil.archiveFolderAndMetadata(dataFolderPath,
                 snapshotMetadata)
         val archiveHashPath = "$archivePath.sha1"

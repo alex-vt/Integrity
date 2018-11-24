@@ -4,19 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.core.type
+package com.alexvt.integrity.core.type.blog
 
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.webkit.WebChromeClient
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
@@ -25,10 +21,15 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.core.FolderLocation
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.SnapshotMetadata
+import com.alexvt.integrity.core.TypeMetadata
+import com.alexvt.integrity.core.util.DataCacheFolderUtil
+import com.jakewharton.rxbinding3.widget.textChanges
+import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_blog_type.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 import kotlin.collections.LinkedHashSet
 
@@ -45,20 +46,25 @@ class BlogTypeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_blog_type)
         setSupportActionBar(toolbar)
 
-        setupWebView(webView)
-
         // when it's an existing artifact, using existing URL instead of address bar
         val existingArtifactId = getArtifactIdFromIntent(intent)
         val snapshotDate = getDateFromIntent(intent)
 
+        rvRelatedLinkList.adapter = RelatedLinkRecyclerAdapter(arrayListOf(), this)
+
         if (existingArtifactId >= 0 && !snapshotDate.isEmpty()) {
             toolbar.title = "Viewing Blog Type Snapshot"
-            etShortUrl.visibility = View.GONE
-            bGo.visibility = View.GONE
             llBottomSheet.visibility = View.GONE
             val snapshotDataPath = IntegrityCore.fetchSnapshotData(existingArtifactId, snapshotDate)
             webView.settings.cacheMode = WebSettings.LOAD_CACHE_ONLY // no loading from internet
-            webView.loadUrl("file://" + snapshotDataPath + "/index.mht")
+            GlobalScope.launch (Dispatchers.Main) {
+                // links from locally loaded HTML can point to local pages named page_<linkHash>
+                val relatedLinkHashesFromFiles = DataCacheFolderUtil.getSnapshotFileSimpleNames(
+                        existingArtifactId, snapshotDate)
+                        .map { it.replace("page_", "") }
+                WebViewUtil.loadHtml(webView,"file://" + snapshotDataPath + "/index.mht",
+                        relatedLinkHashesFromFiles)
+            }
 
         } else if (existingArtifactId >= 0) {
             toolbar.title = "Creating new Blog Type Snapshot"
@@ -68,12 +74,17 @@ class BlogTypeActivity : AppCompatActivity() {
             etDescription.isEnabled = false
             bArchiveLocation.isEnabled = false
             bGo.isEnabled = false
-            etShortUrl.setText(getShortFormUrl(getLatestSnapshotUrl(existingArtifactId)))
+            bRelatedLinksPattern.isEnabled = false
+            etShortUrl.setText(LinkUtil.getShortFormUrl(getLatestSnapshotUrl(existingArtifactId)))
             etName.append(getLatestSnapshot(existingArtifactId).title)
             etDescription.append(getLatestSnapshot(existingArtifactId).description)
+            etLinkPattern.append((getLatestSnapshot(existingArtifactId).dataTypeSpecificMetadata as BlogTypeMetadata)
+                    .relatedPageLinksPattern)
             tvArchiveLocations.text = getArchiveLocationsText(getLatestSnapshot(existingArtifactId)
                     .archiveFolderLocations)
-            bSave.setOnClickListener { savePageAsSnapshot(existingArtifactId, webView) }
+            tvRelatedLinksPattern.text = getRelatedLinksPatternText(getLatestSnapshot(existingArtifactId)
+                    .dataTypeSpecificMetadata)
+            bSave.setOnClickListener { savePageAsSnapshot(existingArtifactId) }
             goToWebPage(etShortUrl.text.toString())
 
         } else {
@@ -82,14 +93,21 @@ class BlogTypeActivity : AppCompatActivity() {
             bArchiveLocation.setOnClickListener { askAddArchiveLocation() }
             bGo.setOnClickListener { view -> goToWebPage(etShortUrl.text.toString()) }
             bSave.setOnClickListener { savePageAsNewArtifact(webView) }
+            bRelatedLinksPattern.setOnClickListener { showRelatedLinksSelectorView(true) }
+            ibBackFromLinkPattern.setOnClickListener { showRelatedLinksSelectorView(false) }
+            bDone.setOnClickListener { showRelatedLinksSelectorView(false) }
+            etLinkPattern.textChanges()
+                    .debounce(800, TimeUnit.MILLISECONDS)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { updateMatchedRelatedLinkList() }
         }
     }
 
     fun askAddArchiveLocation() {
         MaterialDialog(this)
-                .listItems(items = ArrayList(IntegrityCore.getNamedFolderLocationMap().keys)) {
-                    _, _, text -> addArchiveLocationSelection(IntegrityCore
-                        .getNamedFolderLocationMap()[text]!!)
+                .listItems(items = ArrayList(IntegrityCore.getNamedFolderLocationMap().keys)) { _, _, text ->
+                    addArchiveLocationSelection(IntegrityCore
+                            .getNamedFolderLocationMap()[text]!!)
                 }
                 .show()
     }
@@ -104,6 +122,13 @@ class BlogTypeActivity : AppCompatActivity() {
             .replace("[", "")
             .replace("]", "")
 
+    fun getRelatedLinksPatternText(typeMetadata: TypeMetadata): String
+            = getRelatedLinksPatternText((typeMetadata as BlogTypeMetadata).relatedPageLinksPattern)
+
+    fun getRelatedLinksPatternText(cssSelector: String): String
+            = "Pattern of related links to save:\n" +
+            if (cssSelector.isNotEmpty()) cssSelector else "(none)"
+
     fun getArtifactIdFromIntent(intent: Intent): Long {
         return intent.getLongExtra("artifactId", -1)
     }
@@ -116,35 +141,41 @@ class BlogTypeActivity : AppCompatActivity() {
         return date
     }
 
-    fun setupWebView(webView: WebView) {
-        webView.webChromeClient = WebChromeClient()
-        webView.settings.javaScriptEnabled = true
-        webView.settings.saveFormData = false
-        webView.settings.loadsImagesAutomatically = true
-        webView.settings.setAppCacheEnabled(false)
-        webView.clearHistory()
+    fun showRelatedLinksSelectorView(showSelector: Boolean) {
+        // todo animation
+        rlMainHeader.visibility = if (showSelector) View.GONE else View.VISIBLE
+        rlRelatedLinkPatternHeader.visibility = if (showSelector) View.VISIBLE else View.GONE
+        llBottomSheetMainContent.visibility = if (showSelector) View.GONE else View.VISIBLE
+        llBottomSheetLinkPatternContent.visibility = if (showSelector) View.VISIBLE else View.GONE
+    }
 
-        webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView, urlNewString: String): Boolean {
-                webView.loadUrl(urlNewString)
-                return false
-            }
-
-            override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {}
-
-            override fun onPageFinished(view: WebView, url: String) {
-                Log.d(TAG, "Page loaded: $url")
-                etShortUrl.setText(getShortFormUrl(url))
-            }
+    fun updateMatchedRelatedLinkList() {
+        try {
+            val allLinkMap = LinkUtil.getCssSelectedLinkMap(loadedHtml, "", webView.url)
+            val matchedLinkMap = LinkUtil.getCssSelectedLinkMap(loadedHtml,
+                    etLinkPattern.text.toString(), webView.url)
+            val unmatchedLinkMap = allLinkMap.minus(matchedLinkMap)
+            // marched shown first
+            (rvRelatedLinkList.adapter as RelatedLinkRecyclerAdapter).setItems(
+                    matchedLinkMap.map { it -> MatchableLink(it.key, it.value, true) }
+                            .plus(unmatchedLinkMap.map { it -> MatchableLink(it.key as String, it.value, false) })
+            )
+            tvRelatedLinksPattern.text = getRelatedLinksPatternText(etLinkPattern.text.toString())
+            Log.d(TAG, "Matched links: ${matchedLinkMap.size} of ${allLinkMap.size}")
+        } catch (t: Throwable) {
+            Log.e(TAG, "updateMatchedRelatedLinkList exception", t)
         }
     }
+
+    // map of related page links to their unique CSS selectors in HTML document
+    private var loadedHtml = ""
 
     fun getLatestSnapshot(artifactId: Long): SnapshotMetadata = IntegrityCore
             .metadataRepository.getLatestSnapshotMetadata(artifactId)
 
     // URL of first (main) web page of the latest snapshot of this artifact
     fun getLatestSnapshotUrl(artifactId: Long): String
-            = (getLatestSnapshot(artifactId).dataTypeSpecificMetadata as BlogTypeMetadata).urls[0]
+            = (getLatestSnapshot(artifactId).dataTypeSpecificMetadata as BlogTypeMetadata).url
 
     fun savePageAsNewArtifact(view: WebView) {
         if (webView.url == null || !webView.url.startsWith("http") || webView.url.length < 10) {
@@ -163,50 +194,33 @@ class BlogTypeActivity : AppCompatActivity() {
             IntegrityCore.createArtifact(title = etName.text.toString(),
                     description = etDescription.text.toString(),
                     dataArchiveLocations = ArrayList(newSelectedArchiveLocations),
-                    dataTypeSpecificMetadata = BlogTypeMetadata(arrayListOf(webView.url)),
-                    webViewWithContent = view)
+                    dataTypeSpecificMetadata = BlogTypeMetadata(webView.url, etLinkPattern.text.toString()))
             finish()
         }
     }
 
-    fun savePageAsSnapshot(existingArtifactId: Long, view: WebView) {
+    fun savePageAsSnapshot(existingArtifactId: Long) {
         GlobalScope.launch (Dispatchers.Main) {
-            IntegrityCore.createSnapshot(existingArtifactId, view)
+            IntegrityCore.createSnapshot(existingArtifactId)
             finish()
-        }
-    }
-
-
-    fun getShortFormUrl(url: String): String {
-        if (url.startsWith("http://") || url.startsWith("https://")) {
-            return url.replaceFirst("http://", "").replaceFirst("https://", "")
-        }
-        return url
-    }
-
-    fun getFullFormUrl(url: String): String {
-        return if (!url.startsWith("https://") && !url.startsWith("http://")) {
-            "http://" + url
-        } else {
-            url
         }
     }
 
     fun goToWebPage(urlToView: String): Boolean {
-        webView.loadUrl(getFullFormUrl(urlToView))
+        GlobalScope.launch (Dispatchers.Main) {
+            loadedHtml = WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl(urlToView), setOf())
+            etShortUrl.setText(LinkUtil.getShortFormUrl(webView.url))
+            runOnUiThread { updateMatchedRelatedLinkList() }
+        }
         return false
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
         //menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_delete_all -> true
             else -> super.onOptionsItemSelected(item)

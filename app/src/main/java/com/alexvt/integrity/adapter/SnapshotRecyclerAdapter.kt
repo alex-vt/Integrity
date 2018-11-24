@@ -41,7 +41,6 @@ class SnapshotRecyclerAdapter(val items: ArrayList<SnapshotMetadata>, val artifa
     }
 }
 
-
 class SnapshotViewHolder (view: View) : RecyclerView.ViewHolder(view) {
     val tvTitle = view.tvTitle
 }

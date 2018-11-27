@@ -25,6 +25,10 @@ data class LocalFolderLocation(val folderPath: String): FolderLocation() {
             false
         }
     }
+
+    override fun toString(): String {
+        return folderPath
+    }
 }
 
 // todo add SMB, Dropbox. Those will have credentials.

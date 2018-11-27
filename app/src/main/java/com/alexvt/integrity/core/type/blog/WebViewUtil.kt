@@ -14,9 +14,8 @@ import android.webkit.WebViewClient
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import android.webkit.ValueCallback
-import com.alexvt.integrity.R.id.webView
-
+import com.alexvt.integrity.core.SnapshotMetadata
+import com.alexvt.integrity.core.job.JobProgress
 
 
 /**
@@ -85,13 +84,15 @@ object WebViewUtil {
         webView.loadUrl(url)
     }
 
-    suspend fun saveArchives(webView: WebView, urlToArchivePathMap: Map<String, String>) {
+    suspend fun saveArchives(webView: WebView, urlToArchivePathMap: Map<String, String>,
+                             jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit) {
         urlToArchivePathMap.entries.forEachIndexed { index, entry -> run {
-            Log.d("WebViewUtil", "saveArchives: saving " + (index + 1) + " of "
-                    + urlToArchivePathMap.size)
+            Log.d("WebViewUtil", "saveArchives: saving " )
+            jobProgressListener.invoke(JobProgress(
+                    progressMessage = "Saving web archive " + (index + 1) + " of "
+                            + urlToArchivePathMap.size
+            ))
             saveArchive(webView, entry.key, entry.value)
-            Log.d("WebViewUtil", "saveArchives: saved " + (index + 1) + " of "
-                    + urlToArchivePathMap.size)
         } }
     }
 

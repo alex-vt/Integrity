@@ -190,19 +190,34 @@ class BlogTypeActivity : AppCompatActivity() {
             Toast.makeText(this, "Please add location where to save archive", Toast.LENGTH_SHORT).show()
             return
         }
-        GlobalScope.launch (Dispatchers.Main) {
-            IntegrityCore.createArtifact(title = etName.text.toString(),
-                    description = etDescription.text.toString(),
-                    dataArchiveLocations = ArrayList(newSelectedArchiveLocations),
-                    dataTypeSpecificMetadata = BlogTypeMetadata(webView.url, etLinkPattern.text.toString()))
-            finish()
+        val materialDialogProgress = MaterialDialog(this)
+                .title(text = "Saving first snapshot of a new artifact " + etName.text.toString())
+                .cancelable(false)
+        materialDialogProgress.show()
+        IntegrityCore.createArtifact(title = etName.text.toString(),
+                description = etDescription.text.toString(),
+                dataArchiveLocations = ArrayList(newSelectedArchiveLocations),
+                dataTypeSpecificMetadata = BlogTypeMetadata(webView.url,
+                        etLinkPattern.text.toString())) {
+            materialDialogProgress.message(text = it.progressMessage)
+            if (it.result != null) {
+                materialDialogProgress.cancel()
+                finish()
+            }
         }
     }
 
     fun savePageAsSnapshot(existingArtifactId: Long) {
-        GlobalScope.launch (Dispatchers.Main) {
-            IntegrityCore.createSnapshot(existingArtifactId)
-            finish()
+        val materialDialogProgress = MaterialDialog(this)
+                .title(text = "Saving a new snapshot of this artifact")
+                .cancelable(false)
+        materialDialogProgress.show()
+        IntegrityCore.createSnapshot(existingArtifactId) {
+            materialDialogProgress.message(text = it.progressMessage)
+            if (it.result != null) {
+                materialDialogProgress.cancel()
+                finish()
+            }
         }
     }
 

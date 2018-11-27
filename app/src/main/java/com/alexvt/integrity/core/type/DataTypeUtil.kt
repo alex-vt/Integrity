@@ -8,7 +8,9 @@ package com.alexvt.integrity.core.type
 
 import android.app.Activity
 import android.webkit.WebView
+import com.alexvt.integrity.core.SnapshotMetadata
 import com.alexvt.integrity.core.TypeMetadata
+import com.alexvt.integrity.core.job.JobProgress
 
 /**
  * Data manipulation contract for a data type
@@ -36,6 +38,7 @@ interface DataTypeUtil<T: TypeMetadata> {
      *
      * returns: path in data cache folder where the data is downloaded to.
      */
-    suspend fun downloadData(artifactId: Long, date: String, dataTypeSpecificMetadata: T): String
+    suspend fun downloadData(artifactId: Long, date: String, dataTypeSpecificMetadata: T,
+                             jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit): String
 
 }

@@ -7,19 +7,21 @@
 package com.alexvt.integrity.core
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.webkit.WebView
 import com.alexvt.integrity.core.database.MetadataRepository
 import com.alexvt.integrity.core.database.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
 import com.alexvt.integrity.core.filesystem.PresetRepository
 import com.alexvt.integrity.core.filesystem.SimplePersistablePresetRepository
+import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.type.DataTypeUtil
 import com.alexvt.integrity.core.util.ArchiveUtil
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.alexvt.integrity.core.util.HashUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 
 @SuppressLint("StaticFieldLeak") // context // todo DI
@@ -54,10 +56,11 @@ object IntegrityCore {
      *
      * Returns metadata of the created snapshot.
      */
-    suspend fun createArtifact(title: String,
+     fun createArtifact(title: String,
                                description: String,
                                dataArchiveLocations: ArrayList<FolderLocation>,
-                               dataTypeSpecificMetadata: TypeMetadata): SnapshotMetadata {
+                               dataTypeSpecificMetadata: TypeMetadata,
+                               jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit) {
         val timestampMillis = System.currentTimeMillis()
 
         val snapshotMetadata = SnapshotMetadata(
@@ -69,7 +72,16 @@ object IntegrityCore {
                 dataTypeSpecificMetadata = dataTypeSpecificMetadata
         )
 
-        return createSnapshot(snapshotMetadata)
+        GlobalScope.launch (Dispatchers.Main) {
+            jobProgressListener.invoke(JobProgress(
+                    progressMessage = "Creating the first snapshot"
+            ))
+            val resultSnapshotMetadata = createSnapshot(snapshotMetadata, jobProgressListener)
+            jobProgressListener.invoke(JobProgress(
+                    progressMessage = "Done",
+                    result = resultSnapshotMetadata
+            ))
+        }
     }
 
     /**
@@ -82,14 +94,26 @@ object IntegrityCore {
      *
      * Returns metadata of the newly created snapshot.
      */
-    suspend fun createSnapshot(artifactId: Long): SnapshotMetadata {
+    fun createSnapshot(artifactId: Long,
+                               jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit) {
         val timestampMillis = System.currentTimeMillis()
         val newSnapshotDate = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(timestampMillis)
 
         val previousSnapshotMetadata = SimplePersistableMetadataRepository.getLatestSnapshotMetadata(artifactId)
         val newSnapshotMetadata = previousSnapshotMetadata.copy(date = newSnapshotDate)
 
-        return createSnapshot(newSnapshotMetadata)
+        GlobalScope.launch (Dispatchers.Main) {
+            jobProgressListener.invoke(JobProgress(
+                    progressMessage = "Creating a new snapshot"
+            ))
+            val resultSnapshotMetadata = createSnapshot(newSnapshotMetadata, jobProgressListener)
+            jobProgressListener.invoke(JobProgress(
+                    progressMessage = "Done",
+                    result = resultSnapshotMetadata
+            ))
+        }
+
+        return
     }
 
     /**
@@ -252,17 +276,23 @@ object IntegrityCore {
      * clears unneeded files (archives and hashes) from cache while keeping snapshot folders,
      * returns metadata.
      */
-    private suspend fun createSnapshot(snapshotMetadata: SnapshotMetadata): SnapshotMetadata {
+    private suspend fun createSnapshot(snapshotMetadata: SnapshotMetadata,
+                                       jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit): SnapshotMetadata {
         val dataFolderPath = getDataTypeUtil(snapshotMetadata.dataTypeSpecificMetadata)
                 .downloadData(snapshotMetadata.artifactId,
                         snapshotMetadata.date,
-                        snapshotMetadata.dataTypeSpecificMetadata)
+                        snapshotMetadata.dataTypeSpecificMetadata,
+                        jobProgressListener)
         val archivePath = ArchiveUtil.archiveFolderAndMetadata(dataFolderPath,
                 snapshotMetadata)
         val archiveHashPath = "$archivePath.sha1"
         DataCacheFolderUtil.writeTextToFile(HashUtil.getFileHash(archivePath), archiveHashPath)
 
-        for (dataArchiveLocation in snapshotMetadata.archiveFolderLocations) {
+        snapshotMetadata.archiveFolderLocations.forEachIndexed { index, dataArchiveLocation -> run {
+            jobProgressListener.invoke(JobProgress(
+                    progressMessage = "Saving archive to " + dataArchiveLocation + " "
+                            + (index + 1) + " of " + snapshotMetadata.archiveFolderLocations
+            ))
             getFileLocationUtil(dataArchiveLocation).writeArchive(
                     sourceArchivePath = archivePath,
                     sourceHashPath = archiveHashPath,
@@ -271,7 +301,11 @@ object IntegrityCore {
                     date = snapshotMetadata.date,
                     archiveFolderLocation = dataArchiveLocation
             )
-        }
+        } }
+
+        jobProgressListener.invoke(JobProgress(
+                progressMessage = "Saving metadata to database"
+        ))
 
         SimplePersistableMetadataRepository.addSnapshotMetadata(snapshotMetadata)
         DataCacheFolderUtil.clearFiles() // folders remain

@@ -9,8 +9,9 @@ package com.alexvt.integrity.core.type.blog
 import android.util.Log
 import android.webkit.WebView
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.SnapshotMetadata
+import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
-import java.io.File
 import com.alexvt.integrity.core.type.DataTypeUtil
 
 
@@ -21,8 +22,13 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
     override fun getOperationMainActivityClass() = BlogTypeActivity::class.java
 
     override suspend fun downloadData(artifactId: Long, date: String,
-                                      dataTypeSpecificMetadata: BlogTypeMetadata): String {
+                                      dataTypeSpecificMetadata: BlogTypeMetadata,
+                                      jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit): String {
         Log.d("BlogDataTypeUtil", "downloadData start")
+
+        jobProgressListener.invoke(JobProgress(
+                progressMessage = "Downloading web pages data"
+        ))
 
         val webView = WebView(IntegrityCore.context)
         val snapshotDataDirectory = DataCacheFolderUtil.createEmptyFolder(artifactId, date)
@@ -39,7 +45,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                     .plus(relatedPageUrls
                             .associate { it to (snapshotDataDirectory + "/page_" + it.hashCode() + ".mht")})
 
-            WebViewUtil.saveArchives(webView, allTargetUrlToArchivePathMap)
+            WebViewUtil.saveArchives(webView, allTargetUrlToArchivePathMap, jobProgressListener)
 
             Log.d("BlogDataTypeUtil", "downloadData end")
         } catch (t: Throwable) {

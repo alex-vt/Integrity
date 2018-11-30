@@ -7,6 +7,7 @@
 package com.alexvt.integrity.core.util
 
 import android.util.Log
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -28,6 +29,7 @@ object JsonSerializerUtil {
             objectMapper = jacksonObjectMapper()
             objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.OBJECT_AND_NON_CONCRETE,
                     JsonTypeInfo.As.WRAPPER_OBJECT)
+            objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
             objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true)
             // performance optimization: see https://github.com/FasterXML/jackson-module-kotlin/issues/69
             objectMapper.configure(MapperFeature.USE_ANNOTATIONS, false)

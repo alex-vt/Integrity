@@ -18,9 +18,24 @@ import com.alexvt.integrity.core.TypeMetadata
  * When it's empty, related pages are not saved.
  */
 data class BlogTypeMetadata(
-        val url: String,
-        val relatedPageLinksPattern: String // CSS selector, or empty when saving only this page
-) : TypeMetadata() {
-    constructor() : this("", "")
-}
+        val url: String = "",
+        val paginationUsed: Boolean = false,
+        val pagination: Pagination = Pagination(),
+        val relatedPageLinksUsed: Boolean = false,
+        val relatedPageLinksPattern: String = ""// CSS selector, or null when saving only this page
+) : TypeMetadata()
+
+/**
+ * Pagination scheme describing a typical sequential set of blog pages.
+ *
+ * For example, for url = http://example.com/,
+ * pagination with path = page/, startIndex = 1, step = 1 and limit = 3
+ * yields pages http://example.com/page/1, http://example.com/page/2 and http://example.com/page/3.
+ */
+data class Pagination(
+        val path: String = "page/",
+        val startIndex: Int = 1,
+        val step: Int = 1,
+        val limit: Int = 10 // requires attention to prevent missing or excessive pages
+)
 

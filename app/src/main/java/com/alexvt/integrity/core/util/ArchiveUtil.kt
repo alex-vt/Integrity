@@ -30,14 +30,7 @@ object ArchiveUtil {
 
     fun unarchiveSnapshotData(localArchivePath: String, localFolderPath: String): SnapshotMetadata {
         // todo
-        val snapshotMetadata = SnapshotMetadata(
-                artifactId = 0,
-                title = "",
-                date = "",
-                description = "",
-                archiveFolderLocations = ArrayList(),
-                dataTypeSpecificMetadata = BlogTypeMetadata("", "")
-        )
+        val snapshotMetadata = SnapshotMetadata()
         return snapshotMetadata
     }
 

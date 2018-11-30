@@ -25,7 +25,7 @@ data class SnapshotMetadata(val artifactId: Long,
                             val dataTypeSpecificMetadata: TypeMetadata
 ) {
     constructor() : this(0, "", "",  "", arrayListOf(),
-            BlogTypeMetadata("", ""))
+            BlogTypeMetadata())
 }
 
 /**

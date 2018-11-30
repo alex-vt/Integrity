@@ -30,6 +30,8 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                 progressMessage = "Downloading web pages data"
         ))
 
+        // todo implement pagination support
+
         val webView = WebView(IntegrityCore.context)
         val snapshotDataDirectory = DataCacheFolderUtil.createEmptyFolder(artifactId, date)
 
@@ -39,7 +41,11 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
         val cssSelector = dataTypeSpecificMetadata.relatedPageLinksPattern
 
         try {
-            val relatedPageUrls = LinkUtil.getCssSelectedLinkMap(mainPageHtml, cssSelector, mainPageUrl).keys
+            val relatedPageUrls = if (dataTypeSpecificMetadata.relatedPageLinksUsed) {
+                LinkUtil.getCssSelectedLinkMap(mainPageHtml, cssSelector, mainPageUrl).keys
+            } else {
+                linkedSetOf()
+            }
 
             val allTargetUrlToArchivePathMap = mapOf(mainPageUrl to (snapshotDataDirectory + "/index.mht"))
                     .plus(relatedPageUrls

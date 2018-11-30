@@ -192,51 +192,137 @@
         android:paddingTop="50dp"
         >
 
-        <LinearLayout
-            android:id="@+id/llFilter"
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
             >
 
-            <TextView
+            <LinearLayout
+                android:id="@+id/llFilter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Links options"
-                android:textSize="16sp"
-                android:paddingBottom="8dp"
-                />
+                android:orientation="vertical"
+                >
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Pattern to select related links"
-                />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Links options"
+                    android:textSize="16sp"
+                    android:paddingBottom="8dp"
+                    />
 
-            <EditText
-                android:id="@+id/etLinkPattern"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="CSS Selector Query"
-                android:inputType="text"
-                />
+                <CheckBox
+                    android:id="@+id/cbUseRelatedLinks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Include related links"
+                    />
 
-            <TextView
-                android:id="@+id/tvPageLinksPreview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Page links preview"
-                android:paddingTop="8dp"
-                />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Pattern to select related links"
+                    />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvRelatedLinkList"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                />
+                <EditText
+                    android:id="@+id/etLinkPattern"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="CSS Selector Query"
+                    android:inputType="text"
+                    />
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/tvPageLinksPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Page links preview"
+                    android:paddingTop="8dp"
+                    />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvRelatedLinkList"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Pagination options"
+                    android:textSize="16sp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    />
+
+                <CheckBox
+                    android:id="@+id/cbUsePagination"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Load multiple blog pages"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Pattern to load blog pages"
+                    />
+
+                <EditText
+                    android:id="@+id/etPaginationPattern"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="/page/"
+                    android:inputType="text"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="First page index"
+                    />
+
+                <EditText
+                    android:id="@+id/etPaginationStartIndex"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="1"
+                    android:inputType="numberDecimal"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Step"
+                    />
+
+                <EditText
+                    android:id="@+id/etPaginationStep"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="1"
+                    android:inputType="numberDecimal"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Last page index to reach"
+                    />
+
+                <EditText
+                    android:id="@+id/etPaginationLimit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="5"
+                    android:inputType="numberDecimal"
+                    />
+
+            </LinearLayout>
+
+        </ScrollView>
 
     </com.google.android.material.navigation.NavigationView>
 

@@ -45,7 +45,7 @@ class BlogTypeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_blog_type)
         setSupportActionBar(toolbar)
-        supportActionBar!!.setDisplayHomeAsUpEnabled(true);
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         // when it's an existing artifact, using existing URL instead of address bar
@@ -61,6 +61,7 @@ class BlogTypeActivity : AppCompatActivity() {
             etLinkPattern.append((getLatestSnapshot(existingArtifactId).dataTypeSpecificMetadata as BlogTypeMetadata)
                     .relatedPageLinksPattern)
             tvPageLinksPreview.visibility = View.GONE
+            supportActionBar!!.subtitle = getLatestSnapshot(existingArtifactId).title
             val snapshotDataPath = IntegrityCore.fetchSnapshotData(existingArtifactId, snapshotDate)
             webView.settings.cacheMode = WebSettings.LOAD_CACHE_ONLY // no loading from internet
             GlobalScope.launch (Dispatchers.Main) {
@@ -83,6 +84,7 @@ class BlogTypeActivity : AppCompatActivity() {
             bArchiveLocation.isEnabled = false
             bGo.isEnabled = false
             etLinkPattern.isEnabled = false
+            supportActionBar!!.subtitle = getLatestSnapshot(existingArtifactId).title
             etShortUrl.setText(LinkUtil.getShortFormUrl(getLatestSnapshotUrl(existingArtifactId)))
             etName.append(getLatestSnapshot(existingArtifactId).title)
             etDescription.append(getLatestSnapshot(existingArtifactId).description)
@@ -219,7 +221,13 @@ class BlogTypeActivity : AppCompatActivity() {
         WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl(urlToView), setOf()) {
             Log.d(TAG, "Loaded page from: ${webView.url}")
             loadedHtml = it
-            etShortUrl.setText(LinkUtil.getShortFormUrl(webView.url))
+            // Inputs are pre-filled only when creating new artifact
+            if (getArtifactIdFromIntent(intent) < 1) {
+                etShortUrl.text.clear()
+                etShortUrl.append(LinkUtil.getShortFormUrl(webView.url))
+                etName.setText(webView.title)
+                supportActionBar!!.subtitle = webView.title
+            }
             updateMatchedRelatedLinkList()
         }
         return false

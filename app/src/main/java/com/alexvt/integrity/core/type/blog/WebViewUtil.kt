@@ -8,7 +8,6 @@ package com.alexvt.integrity.core.type.blog
 
 import android.util.Log
 import android.webkit.*
-import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import com.alexvt.integrity.core.SnapshotMetadata
@@ -41,16 +40,11 @@ object WebViewUtil {
         }
     }
 
-    fun loadHtml(webView: WebView, url: String, localLinkHashes: Collection<String>,
-                         pageLoadListener: (String) -> Unit) {
+    fun loadHtml(rawWebView: WebView, url: String, localLinkHashes: Collection<String>,
+                 pageLoadListener: (String) -> Unit) {
         WebViewUtil.pageLoadListener = pageLoadListener
-
-        webView.webChromeClient = WebChromeClient()
-        webView.settings.javaScriptEnabled = true
-        webView.settings.saveFormData = false
-        webView.settings.loadsImagesAutomatically = true
-        webView.settings.setAppCacheEnabled(false)
-        webView.clearHistory()
+        val webView = setupWebView(webView = rawWebView,
+                loadingOffline = url.startsWith("file:"))
 
         webView.addJavascriptInterface(this, "jsi") // registers onWebPageHtmlLoaded
 
@@ -90,6 +84,20 @@ object WebViewUtil {
         webView.loadUrl(url)
     }
 
+    private fun setupWebView(webView: WebView, loadingOffline: Boolean): WebView {
+        webView.settings.allowFileAccess = true
+        webView.settings.javaScriptEnabled = true
+        webView.settings.saveFormData = false
+        webView.settings.loadsImagesAutomatically = true
+        webView.settings.setAppCacheEnabled(false)
+        webView.clearHistory()
+        webView.clearCache(true)
+        if (loadingOffline) {
+            webView.settings.cacheMode = WebSettings.LOAD_CACHE_ONLY
+        }
+        return webView
+    }
+
     suspend fun saveArchives(webView: WebView, urlToArchivePathMap: Map<String, String>,
                              jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit) {
         urlToArchivePathMap.entries.forEachIndexed { index, entry -> run {
@@ -104,13 +112,9 @@ object WebViewUtil {
 
     // Async "nature" of saveWebArchive propagated to caller methods as "sync" method
     // using suspend coroutine of Kotlin
-    private suspend fun saveArchive(webView: WebView, url: String, webArchivePath: String)
+    private suspend fun saveArchive(rawWebView: WebView, url: String, webArchivePath: String)
             = suspendCoroutine<String> { continuation ->
-        webView.settings.allowFileAccess = true
-        webView.settings.javaScriptEnabled = true
-        webView.settings.saveFormData = false
-        webView.settings.loadsImagesAutomatically = true
-        webView.settings.setAppCacheEnabled(false)
+        val webView = setupWebView(webView = rawWebView, loadingOffline = false)
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, urlNewString: String): Boolean {

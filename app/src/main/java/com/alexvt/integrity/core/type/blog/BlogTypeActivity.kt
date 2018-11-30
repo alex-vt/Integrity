@@ -63,7 +63,6 @@ class BlogTypeActivity : AppCompatActivity() {
             tvPageLinksPreview.visibility = View.GONE
             supportActionBar!!.subtitle = getLatestSnapshot(existingArtifactId).title
             val snapshotDataPath = IntegrityCore.fetchSnapshotData(existingArtifactId, snapshotDate)
-            webView.settings.cacheMode = WebSettings.LOAD_CACHE_ONLY // no loading from internet
             GlobalScope.launch (Dispatchers.Main) {
                 // links from locally loaded HTML can point to local pages named page_<linkHash>
                 val relatedLinkHashesFromFiles = DataCacheFolderUtil.getSnapshotFileSimpleNames(
@@ -126,13 +125,6 @@ class BlogTypeActivity : AppCompatActivity() {
             = IntegrityCore.getNamedFolderLocationMap(folderLocations).keys.toString()
             .replace("[", "")
             .replace("]", "")
-
-    fun getRelatedLinksPatternText(typeMetadata: TypeMetadata): String
-            = getRelatedLinksPatternText((typeMetadata as BlogTypeMetadata).relatedPageLinksPattern)
-
-    fun getRelatedLinksPatternText(cssSelector: String): String
-            = "Pattern of related links to save:\n" +
-            if (cssSelector.isNotEmpty()) cssSelector else "(none)"
 
     fun getArtifactIdFromIntent(intent: Intent): Long {
         return intent.getLongExtra("artifactId", -1)

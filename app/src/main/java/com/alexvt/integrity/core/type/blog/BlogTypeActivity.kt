@@ -45,6 +45,8 @@ class BlogTypeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_blog_type)
         setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true);
+        supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         // when it's an existing artifact, using existing URL instead of address bar
         val existingArtifactId = getArtifactIdFromIntent(intent)
@@ -67,7 +69,9 @@ class BlogTypeActivity : AppCompatActivity() {
                         existingArtifactId, snapshotDate)
                         .map { it.replace("page_", "") }
                 WebViewUtil.loadHtml(webView,"file://" + snapshotDataPath + "/index.mht",
-                        relatedLinkHashesFromFiles)
+                        relatedLinkHashesFromFiles) {
+                    Log.d(TAG, "Loaded HTML from file")
+                }
             }
 
         } else if (existingArtifactId >= 0) {
@@ -212,12 +216,26 @@ class BlogTypeActivity : AppCompatActivity() {
     }
 
     fun goToWebPage(urlToView: String): Boolean {
-        GlobalScope.launch (Dispatchers.Main) {
-            loadedHtml = WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl(urlToView), setOf())
+        WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl(urlToView), setOf()) {
+            Log.d(TAG, "Loaded page from: ${webView.url}")
+            loadedHtml = it
             etShortUrl.setText(LinkUtil.getShortFormUrl(webView.url))
-            runOnUiThread { updateMatchedRelatedLinkList() }
+            updateMatchedRelatedLinkList()
         }
         return false
+    }
+
+    override fun onBackPressed() {
+        if (webView.canGoBack()) {
+            webView.goBack()
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        super.onBackPressed()
+        return true
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

@@ -7,15 +7,15 @@
 package com.alexvt.integrity.core.type.blog
 
 import android.util.Log
-import android.webkit.JavascriptInterface
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import com.alexvt.integrity.core.SnapshotMetadata
 import com.alexvt.integrity.core.job.JobProgress
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 /**
@@ -23,17 +23,27 @@ import com.alexvt.integrity.core.job.JobProgress
  */
 object WebViewUtil {
 
-    lateinit var htmlLoadingContinuation: Continuation<String>
+    lateinit var pageLoadListener: (String) -> Unit
 
     @JavascriptInterface
     fun onWebPageHtmlLoaded(html: String) {
         Log.d("WebViewUtil", "onWebPageHtmlLoaded: HTML length ${html.length}")
-        WebViewUtil.htmlLoadingContinuation.resume(html)
+        // listener shouldn't be invoked in JavaScript execution thread
+        GlobalScope.launch (Dispatchers.Main) {
+            WebViewUtil.pageLoadListener.invoke(html)
+        }
     }
 
     suspend fun loadHtml(webView: WebView, url: String, localLinkHashes: Collection<String>): String
             = suspendCoroutine { continuation ->
-        htmlLoadingContinuation = continuation
+        loadHtml(webView, url, localLinkHashes) {
+            continuation.resume(it)
+        }
+    }
+
+    fun loadHtml(webView: WebView, url: String, localLinkHashes: Collection<String>,
+                         pageLoadListener: (String) -> Unit) {
+        WebViewUtil.pageLoadListener = pageLoadListener
 
         webView.webChromeClient = WebChromeClient()
         webView.settings.javaScriptEnabled = true
@@ -58,27 +68,23 @@ object WebViewUtil {
         }
 
         webView.webChromeClient = object : WebChromeClient() {
-            var jsLoaded = false // for dealing with possible multiple progress == 100
+            var previousProgress = 0 // for dealing with possible multiple progress == 100
             override fun onProgressChanged(view: WebView, progress: Int) {
                 Log.d("WebViewUtil", "Loading " + progress + "%: " + view.url)
-                if (progress == 100) {
+                if (progress == 100 && previousProgress != 100) {
+                    Log.d("WebViewUtil", "Loading complete: ${view.url}")
                     if (view.url.startsWith("http")) {
-                        if (jsLoaded) {
-                            return
-                        }
-                        jsLoaded = true
                         webView.loadUrl("javascript:window.jsi.onWebPageHtmlLoaded('<head>'" +
                                 "+document.getElementsByTagName('html')[0].innerHTML+'</head>');")
+                        // will resume in onWebPageHtmlLoaded
+
                     } else if (view.url.startsWith("file:")) {
-                        if (jsLoaded) {
-                            return
-                        }
-                        jsLoaded = true
                         // todo fix Blocked script execution in 'file:///....mht' because the
                         // document's frame is sandboxed and the 'allow-scripts' permission is not set.
-                        WebViewUtil.htmlLoadingContinuation.resume("")
+                        WebViewUtil.pageLoadListener.invoke("")
                     }
                 }
+                previousProgress = progress
             }
         }
         webView.loadUrl(url)

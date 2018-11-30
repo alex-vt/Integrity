@@ -40,22 +40,23 @@ object WebViewUtil {
         }
     }
 
-    fun loadHtml(rawWebView: WebView, url: String, localLinkHashes: Collection<String>,
+    fun loadHtml(rawWebView: WebView, startUrl: String, localLinkHashes: Collection<String>,
                  pageLoadListener: (String) -> Unit) {
         WebViewUtil.pageLoadListener = pageLoadListener
-        val webView = setupWebView(webView = rawWebView,
-                loadingOffline = url.startsWith("file:"))
+        val webView = setupWebView(rawWebView, isOfflineLoading(startUrl))
 
         webView.addJavascriptInterface(this, "jsi") // registers onWebPageHtmlLoaded
 
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView, urlNewString: String): Boolean {
-                // links from locally loaded HTML can point to local pages named page_<linkHash>
-                if (url.startsWith("file:") && localLinkHashes.contains("" + urlNewString.hashCode())) {
-                    webView.loadUrl(url.replace("index.mht",
-                            "page_" + urlNewString.hashCode() + ".mht"))
+            override fun shouldOverrideUrlLoading(view: WebView, newUrl: String): Boolean {
+                // links from locally loaded HTML can be redirected to corresponding locally saved pages
+                if (isOfflineLoading(startUrl) && isLocallySavedLinkHit(localLinkHashes, newUrl)) {
+                    webView.loadUrl(getLocallySavedPageUrl(startUrl, newUrl))
                 } else {
-                    webView.loadUrl(urlNewString)
+                    if (isOfflineLoading(startUrl)) {
+                        Log.w("WebViewUtil", "Offline archives don't store page: $newUrl")
+                    }
+                    webView.loadUrl(newUrl)
                 }
                 return false
             }
@@ -81,8 +82,29 @@ object WebViewUtil {
                 previousProgress = progress
             }
         }
-        webView.loadUrl(url)
+        webView.loadUrl(startUrl)
     }
+
+    private fun isOfflineLoading(firstPageUrl: String) = firstPageUrl.startsWith("file:")
+
+    /**
+     * Determines if a page with given URL is stored locally.
+     *
+     * Locally stored web archives have names
+     * that contain the corresponding web page link hash codes.
+      */
+    private fun isLocallySavedLinkHit(localLinkHashes: Collection<String>, url: String)
+            = localLinkHashes.contains(url.hashCode().toString())
+
+    /**
+     * Returns a redirect link to load page from file instead of loading by its web URL.
+     *
+     * Links from locally loaded HTML can be redirected to corresponding local pages
+     * named page_<linkHash>.mht, similarly to first page name index.mht.
+     */
+    private fun getLocallySavedPageUrl(firstPageLocalUrl: String, newPageWebUrl: String)
+            = firstPageLocalUrl.replace("index.mht", "page_${newPageWebUrl.hashCode()}.mht")
+
 
     private fun setupWebView(webView: WebView, loadingOffline: Boolean): WebView {
         webView.settings.allowFileAccess = true

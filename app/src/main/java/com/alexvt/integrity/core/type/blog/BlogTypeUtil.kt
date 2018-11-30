@@ -22,34 +22,45 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
     override fun getOperationMainActivityClass() = BlogTypeActivity::class.java
 
     override suspend fun downloadData(artifactId: Long, date: String,
-                                      dataTypeSpecificMetadata: BlogTypeMetadata,
+                                      blogMetadata: BlogTypeMetadata,
                                       jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit): String {
         Log.d("BlogDataTypeUtil", "downloadData start")
 
-        jobProgressListener.invoke(JobProgress(
-                progressMessage = "Downloading web pages data"
-        ))
-
-        // todo implement pagination support
-
         val webView = WebView(IntegrityCore.context)
         val snapshotDataDirectory = DataCacheFolderUtil.createEmptyFolder(artifactId, date)
-
-        val mainPageUrl = dataTypeSpecificMetadata.url
-        val mainPageHtml = WebViewUtil.loadHtml(webView, mainPageUrl, setOf())
-
-        val cssSelector = dataTypeSpecificMetadata.relatedPageLinksPattern
+        val urlsToDownload = LinkedHashSet<String>()
 
         try {
-            val relatedPageUrls = if (dataTypeSpecificMetadata.relatedPageLinksUsed) {
-                LinkUtil.getCssSelectedLinkMap(mainPageHtml, cssSelector, mainPageUrl).keys
+            if (!blogMetadata.paginationUsed) {
+                jobProgressListener.invoke(JobProgress(
+                        progressMessage = "Collecting links for page:\n${blogMetadata.url}"
+                ))
+                urlsToDownload.addAll(getPageLinks(
+                        webView, blogMetadata.url,
+                        blogMetadata.relatedPageLinksUsed,
+                        blogMetadata.relatedPageLinksPattern
+                ))
             } else {
-                linkedSetOf()
+                for (pageIndex in blogMetadata.pagination.startIndex..blogMetadata.pagination.limit
+                        step blogMetadata.pagination.step) {
+                    val pageUrl = blogMetadata.url + blogMetadata.pagination.path + pageIndex
+                    jobProgressListener.invoke(JobProgress(
+                            progressMessage = "Collecting links for page $pageIndex " +
+                                    "of ${blogMetadata.pagination.limit}:\n$pageUrl"
+                    ))
+                    urlsToDownload.addAll(getPageLinks(
+                            webView, pageUrl,
+                            blogMetadata.relatedPageLinksUsed,
+                            blogMetadata.relatedPageLinksPattern
+                    ))
+                }
             }
 
-            val allTargetUrlToArchivePathMap = mapOf(mainPageUrl to (snapshotDataDirectory + "/index.mht"))
-                    .plus(relatedPageUrls
-                            .associate { it to (snapshotDataDirectory + "/page_" + it.hashCode() + ".mht")})
+            // first page should be saved as index.mht
+            val allTargetUrlToArchivePathMap = urlsToDownload.take(1)
+                    .associate { it to "$snapshotDataDirectory/index.mht" }
+                    .plus(urlsToDownload.drop(1)
+                            .associate { it to "$snapshotDataDirectory/page_${it.hashCode()}.mht"})
 
             WebViewUtil.saveArchives(webView, allTargetUrlToArchivePathMap, jobProgressListener)
 
@@ -58,6 +69,24 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
             Log.e("BlogDataTypeUtil", "downloadData exception", t)
         }
         return snapshotDataDirectory
+    }
+
+    private suspend fun getPageLinks(webView: WebView, pageUrl: String,
+                                     relatedPageLinksUsed: Boolean,
+                                     cssSelector: String): Set<String> {
+        val pageHtml = WebViewUtil.loadHtml(webView, pageUrl, setOf())
+        val relatedPageUrls = linkedSetOf(pageUrl).plus(
+                if (relatedPageLinksUsed) {
+                    LinkUtil.getCssSelectedLinkMap(
+                            html = pageHtml,
+                            cssSelector = cssSelector,
+                            currentPageUrl = pageUrl
+                    ).keys
+                } else {
+                    setOf()
+                }
+        )
+        return relatedPageUrls
     }
 
 }

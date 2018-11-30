@@ -74,7 +74,7 @@ class BlogTypeActivity : AppCompatActivity() {
 
         } else if (existingArtifactId >= 0) {
             toolbar.title = "Creating new Blog Type Snapshot"
-            // todo make snapshot data editable, then also support pagination option
+            // todo make snapshot data editable, then also disable pagination option by default
             etShortUrl.isEnabled = false
             etName.isEnabled = false
             etDescription.isEnabled = false

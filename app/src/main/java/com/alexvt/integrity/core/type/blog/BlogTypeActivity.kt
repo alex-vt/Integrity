@@ -55,6 +55,10 @@ class BlogTypeActivity : AppCompatActivity() {
         if (existingArtifactId >= 0 && !snapshotDate.isEmpty()) {
             toolbar.title = "Viewing Blog Type Snapshot"
             llBottomSheet.visibility = View.GONE
+            etLinkPattern.isEnabled = false
+            etLinkPattern.append((getLatestSnapshot(existingArtifactId).dataTypeSpecificMetadata as BlogTypeMetadata)
+                    .relatedPageLinksPattern)
+            tvPageLinksPreview.visibility = View.GONE
             val snapshotDataPath = IntegrityCore.fetchSnapshotData(existingArtifactId, snapshotDate)
             webView.settings.cacheMode = WebSettings.LOAD_CACHE_ONLY // no loading from internet
             GlobalScope.launch (Dispatchers.Main) {
@@ -74,16 +78,14 @@ class BlogTypeActivity : AppCompatActivity() {
             etDescription.isEnabled = false
             bArchiveLocation.isEnabled = false
             bGo.isEnabled = false
-            bRelatedLinksPattern.isEnabled = false
+            etLinkPattern.isEnabled = false
             etShortUrl.setText(LinkUtil.getShortFormUrl(getLatestSnapshotUrl(existingArtifactId)))
             etName.append(getLatestSnapshot(existingArtifactId).title)
             etDescription.append(getLatestSnapshot(existingArtifactId).description)
-            etLinkPattern.append((getLatestSnapshot(existingArtifactId).dataTypeSpecificMetadata as BlogTypeMetadata)
-                    .relatedPageLinksPattern)
             tvArchiveLocations.text = getArchiveLocationsText(getLatestSnapshot(existingArtifactId)
                     .archiveFolderLocations)
-            tvRelatedLinksPattern.text = getRelatedLinksPatternText(getLatestSnapshot(existingArtifactId)
-                    .dataTypeSpecificMetadata)
+            etLinkPattern.append((getLatestSnapshot(existingArtifactId).dataTypeSpecificMetadata as BlogTypeMetadata)
+                    .relatedPageLinksPattern)
             bSave.setOnClickListener { savePageAsSnapshot(existingArtifactId) }
             goToWebPage(etShortUrl.text.toString())
 
@@ -93,9 +95,6 @@ class BlogTypeActivity : AppCompatActivity() {
             bArchiveLocation.setOnClickListener { askAddArchiveLocation() }
             bGo.setOnClickListener { view -> goToWebPage(etShortUrl.text.toString()) }
             bSave.setOnClickListener { savePageAsNewArtifact(webView) }
-            bRelatedLinksPattern.setOnClickListener { showRelatedLinksSelectorView(true) }
-            ibBackFromLinkPattern.setOnClickListener { showRelatedLinksSelectorView(false) }
-            bDone.setOnClickListener { showRelatedLinksSelectorView(false) }
             etLinkPattern.textChanges()
                     .debounce(800, TimeUnit.MILLISECONDS)
                     .observeOn(AndroidSchedulers.mainThread())
@@ -141,14 +140,6 @@ class BlogTypeActivity : AppCompatActivity() {
         return date
     }
 
-    fun showRelatedLinksSelectorView(showSelector: Boolean) {
-        // todo animation
-        rlMainHeader.visibility = if (showSelector) View.GONE else View.VISIBLE
-        rlRelatedLinkPatternHeader.visibility = if (showSelector) View.VISIBLE else View.GONE
-        llBottomSheetMainContent.visibility = if (showSelector) View.GONE else View.VISIBLE
-        llBottomSheetLinkPatternContent.visibility = if (showSelector) View.VISIBLE else View.GONE
-    }
-
     fun updateMatchedRelatedLinkList() {
         try {
             val allLinkMap = LinkUtil.getCssSelectedLinkMap(loadedHtml, "", webView.url)
@@ -160,7 +151,6 @@ class BlogTypeActivity : AppCompatActivity() {
                     matchedLinkMap.map { it -> MatchableLink(it.key, it.value, true) }
                             .plus(unmatchedLinkMap.map { it -> MatchableLink(it.key as String, it.value, false) })
             )
-            tvRelatedLinksPattern.text = getRelatedLinksPatternText(etLinkPattern.text.toString())
             Log.d(TAG, "Matched links: ${matchedLinkMap.size} of ${allLinkMap.size}")
         } catch (t: Throwable) {
             Log.e(TAG, "updateMatchedRelatedLinkList exception", t)

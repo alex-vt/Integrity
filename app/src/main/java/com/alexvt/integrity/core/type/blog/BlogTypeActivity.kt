@@ -9,6 +9,7 @@ package com.alexvt.integrity.core.type.blog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -239,13 +240,16 @@ class BlogTypeActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        //menuInflater.inflate(R.menu.menu_main, menu)
+        menuInflater.inflate(R.menu.menu_data_view, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_delete_all -> true
+            R.id.action_options -> {
+                dlAllContent.openDrawer(Gravity.RIGHT)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

@@ -36,7 +36,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                         progressMessage = "Collecting links for page:\n${blogMetadata.url}"
                 ))
                 urlsToDownload.addAll(getPageLinks(
-                        webView, blogMetadata.url,
+                        webView, blogMetadata.url, blogMetadata.url,
                         blogMetadata.relatedPageLinksUsed,
                         blogMetadata.relatedPageLinksPattern
                 ))
@@ -49,7 +49,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                                     "of ${blogMetadata.pagination.limit}:\n$pageUrl"
                     ))
                     urlsToDownload.addAll(getPageLinks(
-                            webView, pageUrl,
+                            webView, blogMetadata.url, pageUrl,
                             blogMetadata.relatedPageLinksUsed,
                             blogMetadata.relatedPageLinksPattern
                     ))
@@ -71,21 +71,24 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
         return snapshotDataDirectory
     }
 
-    private suspend fun getPageLinks(webView: WebView, pageUrl: String,
-                                     relatedPageLinksUsed: Boolean,
+    /**
+     * Gets links from page based on its pageUrl,
+     * and firstPageUrl to match links with (must contain it),
+     * according to cssSelector.
+     */
+    private suspend fun getPageLinks(webView: WebView, firstPageUrl: String, pageUrl: String,
+                                     selectRelatedLinks: Boolean,
                                      cssSelector: String): Set<String> {
         val pageHtml = WebViewUtil.loadHtml(webView, pageUrl, setOf())
-        val relatedPageUrls = linkedSetOf(pageUrl).plus(
-                if (relatedPageLinksUsed) {
-                    LinkUtil.getCssSelectedLinkMap(
-                            html = pageHtml,
-                            cssSelector = cssSelector,
-                            currentPageUrl = pageUrl
-                    ).keys
-                } else {
-                    setOf()
-                }
-        )
+        val relatedPageUrls = linkedSetOf(pageUrl)
+        if (selectRelatedLinks) {
+            val selectedLinkMap = LinkUtil.getCssSelectedLinkMap(pageHtml, cssSelector, firstPageUrl)
+            Log.d("BlogDataTypeUtil", "getPageLinks: selectRelatedLinks = ${selectedLinkMap}")
+            relatedPageUrls.addAll(selectedLinkMap.keys)
+        }
+        Log.d("BlogDataTypeUtil", "getPageLinks: Obtained ${relatedPageUrls.size} links" +
+                " (related links selected: $selectRelatedLinks)" +
+                " by pattern $cssSelector \nat page $pageUrl")
         return relatedPageUrls
     }
 

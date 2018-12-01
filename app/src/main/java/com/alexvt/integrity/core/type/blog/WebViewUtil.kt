@@ -16,9 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import android.webkit.ConsoleMessage
-
-
-
+import kotlinx.coroutines.delay
 
 /**
  * Performs main operations with web pages in the provided WebView.
@@ -57,7 +55,8 @@ object WebViewUtil {
                     webView.loadUrl(getLocallySavedPageUrl(startUrl, newUrl))
                 } else {
                     if (isOfflineLoading(startUrl)) {
-                        Log.w("WebViewUtil", "Offline archives don't store page: $newUrl")
+                        Log.w("WebViewUtil", "Offline archives don't store page: $newUrl " +
+                                "(hash ${newUrl.hashCode()})")
                     }
                     webView.loadUrl(newUrl)
                 }
@@ -120,16 +119,21 @@ object WebViewUtil {
         webView.settings.javaScriptEnabled = true
         webView.settings.saveFormData = false
         webView.settings.loadsImagesAutomatically = true
-        webView.settings.setAppCacheEnabled(false)
+        webView.settings.setAppCacheEnabled(true)
+        webView.settings.setAppCachePath(webView.context.cacheDir.absolutePath)
+        webView.settings.setRenderPriority(WebSettings.RenderPriority.HIGH)
         webView.clearHistory()
         webView.clearCache(true)
-        if (loadingOffline) {
-            webView.settings.cacheMode = WebSettings.LOAD_CACHE_ONLY
+        webView.settings.cacheMode = if (loadingOffline) {
+            WebSettings.LOAD_CACHE_ONLY
+        } else {
+            WebSettings.LOAD_NO_CACHE
         }
         return webView
     }
 
     suspend fun saveArchives(webView: WebView, urlToArchivePathMap: Map<String, String>,
+                             loadIntervalMillis: Long,
                              jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit) {
         urlToArchivePathMap.entries.forEachIndexed { index, entry -> run {
             Log.d("WebViewUtil", "saveArchives: saving " )
@@ -137,13 +141,14 @@ object WebViewUtil {
                     progressMessage = "Saving web archive " + (index + 1) + " of "
                             + urlToArchivePathMap.size
             ))
-            saveArchive(webView, entry.key, entry.value)
+            saveArchive(webView, entry.key, entry.value, loadIntervalMillis)
         } }
     }
 
     // Async "nature" of saveWebArchive propagated to caller methods as "sync" method
     // using suspend coroutine of Kotlin
-    private suspend fun saveArchive(rawWebView: WebView, url: String, webArchivePath: String)
+    private suspend fun saveArchive(rawWebView: WebView, url: String, webArchivePath: String,
+                                    loadIntervalMillis: Long)
             = suspendCoroutine<String> { continuation ->
         val webView = setupWebView(webView = rawWebView, loadingOffline = false)
 
@@ -156,13 +161,16 @@ object WebViewUtil {
 
         webView.webChromeClient = object : WebChromeClient() {
             var previousProgress = 0 // for dealing with possible multiple progress == 100
-            
+
             override fun onProgressChanged(view: WebView, progress: Int) {
                 Log.d("WebViewUtil", "Loading " + progress + "%: " + view.url)
                 if (progress == 100 && previousProgress != 100) {
-                    webView.saveWebArchive(webArchivePath, false) {
-                        Log.d("WebViewUtil", "saveWebArchive ended")
-                        continuation.resume(webArchivePath)
+                    GlobalScope.launch(Dispatchers.Main) {
+                        delay(loadIntervalMillis)
+                        webView.saveWebArchive(webArchivePath, false) {
+                            Log.d("WebViewUtil", "saveWebArchive ended")
+                            continuation.resume(webArchivePath)
+                        }
                     }
                     Log.d("WebViewUtil", "saveWebArchive started")
                 }

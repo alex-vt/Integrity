@@ -190,6 +190,7 @@
         android:layout_gravity="end"
         android:fitsSystemWindows="true"
         android:paddingTop="50dp"
+        android:paddingBottom="80dp"
         >
 
         <ScrollView
@@ -317,6 +318,29 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="5"
+                    android:inputType="numberDecimal"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Downloads options"
+                    android:textSize="16sp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Interval between loading pages (seconds)"
+                    />
+
+                <EditText
+                    android:id="@+id/etLoadInterval"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="0"
                     android:inputType="numberDecimal"
                     />
 

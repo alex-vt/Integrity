@@ -22,7 +22,8 @@ data class BlogTypeMetadata(
         val paginationUsed: Boolean = false,
         val pagination: Pagination = Pagination(),
         val relatedPageLinksUsed: Boolean = false,
-        val relatedPageLinksPattern: String = ""// CSS selector, or null when saving only this page
+        val relatedPageLinksPattern: String = "",// CSS selector, or null when saving only this page
+        val loadIntervalMillis: Long = 0
 ) : TypeMetadata()
 
 /**

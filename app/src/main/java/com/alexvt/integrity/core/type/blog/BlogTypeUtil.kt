@@ -62,7 +62,8 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                     .plus(urlsToDownload.drop(1)
                             .associate { it to "$snapshotDataDirectory/page_${it.hashCode()}.mht"})
 
-            WebViewUtil.saveArchives(webView, allTargetUrlToArchivePathMap, jobProgressListener)
+            WebViewUtil.saveArchives(webView, allTargetUrlToArchivePathMap,
+                    blogMetadata.loadIntervalMillis, jobProgressListener)
 
             Log.d("BlogDataTypeUtil", "downloadData end")
         } catch (t: Throwable) {

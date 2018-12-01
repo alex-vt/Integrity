@@ -119,6 +119,8 @@ class BlogTypeActivity : AppCompatActivity() {
         etPaginationStep.setText(getLatestSnapshotTypeMetadata(existingArtifactId).pagination.step.toString())
         etPaginationLimit.isEnabled = false
         etPaginationLimit.setText(getLatestSnapshotTypeMetadata(existingArtifactId).pagination.limit.toString())
+        etLoadInterval.isEnabled = false
+        etLoadInterval.setText((getLatestSnapshotTypeMetadata(existingArtifactId).loadIntervalMillis / 1000).toString())
     }
 
     fun askAddArchiveLocation() {
@@ -215,7 +217,8 @@ class BlogTypeActivity : AppCompatActivity() {
                                 limit = etPaginationLimit.text.toString().toInt()
                         ),
                         relatedPageLinksUsed = cbUseRelatedLinks.isChecked,
-                        relatedPageLinksPattern = etLinkPattern.text.toString()
+                        relatedPageLinksPattern = etLinkPattern.text.toString(),
+                        loadIntervalMillis = etLoadInterval.text.toString().toInt() * 1000L
                 )
         ) {
             materialDialogProgress.message(text = it.progressMessage)

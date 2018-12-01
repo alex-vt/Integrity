@@ -15,6 +15,9 @@ import com.alexvt.integrity.core.job.JobProgress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import android.webkit.ConsoleMessage
+
+
 
 
 /**
@@ -81,6 +84,12 @@ object WebViewUtil {
                 }
                 previousProgress = progress
             }
+
+            override fun onConsoleMessage(cm: ConsoleMessage): Boolean {
+                // this is verbose
+                Log.v("TAG", cm.message() + " at " + cm.sourceId() + ":" + cm.lineNumber())
+                return true
+            }
         }
         webView.loadUrl(startUrl)
     }
@@ -145,21 +154,25 @@ object WebViewUtil {
             }
         }
 
-        var alreadyLoaded = false // for preventing triggering events on load twice
         webView.webChromeClient = object : WebChromeClient() {
+            var previousProgress = 0 // for dealing with possible multiple progress == 100
+            
             override fun onProgressChanged(view: WebView, progress: Int) {
-                if (alreadyLoaded) {
-                    return
-                }
                 Log.d("WebViewUtil", "Loading " + progress + "%: " + view.url)
-                if (progress == 100) {
-                    alreadyLoaded = true
+                if (progress == 100 && previousProgress != 100) {
                     webView.saveWebArchive(webArchivePath, false) {
                         Log.d("WebViewUtil", "saveWebArchive ended")
                         continuation.resume(webArchivePath)
                     }
                     Log.d("WebViewUtil", "saveWebArchive started")
                 }
+                previousProgress = progress
+            }
+
+            override fun onConsoleMessage(cm: ConsoleMessage): Boolean {
+                // this is verbose
+                Log.v("TAG", cm.message() + " at " + cm.sourceId() + ":" + cm.lineNumber())
+                return true
             }
         }
         webView.loadUrl(url)

@@ -199,6 +199,7 @@ class BlogTypeActivity : AppCompatActivity() {
         val materialDialogProgress = MaterialDialog(this)
                 .title(text = "Saving first snapshot of a new artifact " + etName.text.toString())
                 .cancelable(false)
+                .negativeButton(text = "Cancel") { it.cancel() }
         materialDialogProgress.show()
         IntegrityCore.createArtifact(
                 title = etName.text.toString(),
@@ -229,6 +230,7 @@ class BlogTypeActivity : AppCompatActivity() {
         val materialDialogProgress = MaterialDialog(this)
                 .title(text = "Saving a new snapshot of this artifact")
                 .cancelable(false)
+                .negativeButton(text = "Cancel") { it.cancel() }
         materialDialogProgress.show()
         IntegrityCore.createSnapshot(existingArtifactId) {
             materialDialogProgress.message(text = it.progressMessage)

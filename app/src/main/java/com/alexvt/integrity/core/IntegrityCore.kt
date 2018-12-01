@@ -283,6 +283,9 @@ object IntegrityCore {
                         snapshotMetadata.date,
                         snapshotMetadata.dataTypeSpecificMetadata,
                         jobProgressListener)
+        jobProgressListener.invoke(JobProgress(
+                progressMessage = "Compressing data"
+        ))
         val archivePath = ArchiveUtil.archiveFolderAndMetadata(dataFolderPath,
                 snapshotMetadata)
         val archiveHashPath = "$archivePath.sha1"

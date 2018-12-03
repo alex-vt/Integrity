@@ -4,22 +4,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.core.filesystem
+package com.alexvt.integrity.core.filesystem.samba
 
 import com.alexvt.integrity.core.FolderLocation
 
 /**
- * A path in local filesystem, defined simply by a single string.
+ * A location in Samba filesystem, defined by path, user name and password
  */
-data class LocalFolderLocation(val folderPath: String): FolderLocation() {
-    constructor() : this("")
+data class SambaFolderLocation(
+        val user: String,
+        val password: String,
+        val fullPath: String
+): FolderLocation() {
+    constructor() : this("", "", "")
 
     override fun hashCode(): Int {
-        return LocalFolderLocation::class.java.name.hashCode() + folderPath.hashCode()
+        return SambaFolderLocation::class.java.name.hashCode() + fullPath.hashCode() + user.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other is LocalFolderLocation) {
+        return if (other is SambaFolderLocation) {
             other.hashCode() == hashCode()
         } else {
             false
@@ -27,6 +31,6 @@ data class LocalFolderLocation(val folderPath: String): FolderLocation() {
     }
 
     override fun toString(): String {
-        return folderPath
+        return fullPath
     }
 }

@@ -11,7 +11,7 @@ import com.alexvt.integrity.core.IntegrityCore
 import com.snatik.storage.Storage
 import java.io.File
 
-open class LocalArchiveLocationUtil : ArchiveLocationUtil<LocalFolderLocation> {
+open class LocalFolderLocationUtil : ArchiveLocationUtil<LocalFolderLocation> {
 
     override fun getFolderLocationTypeName(): String {
         return "Files on device"
@@ -24,12 +24,11 @@ open class LocalArchiveLocationUtil : ArchiveLocationUtil<LocalFolderLocation> {
     override fun writeArchive(sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,
                               archiveFolderLocation: LocalFolderLocation) {
-        Log.d("LocalFileLocationUtil", "writeArchive")
+        Log.d("LocalFolderLocationUtil", "writeArchive")
         val storage = Storage(IntegrityCore.context)
         storage.createDirectory(archiveFolderLocation.folderPath)
         val destinationArtifactFolderPath = archiveFolderLocation.folderPath + File.separator +
                 artifactAlias + "_" + artifactId
-        // todo check if folder exists, if so then abort
         storage.createDirectory(destinationArtifactFolderPath)
 
         val destinationArchivePath = destinationArtifactFolderPath + File.separator +

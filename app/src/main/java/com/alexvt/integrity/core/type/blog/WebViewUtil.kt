@@ -12,11 +12,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import com.alexvt.integrity.core.SnapshotMetadata
 import com.alexvt.integrity.core.job.JobProgress
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import android.webkit.ConsoleMessage
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Performs main operations with web pages in the provided WebView.
@@ -37,7 +35,11 @@ object WebViewUtil {
     suspend fun loadHtml(webView: WebView, url: String, localLinkHashes: Collection<String>): String
             = suspendCoroutine { continuation ->
         loadHtml(webView, url, localLinkHashes) {
-            continuation.resume(it)
+            try {
+                continuation.resume(it)
+            } catch (t: Throwable) {
+                Log.e("WebViewUtil", "loadHtml continuation failed") // todo support job cancellation
+            }
         }
     }
 
@@ -134,8 +136,12 @@ object WebViewUtil {
 
     suspend fun saveArchives(webView: WebView, urlToArchivePathMap: Map<String, String>,
                              loadIntervalMillis: Long,
-                             jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit) {
+                             jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
+                             jobCoroutineContext: CoroutineContext) {
         urlToArchivePathMap.entries.forEachIndexed { index, entry -> run {
+            if (!jobCoroutineContext.isActive) {
+                return
+            }
             Log.d("WebViewUtil", "saveArchives: saving " )
             jobProgressListener.invoke(JobProgress(
                     progressMessage = "Saving web archive " + (index + 1) + " of "

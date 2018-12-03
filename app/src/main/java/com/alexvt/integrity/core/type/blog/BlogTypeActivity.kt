@@ -21,6 +21,7 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.core.FolderLocation
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.SnapshotMetadata
+import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.jakewharton.rxbinding3.widget.textChanges
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -201,9 +202,11 @@ class BlogTypeActivity : AppCompatActivity() {
         val materialDialogProgress = MaterialDialog(this)
                 .title(text = "Saving first snapshot of a new artifact " + etName.text.toString())
                 .cancelable(false)
-                .negativeButton(text = "Cancel") { it.cancel() }
+                .positiveButton(text = "In background") {
+                    finish() // todo track job elsewhere, listen to data changes
+                }
         materialDialogProgress.show()
-        IntegrityCore.createArtifact(
+        val job = IntegrityCore.createArtifact(
                 title = etName.text.toString(),
                 description = etDescription.text.toString(),
                 dataArchiveLocations = ArrayList(newSelectedArchiveLocations),
@@ -221,11 +224,10 @@ class BlogTypeActivity : AppCompatActivity() {
                         loadIntervalMillis = etLoadInterval.text.toString().toInt() * 1000L
                 )
         ) {
-            materialDialogProgress.message(text = it.progressMessage)
-            if (it.result != null) {
-                materialDialogProgress.cancel()
-                finish()
-            }
+            onJobProgress(it, materialDialogProgress)
+        }
+        materialDialogProgress.negativeButton(text = "Cancel") {
+            IntegrityCore.cancelJob(job)
         }
     }
 
@@ -233,14 +235,23 @@ class BlogTypeActivity : AppCompatActivity() {
         val materialDialogProgress = MaterialDialog(this)
                 .title(text = "Saving a new snapshot of this artifact")
                 .cancelable(false)
-                .negativeButton(text = "Cancel") { it.cancel() }
+                .positiveButton(text = "In background") {
+                    finish() // todo track job elsewhere, listen to data changes
+                }
         materialDialogProgress.show()
-        IntegrityCore.createSnapshot(existingArtifactId) {
-            materialDialogProgress.message(text = it.progressMessage)
-            if (it.result != null) {
-                materialDialogProgress.cancel()
-                finish()
-            }
+        val job = IntegrityCore.createSnapshot(existingArtifactId) {
+            onJobProgress(it, materialDialogProgress)
+        }
+        materialDialogProgress.negativeButton(text = "Cancel") {
+            IntegrityCore.cancelJob(job)
+        }
+    }
+
+    fun onJobProgress(jobProgress: JobProgress<SnapshotMetadata>, dialog: MaterialDialog) {
+        dialog.message(text = jobProgress.progressMessage)
+        if (jobProgress.result != null) {
+            dialog.cancel()
+            finish()
         }
     }
 

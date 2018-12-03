@@ -13,6 +13,8 @@ import com.alexvt.integrity.core.SnapshotMetadata
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.alexvt.integrity.core.type.DataTypeUtil
+import kotlinx.coroutines.isActive
+import kotlin.coroutines.CoroutineContext
 
 
 class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
@@ -23,7 +25,8 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
 
     override suspend fun downloadData(artifactId: Long, date: String,
                                       blogMetadata: BlogTypeMetadata,
-                                      jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit): String {
+                                      jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
+                                      jobCoroutineContext: CoroutineContext): String {
         Log.d("BlogDataTypeUtil", "downloadData start")
 
         val webView = WebView(IntegrityCore.context)
@@ -43,6 +46,9 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
             } else {
                 for (pageIndex in blogMetadata.pagination.startIndex..blogMetadata.pagination.limit
                         step blogMetadata.pagination.step) {
+                    if (!jobCoroutineContext.isActive) {
+                        break
+                    }
                     val pageUrl = blogMetadata.url + blogMetadata.pagination.path + pageIndex
                     jobProgressListener.invoke(JobProgress(
                             progressMessage = "Collecting links for page $pageIndex " +
@@ -63,7 +69,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                             .associate { it to "$snapshotDataDirectory/page_${it.hashCode()}.mht"})
 
             WebViewUtil.saveArchives(webView, allTargetUrlToArchivePathMap,
-                    blogMetadata.loadIntervalMillis, jobProgressListener)
+                    blogMetadata.loadIntervalMillis, jobProgressListener, jobCoroutineContext)
 
             Log.d("BlogDataTypeUtil", "downloadData end")
         } catch (t: Throwable) {

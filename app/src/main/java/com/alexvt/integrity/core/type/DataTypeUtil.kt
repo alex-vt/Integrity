@@ -11,6 +11,7 @@ import android.webkit.WebView
 import com.alexvt.integrity.core.SnapshotMetadata
 import com.alexvt.integrity.core.TypeMetadata
 import com.alexvt.integrity.core.job.JobProgress
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Data manipulation contract for a data type
@@ -39,6 +40,7 @@ interface DataTypeUtil<T: TypeMetadata> {
      * returns: path in data cache folder where the data is downloaded to.
      */
     suspend fun downloadData(artifactId: Long, date: String, dataTypeSpecificMetadata: T,
-                             jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit): String
+                             jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
+                             jobCoroutineContext: CoroutineContext): String
 
 }

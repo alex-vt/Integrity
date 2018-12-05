@@ -78,6 +78,16 @@ class BlogTypeActivity : AppCompatActivity() {
         } else if (existingArtifactId >= 0) {
             toolbar.title = "Creating new Blog Type Snapshot"
             snapshotBlueprint = IntegrityCore.metadataRepository.getLatestSnapshotMetadata(existingArtifactId)
+            
+            // disabling pagination by default for manual snapshot creation
+            if (getBlueprintTypeMetadata().paginationUsed) {
+                snapshotBlueprint = snapshotBlueprint.copy(
+                        dataTypeSpecificMetadata = getBlueprintTypeMetadata().copy(
+                                paginationUsed = false
+                        )
+                )
+                Toast.makeText(this, "Pagination is turned off", Toast.LENGTH_SHORT).show()
+            }
 
             fillInOptions(isEditable = true)
 

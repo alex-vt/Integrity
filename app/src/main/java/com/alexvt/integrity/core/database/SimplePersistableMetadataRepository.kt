@@ -44,15 +44,13 @@ object SimplePersistableMetadataRepository: MetadataRepository {
     }
 
     override fun removeArtifactMetadata(artifactId: Long) {
-        val snapshotMetadataCollectionToRemove = getArtifactMetadata(artifactId)
-        allMetadata.snapshotMetadataList.removeAll(snapshotMetadataCollectionToRemove.snapshotMetadataList)
+        allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId }
         allMetadata = HashUtil.updateHash(allMetadata)
         persistAll()
     }
 
     override fun removeSnapshotMetadata(artifactId: Long, date: String) {
-        val snapshotMetadataToRemove = getSnapshotMetadata(artifactId, date)
-        allMetadata.snapshotMetadataList.remove(snapshotMetadataToRemove)
+        allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId && it.date == date }
         allMetadata = HashUtil.updateHash(allMetadata)
         persistAll()
     }
@@ -65,7 +63,9 @@ object SimplePersistableMetadataRepository: MetadataRepository {
         val artifactSnapshotMetadataList = allMetadata.snapshotMetadataList
                 .groupBy { it.artifactId }
                 .map { it.value
-                        .sortedByDescending { it.date }
+                        // in every group, getting the latest of preferably non-blueprint snapshots
+                        .sortedWith(compareBy<SnapshotMetadata> { it.blueprint }
+                                .thenByDescending { it.date })
                         .first() }
                 .sortedByDescending { it.date }
         return MetadataCollection(ArrayList(artifactSnapshotMetadataList),
@@ -94,6 +94,12 @@ object SimplePersistableMetadataRepository: MetadataRepository {
 
     override fun clear() {
         allMetadata.snapshotMetadataList.clear()
+        allMetadata = HashUtil.updateHash(allMetadata)
+        persistAll()
+    }
+
+    override fun cleanupArtifactBlueprints(artifactId: Long) {
+        allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId && it.blueprint }
         allMetadata = HashUtil.updateHash(allMetadata)
         persistAll()
     }

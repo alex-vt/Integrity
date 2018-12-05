@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.activity.MainActivity
 import com.alexvt.integrity.core.SnapshotMetadata
@@ -36,7 +35,12 @@ class ArtifactRecyclerAdapter(val items: ArrayList<SnapshotMetadata>, val mainAc
     override fun onBindViewHolder(holder: ArtifactViewHolder, position: Int) {
         val artifactId = items.get(position).artifactId
 
-        holder.tvTitle?.text = items.get(position).title + "\nat " + items.get(position).date
+        holder.tvTitle?.text = items.get(position).title + "\n" +
+                if (items.get(position).blueprint) {
+                    "blueprint only"
+                } else {
+                    "at "  + items.get(position).date
+                }
         holder.tvTitle.setOnClickListener {mainActivity.viewArtifact(artifactId)}
 
         holder.tvTitle.setOnLongClickListener {

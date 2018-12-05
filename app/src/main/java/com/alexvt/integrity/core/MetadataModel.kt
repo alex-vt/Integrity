@@ -17,16 +17,14 @@ import com.alexvt.integrity.core.type.blog.BlogTypeMetadata
  *
  * Data itself is stored separately in an archive and can be accessed by the archive path.
  */
-data class SnapshotMetadata(val artifactId: Long,
-                            val date: String,
-                            val title: String,
-                            val description: String,
-                            val archiveFolderLocations: ArrayList<FolderLocation>,
-                            val dataTypeSpecificMetadata: TypeMetadata
-) {
-    constructor() : this(0, "", "",  "", arrayListOf(),
-            BlogTypeMetadata())
-}
+data class SnapshotMetadata(val artifactId: Long = 0,
+                            val date: String = "",
+                            val title: String = "",
+                            val description: String = "",
+                            val archiveFolderLocations: ArrayList<FolderLocation> = arrayListOf(),
+                            val dataTypeSpecificMetadata: TypeMetadata = BlogTypeMetadata(),
+                            val blueprint: Boolean = true
+)
 
 /**
  * A collection of metadata snapshots,
@@ -35,10 +33,8 @@ data class SnapshotMetadata(val artifactId: Long,
  * In the particular case, collection of all metadata snapshots of artifact
  * comprises that artifact itself.
  */
-data class MetadataCollection(val snapshotMetadataList: ArrayList<SnapshotMetadata>,
-                              val metadataHash: String) {
-    constructor() : this(arrayListOf(), "")
-}
+data class MetadataCollection(val snapshotMetadataList: ArrayList<SnapshotMetadata> = arrayListOf(),
+                              val metadataHash: String = "")
 
 // todo add operation status and/or callbacks for the future async operations
 

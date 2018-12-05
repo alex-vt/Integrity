@@ -36,9 +36,11 @@ class ArtifactViewActivity : AppCompatActivity() {
     fun getArtifactId(): Long = MainActivity.getArtifactIdFromIntent(intent)
 
     private fun refreshSnapshotList() {
+        // Only complete snapshot metadata is shown here.
+        // If artifact has only a metadata blueprint, Add Snapshot button will utilize it.
         (rvSnapshotList.adapter as SnapshotRecyclerAdapter)
                 .setItems(IntegrityCore.metadataRepository.getArtifactMetadata(getArtifactId())
-                        .snapshotMetadataList)
+                        .snapshotMetadataList.filter { !it.blueprint })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

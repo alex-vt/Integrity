@@ -168,13 +168,28 @@
 
                 </LinearLayout>
 
-                <Button
-                    android:id="@+id/bSave"
-                    android:layout_width="wrap_content"
+                <FrameLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Save Snapshot"
-                    android:layout_gravity="end"
-                    />
+                    >
+
+                    <Button
+                        android:id="@+id/bSaveBlueprint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Save as Blueprint"
+                        android:layout_gravity="start"
+                        />
+
+                    <Button
+                        android:id="@+id/bSave"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Save Snapshot"
+                        android:layout_gravity="end"
+                        />
+
+                </FrameLayout>
 
             </LinearLayout>
 

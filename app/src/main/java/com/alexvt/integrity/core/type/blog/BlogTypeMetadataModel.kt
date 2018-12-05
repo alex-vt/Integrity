@@ -23,7 +23,7 @@ data class BlogTypeMetadata(
         val pagination: Pagination = Pagination(),
         val relatedPageLinksUsed: Boolean = false,
         val relatedPageLinksPattern: String = "",// CSS selector, or null when saving only this page
-        val loadIntervalMillis: Long = 0
+        val loadIntervalMillis: Long = 1000
 ) : TypeMetadata()
 
 /**
@@ -37,6 +37,6 @@ data class Pagination(
         val path: String = "page/",
         val startIndex: Int = 1,
         val step: Int = 1,
-        val limit: Int = 10 // requires attention to prevent missing or excessive pages
+        val limit: Int = 3 // requires attention to prevent missing or excessive pages
 )
 

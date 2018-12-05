@@ -12,17 +12,19 @@ import kotlin.coroutines.CoroutineContext
 /**
  * Allows canceling coroutine jobs by given assigned ID.
  */
-object LongRunningJobManager {
+object CoroutineJobManager {
 
     var coroutineJobMap: Map<Long, Job> = mapOf()
 
-    fun addJob(id: Long, coroutineJob: Job) {
-        coroutineJobMap = coroutineJobMap.plus(Pair(id, coroutineJob))
+    fun addJob(coroutineJob: Job): Long {
+        val jobId = System.currentTimeMillis() + coroutineJob.hashCode()
+        coroutineJobMap = coroutineJobMap.plus(Pair(jobId, coroutineJob))
+        return jobId
     }
 
-    fun cancelJob(id: Long) {
-        coroutineJobMap[id]?.cancel()
-        removeJob(coroutineJobMap[id])
+    fun cancelJob(jobId: Long) {
+        coroutineJobMap[jobId]?.cancel()
+        removeJob(coroutineJobMap[jobId])
     }
 
     fun removeJob(coroutineJob: CoroutineContext?) {

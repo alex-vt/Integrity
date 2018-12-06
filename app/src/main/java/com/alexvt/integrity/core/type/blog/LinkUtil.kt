@@ -7,19 +7,17 @@
 package com.alexvt.integrity.core.type.blog
 
 import org.jsoup.Jsoup
-import org.jsoup.select.Elements
-import org.jsoup.select.Selector
+import java.net.URL
 
 object LinkUtil {
 
     fun getCssSelectedLinkMap(html: String, cssSelector: String,
-                              currentPageUrl: String): Map<String, String>
+                              pageUrl: String): Map<String, String>
             = Jsoup.parse(html).select(cssSelector.trim() + " a[href]")
             .distinctBy { it.attr("abs:href") } // dropping duplicates before putting to map to preserve first
             .associate { it.attr("abs:href") to it.cssSelector() }
             .filter { it.key.isNotEmpty() }
-            .filter { it.key.startsWith(currentPageUrl) }
-            .filter { it.key != currentPageUrl }
+            .filter { it.key.contains(getDomainName(pageUrl)) }
             .filter { !it.key.contains("#") }
 
     fun getShortFormUrl(url: String): String {
@@ -37,4 +35,9 @@ object LinkUtil {
         }
     }
 
+    private fun getDomainName(url: String) = if (URL(url).host.startsWith("www.")) {
+        URL(url).host.replaceFirst("www.", "")
+    } else {
+        URL(url).host
+    }
 }

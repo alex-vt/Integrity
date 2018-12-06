@@ -21,6 +21,7 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.core.FolderLocation
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.SnapshotMetadata
+import com.alexvt.integrity.core.SnapshotStatus
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.jakewharton.rxbinding3.widget.textChanges
@@ -29,17 +30,17 @@ import kotlinx.android.synthetic.main.activity_blog_type.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
-import kotlin.collections.LinkedHashSet
 
 
 class BlogTypeActivity : AppCompatActivity() {
 
     private val TAG = BlogTypeActivity::class.java.simpleName
 
-    // destinations for saving snapshot
-    private val newSelectedArchiveLocations: LinkedHashSet<FolderLocation> = linkedSetOf()
+    // snapshot metadata to view/save related data
+    private lateinit var snapshot: SnapshotMetadata
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,80 +49,135 @@ class BlogTypeActivity : AppCompatActivity() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
-        // when it's an existing artifact, using existing URL instead of address bar
-        val existingArtifactId = getArtifactIdFromIntent(intent)
-        val snapshotDate = getDateFromIntent(intent)
-
         rvRelatedLinkList.adapter = RelatedLinkRecyclerAdapter(arrayListOf(), this)
 
-        if (existingArtifactId >= 0 && !snapshotDate.isEmpty()) {
-            toolbar.title = "Viewing Blog Type Snapshot"
-            llBottomSheet.visibility = View.GONE
-            tvPageLinksPreview.visibility = View.GONE
-            supportActionBar!!.subtitle = getLatestSnapshot(existingArtifactId).title
+        if (snapshotDataExists(intent)) {
+            snapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(
+                    getArtifactIdFromIntent(intent), getDateFromIntent(intent))
+
+            // Incomplete snapshot can be completed, apart from creating a new blueprint from it
+            if (snapshot.status == SnapshotStatus.INCOMPLETE) {
+                toolbar.title = "Incomplete Blog Type Snapshot"
+                bContinueSaving.visibility = View.VISIBLE
+            } else {
+                toolbar.title = "Viewing Blog Type Snapshot"
+                bContinueSaving.visibility = View.GONE
+            }
+
+            fillInOptions(isEditable = false)
+
             GlobalScope.launch (Dispatchers.Main) {
                 // links from locally loaded HTML can point to local pages named page_<linkHash>
                 val relatedLinkHashesFromFiles = DataCacheFolderUtil.getSnapshotFileSimpleNames(
-                        existingArtifactId, snapshotDate)
+                        snapshot.artifactId, snapshot.date)
                         .map { it.replace("page_", "") }
-                val snapshotDataPath = IntegrityCore.fetchSnapshotData(existingArtifactId, snapshotDate)
+                val snapshotDataPath = IntegrityCore.fetchSnapshotData(snapshot.artifactId,
+                        snapshot.date)
                 WebViewUtil.loadHtml(webView,"file://" + snapshotDataPath + "/index.mht",
-                        relatedLinkHashesFromFiles) {
+                        relatedLinkHashesFromFiles, getTypeMetadata().loadImages,
+                        getTypeMetadata().desktopSite) {
                     Log.d(TAG, "Loaded HTML from file")
                 }
             }
 
-            fillInReadOnlyOptions(existingArtifactId)
-
-        } else if (existingArtifactId >= 0) {
+        } else if (artifactExists(intent)) {
+            snapshot = IntegrityCore.metadataRepository.getLatestSnapshotMetadata(
+                    getArtifactIdFromIntent(intent))
             toolbar.title = "Creating new Blog Type Snapshot"
-            // todo make snapshot data editable, then also disable pagination option by default
-            etShortUrl.isEnabled = false
-            etName.isEnabled = false
-            etDescription.isEnabled = false
-            bArchiveLocation.isEnabled = false
-            bGo.isEnabled = false
-            supportActionBar!!.subtitle = getLatestSnapshot(existingArtifactId).title
-            etShortUrl.setText(LinkUtil.getShortFormUrl(getLatestSnapshotUrl(existingArtifactId)))
-            etName.append(getLatestSnapshot(existingArtifactId).title)
-            etDescription.append(getLatestSnapshot(existingArtifactId).description)
-            tvArchiveLocations.text = getArchiveLocationsText(getLatestSnapshot(existingArtifactId)
-                    .archiveFolderLocations)
-            bSave.setOnClickListener { savePageAsSnapshot(existingArtifactId) }
+
+            // disabling pagination by default for manual snapshot creation
+            if (getTypeMetadata().paginationUsed) {
+                snapshot = snapshot.copy(
+                        dataTypeSpecificMetadata = getTypeMetadata().copy(
+                                paginationUsed = false
+                        )
+                )
+                Toast.makeText(this, "Pagination is turned off", Toast.LENGTH_SHORT).show()
+            }
+
+            fillInOptions(isEditable = true)
+
             goToWebPage(etShortUrl.text.toString())
 
-            fillInReadOnlyOptions(existingArtifactId)
-
         } else {
+            snapshot = SnapshotMetadata(
+                    artifactId = System.currentTimeMillis(),
+                    title = "Blog Type Artifact"
+            )
+
             toolbar.title = "Creating new Blog Type Artifact"
-            etShortUrl.setOnEditorActionListener { v, actionId, event -> goToWebPage(etShortUrl.text.toString()) }
-            bArchiveLocation.setOnClickListener { askAddArchiveLocation() }
-            bGo.setOnClickListener { view -> goToWebPage(etShortUrl.text.toString()) }
-            bSave.setOnClickListener { savePageAsNewArtifact() }
-            etLinkPattern.textChanges()
-                    .debounce(800, TimeUnit.MILLISECONDS)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { updateMatchedRelatedLinkList() }
+
+            fillInOptions(isEditable = true)
         }
     }
 
-    fun fillInReadOnlyOptions(existingArtifactId: Long) {
-        etLinkPattern.isEnabled = false
-        etLinkPattern.append(getLatestSnapshotTypeMetadata(existingArtifactId).relatedPageLinksPattern)
-        cbUseRelatedLinks.isEnabled = false
-        cbUseRelatedLinks.isChecked = getLatestSnapshotTypeMetadata(existingArtifactId).relatedPageLinksUsed
-        cbUsePagination.isEnabled = false
-        cbUsePagination.isChecked = getLatestSnapshotTypeMetadata(existingArtifactId).paginationUsed
-        etPaginationPattern.isEnabled = false
-        etPaginationPattern.setText(getLatestSnapshotTypeMetadata(existingArtifactId).pagination.path)
-        etPaginationStartIndex.isEnabled = false
-        etPaginationStartIndex.setText(getLatestSnapshotTypeMetadata(existingArtifactId).pagination.startIndex.toString())
-        etPaginationStep.isEnabled = false
-        etPaginationStep.setText(getLatestSnapshotTypeMetadata(existingArtifactId).pagination.step.toString())
-        etPaginationLimit.isEnabled = false
-        etPaginationLimit.setText(getLatestSnapshotTypeMetadata(existingArtifactId).pagination.limit.toString())
-        etLoadInterval.isEnabled = false
-        etLoadInterval.setText((getLatestSnapshotTypeMetadata(existingArtifactId).loadIntervalMillis / 1000).toString())
+    fun artifactExists(intent: Intent?) = getArtifactIdFromIntent(intent) > 0
+
+    fun snapshotDataExists(intent: Intent?) = artifactExists(intent) && !getDateFromIntent(intent).isEmpty()
+            && IntegrityCore.metadataRepository.getSnapshotMetadata(
+            getArtifactIdFromIntent(intent), getDateFromIntent(intent))
+            .status != SnapshotStatus.BLUEPRINT
+
+    fun fillInOptions(isEditable: Boolean) {
+        etShortUrl.isEnabled = isEditable
+        etShortUrl.setText(LinkUtil.getShortFormUrl(getLatestSnapshotUrl()))
+        etShortUrl.setOnEditorActionListener { v, actionId, event -> goToWebPage(etShortUrl.text.toString()) }
+        bGo.isEnabled = isEditable
+        bGo.setOnClickListener { view -> goToWebPage(etShortUrl.text.toString()) }
+
+        etName.isEnabled = isEditable
+        etName.append(snapshot.title)
+        etDescription.isEnabled = isEditable
+        etDescription.append(snapshot.description)
+
+        tvArchiveLocations.text = getArchiveLocationsText(snapshot.archiveFolderLocations)
+        bArchiveLocation.isEnabled = isEditable
+        bArchiveLocation.setOnClickListener { askAddArchiveLocation() }
+
+        supportActionBar!!.subtitle = snapshot.title
+
+        etLinkPattern.isEnabled = isEditable
+        etLinkPattern.append(getTypeMetadata().relatedPageLinksPattern)
+        etLinkPattern.textChanges()
+                .debounce(800, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { updateMatchedRelatedLinkList() }
+
+        cbLoadImages.isEnabled = isEditable
+        cbLoadImages.isChecked = getTypeMetadata().loadImages
+        cbDesktopSite.isEnabled = isEditable
+        cbDesktopSite.isChecked = getTypeMetadata().desktopSite
+        // todo update web page with debounce. Fix these changes not applying on page reload
+
+        cbUseRelatedLinks.isEnabled = isEditable
+        cbUseRelatedLinks.isChecked = getTypeMetadata().relatedPageLinksUsed
+        cbUsePagination.isEnabled = isEditable
+        cbUsePagination.isChecked = getTypeMetadata().paginationUsed
+        etPaginationPattern.isEnabled = isEditable
+        etPaginationPattern.setText(getTypeMetadata().pagination.path)
+        etPaginationStartIndex.isEnabled = isEditable
+        etPaginationStartIndex.setText(getTypeMetadata().pagination.startIndex.toString())
+        etPaginationStep.isEnabled = isEditable
+        etPaginationStep.setText(getTypeMetadata().pagination.step.toString())
+        etPaginationLimit.isEnabled = isEditable
+        etPaginationLimit.setText(getTypeMetadata().pagination.limit.toString())
+        etLoadInterval.isEnabled = isEditable
+        etLoadInterval.setText((getTypeMetadata().loadIntervalMillis / 1000).toString())
+
+        tvPageLinksPreview.visibility = if (isEditable) View.VISIBLE else View.GONE
+
+        bSaveBlueprint.setOnClickListener {
+            if (checkAndSaveBlueprint()) {
+                finish()
+            }
+        }
+        bSave.visibility = if (isEditable) View.VISIBLE else View.GONE
+        bSave.setOnClickListener {
+            if (checkAndSaveBlueprint()) {
+                saveSnapshotAndFinish()
+            }
+        }
+        bContinueSaving.setOnClickListener { saveSnapshotAndFinish() }
     }
 
     fun askAddArchiveLocation() {
@@ -134,8 +190,10 @@ class BlogTypeActivity : AppCompatActivity() {
     }
 
     fun addArchiveLocationSelection(folderLocation: FolderLocation) {
-        newSelectedArchiveLocations.add(folderLocation)
-        tvArchiveLocations.text = getArchiveLocationsText(newSelectedArchiveLocations)
+        snapshot = snapshot.copy(
+                archiveFolderLocations = ArrayList(snapshot.archiveFolderLocations.plus(folderLocation))
+        )
+        tvArchiveLocations.text = getArchiveLocationsText(snapshot.archiveFolderLocations)
     }
 
     fun getArchiveLocationsText(folderLocations: Collection<FolderLocation>): String
@@ -143,12 +201,12 @@ class BlogTypeActivity : AppCompatActivity() {
             .replace("[", "")
             .replace("]", "")
 
-    fun getArtifactIdFromIntent(intent: Intent): Long {
-        return intent.getLongExtra("artifactId", -1)
+    fun getArtifactIdFromIntent(intent: Intent?): Long {
+        return intent?.getLongExtra("artifactId", -1) ?: -1
     }
 
-    fun getDateFromIntent(intent: Intent): String {
-        var date: String? = intent.getStringExtra("date")
+    fun getDateFromIntent(intent: Intent?): String {
+        var date: String? = intent?.getStringExtra("date")
         if (date == null) {
             date = ""
         }
@@ -175,43 +233,42 @@ class BlogTypeActivity : AppCompatActivity() {
     // map of related page links to their unique CSS selectors in HTML document
     private var loadedHtml = ""
 
-    fun getLatestSnapshot(artifactId: Long): SnapshotMetadata = IntegrityCore
-            .metadataRepository.getLatestSnapshotMetadata(artifactId)
-
-    fun getLatestSnapshotTypeMetadata(artifactId: Long): BlogTypeMetadata = IntegrityCore
-            .metadataRepository.getLatestSnapshotMetadata(artifactId).dataTypeSpecificMetadata
-            as BlogTypeMetadata
+    fun getTypeMetadata(): BlogTypeMetadata
+            = snapshot.dataTypeSpecificMetadata as BlogTypeMetadata
 
     // URL of first (main) web page of the latest snapshot of this artifact
-    fun getLatestSnapshotUrl(artifactId: Long): String
-            = getLatestSnapshotTypeMetadata(artifactId).url
+    fun getLatestSnapshotUrl(): String = getTypeMetadata().url
 
-    fun savePageAsNewArtifact() {
-        if (webView.url == null || !webView.url.startsWith("http") || webView.url.length < 10) {
+    fun checkAndSaveBlueprint(): Boolean {
+        if (etShortUrl.text.trim().isEmpty()) {
             Toast.makeText(this, "Please go to a web page first", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
         if (etName.text.trim().isEmpty()) {
             Toast.makeText(this, "Please enter name", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
-        if (newSelectedArchiveLocations.isEmpty()) {
+        if (snapshot.archiveFolderLocations.isEmpty()) {
             Toast.makeText(this, "Please add location where to save archive", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
-        val materialDialogProgress = MaterialDialog(this)
-                .title(text = "Saving first snapshot of a new artifact " + etName.text.toString())
-                .cancelable(false)
-                .positiveButton(text = "In background") {
-                    finish() // todo track job elsewhere, listen to data changes
-                }
-        materialDialogProgress.show()
-        val job = IntegrityCore.createArtifact(
+        val timestamp = System.currentTimeMillis()
+        // for new artifact, generating artifactId
+        if (snapshot.artifactId < 1) {
+            snapshot = snapshot.copy(artifactId = timestamp)
+        }
+        snapshot = snapshot.copy(
                 title = etName.text.toString(),
+                date = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(timestamp),
                 description = etDescription.text.toString(),
-                dataArchiveLocations = ArrayList(newSelectedArchiveLocations),
                 dataTypeSpecificMetadata = BlogTypeMetadata(
-                        url = webView.url,
+                        url = if (snapshotDataExists(intent)) {
+                            getTypeMetadata().url // for read only snapshot, same as it was
+                        } else {
+                            webView.url // for editable snapshot, the one from loaded WebView
+                        },
+                        loadImages = cbLoadImages.isChecked,
+                        desktopSite = cbDesktopSite.isChecked,
                         paginationUsed = cbUsePagination.isChecked,
                         pagination = Pagination(
                                 path = etPaginationPattern.text.toString(),
@@ -223,27 +280,25 @@ class BlogTypeActivity : AppCompatActivity() {
                         relatedPageLinksPattern = etLinkPattern.text.toString(),
                         loadIntervalMillis = etLoadInterval.text.toString().toInt() * 1000L
                 )
-        ) {
-            onJobProgress(it, materialDialogProgress)
-        }
-        materialDialogProgress.negativeButton(text = "Cancel") {
-            IntegrityCore.cancelJob(job)
-        }
+        )
+        IntegrityCore.saveSnapshotBlueprint(snapshot)
+        return true
     }
 
-    fun savePageAsSnapshot(existingArtifactId: Long) {
+    fun saveSnapshotAndFinish() {
         val materialDialogProgress = MaterialDialog(this)
-                .title(text = "Saving a new snapshot of this artifact")
+                .title(text = "Creating snapshot of " + snapshot.title)
                 .cancelable(false)
                 .positiveButton(text = "In background") {
                     finish() // todo track job elsewhere, listen to data changes
                 }
         materialDialogProgress.show()
-        val job = IntegrityCore.createSnapshot(existingArtifactId) {
+        val job = IntegrityCore.createSnapshotFromBlueprint(snapshot.artifactId, snapshot.date) {
             onJobProgress(it, materialDialogProgress)
         }
-        materialDialogProgress.negativeButton(text = "Cancel") {
+        materialDialogProgress.negativeButton(text = "Stop") {
             IntegrityCore.cancelJob(job)
+            finish()
         }
     }
 
@@ -256,11 +311,12 @@ class BlogTypeActivity : AppCompatActivity() {
     }
 
     fun goToWebPage(urlToView: String): Boolean {
-        WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl(urlToView), setOf()) {
+        WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl(urlToView), setOf(),
+                getTypeMetadata().loadImages, getTypeMetadata().desktopSite) {
             Log.d(TAG, "Loaded page from: ${webView.url}")
             loadedHtml = it
             // Inputs are pre-filled only when creating new artifact
-            if (getArtifactIdFromIntent(intent) < 1) {
+            if (!artifactExists(intent)) {
                 etShortUrl.text.clear()
                 etShortUrl.append(LinkUtil.getShortFormUrl(webView.url))
                 etName.setText(webView.title)

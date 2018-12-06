@@ -55,7 +55,10 @@ interface MetadataRepository {
     fun getAllArtifactMetadata(): MetadataCollection
 
     /**
-     * Returns list of the latest snapshots of metadata for all artifacts.
+     * Returns list of the latest snapshots
+     * of metadata for all artifacts:
+     *
+     * Complete ones if there are any, otherwise incomplete if there are any, otherwise blueprints.
      */
     fun getAllArtifactLatestMetadata(): MetadataCollection
 
@@ -73,6 +76,11 @@ interface MetadataRepository {
      * Returns snapshot of metadata by given artifactId and date.
      */
     fun getSnapshotMetadata(artifactId: Long, date: String): SnapshotMetadata
+
+    /**
+     * Removes snapshot metadata marked as blueprints for a given artifact.
+     */
+    fun cleanupArtifactBlueprints(artifactId: Long)
 
     /**
      * Deletes all metadata from database

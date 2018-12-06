@@ -28,9 +28,9 @@ object DataCacheFolderUtil {
                 .toSet()
     }
 
-    fun createEmptyFolder(artifactId: Long, date: String): String {
+    fun createSnapshotFolder(artifactId: Long, date: String): String {
         val snapshotDataDirectory = getSnapshotFolderPath(artifactId, date)
-        getStorage().createDirectory(snapshotDataDirectory, true)
+        getStorage().createDirectory(snapshotDataDirectory, false)
         return snapshotDataDirectory
     }
 
@@ -58,6 +58,21 @@ object DataCacheFolderUtil {
 
     fun writeTextToFile(text: String, path: String) {
         getStorage().createFile(path, text)
+    }
+
+    fun addTextToFile(text: String, path: String) {
+        if (!fileExists(path)) {
+            getStorage().createFile(path, "")
+        }
+        getStorage().appendFile(path, text)
+    }
+
+    fun fileExists(path: String) = getStorage().isFileExist(path)
+
+    fun readTextFromFile(path: String) = if (fileExists(path)) {
+        getStorage().readTextFile(path)?: ""
+    } else {
+        ""
     }
 
     private fun deleteFiles(filesToDelete: List<File>) {

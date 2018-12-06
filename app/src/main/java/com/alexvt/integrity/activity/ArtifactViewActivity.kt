@@ -58,25 +58,10 @@ class ArtifactViewActivity : AppCompatActivity() {
     }
 
     fun previewSnapshot(artifactId: Long, date: String) {
-        val intent = Intent(this, SnapshotPreviewActivity::class.java)
-        intent.putExtra(INTENT_ARTIFACT_ID, artifactId)
-        intent.putExtra(INTENT_DATE, date)
-        startActivity(intent)
+        startActivity(IntegrityCore.getSnapshotViewIntent(this, artifactId, date))
     }
 
     fun createNewSnapshot(artifactId: Long) {
         startActivity(IntegrityCore.getSnapshotCreateIntent(this, artifactId))
-    }
-
-    companion object {
-        val INTENT_ARTIFACT_ID = "artifactId"
-        fun getArtifactIdFromIntent(intent: Intent): Long {
-            return intent.getLongExtra(INTENT_ARTIFACT_ID, 0)
-        }
-
-        val INTENT_DATE = "date"
-        fun getDateFromIntent(intent: Intent): String {
-            return intent.getStringExtra(INTENT_DATE);
-        }
     }
 }

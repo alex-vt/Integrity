@@ -25,6 +25,7 @@ class App : android.app.Application() {
         IntegrityCore.registerFileLocationUtil(LocalFolderLocation::class.java, LocalFolderLocationUtil())
         IntegrityCore.registerFileLocationUtil(SambaFolderLocation::class.java, SambaFolderLocationUtil())
         IntegrityCore.registerDataTypeUtil(BlogTypeMetadata::class.java, BlogTypeUtil())
+        //IntegrityCore.metadataRepository.clear()
 
         // todo add in app
         //IntegrityCore.presetRepository.clear()

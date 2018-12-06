@@ -7,9 +7,7 @@
 package com.alexvt.integrity.core.database
 
 import android.content.Context
-import com.alexvt.integrity.core.MetadataCollection
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.SnapshotMetadata
+import com.alexvt.integrity.core.*
 import com.alexvt.integrity.core.util.HashUtil
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.core.util.PreferencesUtil
@@ -44,15 +42,13 @@ object SimplePersistableMetadataRepository: MetadataRepository {
     }
 
     override fun removeArtifactMetadata(artifactId: Long) {
-        val snapshotMetadataCollectionToRemove = getArtifactMetadata(artifactId)
-        allMetadata.snapshotMetadataList.removeAll(snapshotMetadataCollectionToRemove.snapshotMetadataList)
+        allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId }
         allMetadata = HashUtil.updateHash(allMetadata)
         persistAll()
     }
 
     override fun removeSnapshotMetadata(artifactId: Long, date: String) {
-        val snapshotMetadataToRemove = getSnapshotMetadata(artifactId, date)
-        allMetadata.snapshotMetadataList.remove(snapshotMetadataToRemove)
+        allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId && it.date == date }
         allMetadata = HashUtil.updateHash(allMetadata)
         persistAll()
     }
@@ -65,7 +61,9 @@ object SimplePersistableMetadataRepository: MetadataRepository {
         val artifactSnapshotMetadataList = allMetadata.snapshotMetadataList
                 .groupBy { it.artifactId }
                 .map { it.value
-                        .sortedByDescending { it.date }
+                        // sort by status Complete->Incomplete->Blueprint, then by date descending
+                        .sortedWith(SnapshotCompareUtil.statusComparator
+                                .thenByDescending { it.date })
                         .first() }
                 .sortedByDescending { it.date }
         return MetadataCollection(ArrayList(artifactSnapshotMetadataList),
@@ -94,6 +92,13 @@ object SimplePersistableMetadataRepository: MetadataRepository {
 
     override fun clear() {
         allMetadata.snapshotMetadataList.clear()
+        allMetadata = HashUtil.updateHash(allMetadata)
+        persistAll()
+    }
+
+    override fun cleanupArtifactBlueprints(artifactId: Long) {
+        allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId
+                && it.status == SnapshotStatus.BLUEPRINT }
         allMetadata = HashUtil.updateHash(allMetadata)
         persistAll()
     }

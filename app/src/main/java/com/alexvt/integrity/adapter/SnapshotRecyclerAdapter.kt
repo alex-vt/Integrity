@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.activity.ArtifactViewActivity
 import com.alexvt.integrity.core.SnapshotMetadata
+import com.alexvt.integrity.core.SnapshotStatus
 import kotlinx.android.synthetic.main.artifact_list_item.view.*
 
 class SnapshotRecyclerAdapter(val items: ArrayList<SnapshotMetadata>, val artifactViewActivity: ArtifactViewActivity)
@@ -36,7 +37,15 @@ class SnapshotRecyclerAdapter(val items: ArrayList<SnapshotMetadata>, val artifa
         val artifactId = items.get(position).artifactId
         val date = items.get(position).date
 
-        holder.tvTitle?.text = items.get(position).title + " snapshot\nat " + items.get(position).date
+        holder.tvTitle?.text = items.get(position).title + " snapshot\nat " +
+                items.get(position).date +
+                if (items.get(position).status == SnapshotStatus.BLUEPRINT) {
+                    " (blueprint)"
+                } else if (items.get(position).status == SnapshotStatus.COMPLETE) {
+                    ""
+                } else {
+                    " (incomplete)"
+                }
         holder.tvTitle.setOnClickListener({view -> artifactViewActivity.previewSnapshot(artifactId, date)})
     }
 }

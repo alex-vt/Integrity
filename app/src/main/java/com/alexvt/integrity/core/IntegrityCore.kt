@@ -16,13 +16,12 @@ import com.alexvt.integrity.core.filesystem.PresetRepository
 import com.alexvt.integrity.core.filesystem.SimplePersistablePresetRepository
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.job.LongRunningJob
-import com.alexvt.integrity.core.job.LongRunningJobManager
+import com.alexvt.integrity.core.job.CoroutineJobManager
 import com.alexvt.integrity.core.type.DataTypeUtil
 import com.alexvt.integrity.core.util.ArchiveUtil
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.alexvt.integrity.core.util.HashUtil
 import kotlinx.coroutines.*
-import java.text.SimpleDateFormat
 import kotlin.coroutines.CoroutineContext
 
 @SuppressLint("StaticFieldLeak") // context // todo DI
@@ -48,76 +47,44 @@ object IntegrityCore {
     }
 
     /**
-     * Creates the first snapshot of a new artifact:
-     *
-     * Obtains a new user data snapshot at the time of calling,
-     * according to provided typed content metadata, title and description,
-     * writes snapshot metadata to database
-     * and writes data to archive according to provided data archive path.
-     *
-     * Returns metadata of the created snapshot
-     * (preliminary metadata on job start, then the final metadata when job complete).
+     * Saves preliminary (intended) snapshot metadata to database. No data is processed here.
      */
-     fun createArtifact(title: String,
-                               description: String,
-                               dataArchiveLocations: ArrayList<FolderLocation>,
-                               dataTypeSpecificMetadata: TypeMetadata,
-                               jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit)
-            : LongRunningJob<SnapshotMetadata> {
-        val timestampMillis = System.currentTimeMillis()
-
-        val snapshotMetadata = SnapshotMetadata(
-                artifactId = timestampMillis,
-                title = title,
-                date = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(timestampMillis),
-                description = description,
-                archiveFolderLocations = dataArchiveLocations,
-                dataTypeSpecificMetadata = dataTypeSpecificMetadata
-        )
-
-        LongRunningJobManager.addJob(timestampMillis, GlobalScope.launch (Dispatchers.Main) {
-            jobProgressListener.invoke(JobProgress(
-                    progressMessage = "Creating the first snapshot"
-            ))
-            createSnapshot(snapshotMetadata, jobProgressListener, coroutineContext)
-        })
-        return LongRunningJob(timestampMillis, snapshotMetadata)
+    fun saveSnapshotBlueprint(snapshotMetadata: SnapshotMetadata) {
+        metadataRepository.cleanupArtifactBlueprints(snapshotMetadata.artifactId) // no old ones
+        metadataRepository.addSnapshotMetadata(snapshotMetadata.copy(status = SnapshotStatus.BLUEPRINT))
     }
 
     /**
-     * Creates another snapshot of an existing artifact:
+     * Creates a snapshot of an existing artifact:
      *
-     * Obtains the most recent metadata snapshot with the given artifact ID from the database,
-     * obtains a new user data snapshot at the time of calling,
+     * Obtains metadata snapshot with the given artifact ID and date from the database,
+     * uses it as a blueprint for the new snapshot,
+     * downloads corresponding data,
      * writes its (new) metadata to database
      * and writes data to archive according to the known archive path from metadata.
      *
      * Returns metadata of the newly created snapshot
      * (preliminary metadata on job start, then the final metadata when job complete).
      */
-    fun createSnapshot(artifactId: Long,
-                       jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit)
+    fun createSnapshotFromBlueprint(blueprintSnapshotArtifactId: Long,
+                                    blueprintSnapshotDate: String,
+                                    jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit)
             : LongRunningJob<SnapshotMetadata> {
-        val timestampMillis = System.currentTimeMillis()
-        val newSnapshotDate = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(timestampMillis)
+        val metadataInProgress = SimplePersistableMetadataRepository
+                .getSnapshotMetadata(blueprintSnapshotArtifactId, blueprintSnapshotDate)
+                .copy(status = SnapshotStatus.INCOMPLETE)
 
-        val previousSnapshotMetadata = SimplePersistableMetadataRepository.getLatestSnapshotMetadata(artifactId)
-        val newSnapshotMetadata = previousSnapshotMetadata.copy(date = newSnapshotDate)
-
-        LongRunningJobManager.addJob(timestampMillis, GlobalScope.launch (Dispatchers.Main) {
-            jobProgressListener.invoke(JobProgress(
-                    progressMessage = "Creating a new snapshot"
-            ))
-            createSnapshot(newSnapshotMetadata, jobProgressListener, coroutineContext)
+        val coroutineJobId = CoroutineJobManager.addJob(GlobalScope.launch (Dispatchers.Main) {
+            createSnapshot(metadataInProgress, jobProgressListener, coroutineContext)
         })
-        return LongRunningJob(timestampMillis, newSnapshotMetadata)
+        return LongRunningJob(coroutineJobId, metadataInProgress)
     }
 
     /**
      * Cancels long running job if it's running
      */
     fun cancelJob(longRunningJob: LongRunningJob<*>) {
-        LongRunningJobManager.cancelJob(longRunningJob.id)
+        CoroutineJobManager.cancelJob(longRunningJob.id)
     }
 
     /**
@@ -279,67 +246,89 @@ object IntegrityCore {
      * saves metadata to database,
      * clears unneeded files (archives and hashes) from cache while keeping snapshot folders,
      * returns metadata.
+     *
+     * Intended metadata as a blueprint is saved to database at once
+     * to keep track of possibly interrupted job.
+     * The blueprint is overwritten by the complete metadata after job succeeds.
      */
-    private suspend fun createSnapshot(snapshotMetadata: SnapshotMetadata,
+    private suspend fun createSnapshot(metadataInProgress: SnapshotMetadata,
                                        jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
-                                       jobCoroutineContext: CoroutineContext): SnapshotMetadata {
-        val dataFolderPath = getDataTypeUtil(snapshotMetadata.dataTypeSpecificMetadata)
-                .downloadData(snapshotMetadata.artifactId,
-                        snapshotMetadata.date,
-                        snapshotMetadata.dataTypeSpecificMetadata,
+                                       jobCoroutineContext: CoroutineContext) {
+        // the corresponding incomplete snapshot no longer needed as snapshot now is being created
+        SimplePersistableMetadataRepository.removeSnapshotMetadata(metadataInProgress.artifactId,
+                metadataInProgress.date)
+        SimplePersistableMetadataRepository.addSnapshotMetadata(metadataInProgress)
+
+        jobProgressListener.invoke(JobProgress(
+                progressMessage = "Downloading data"
+        ))
+        val dataFolderPath = getDataTypeUtil(metadataInProgress.dataTypeSpecificMetadata)
+                .downloadData(metadataInProgress.artifactId,
+                        metadataInProgress.date,
+                        metadataInProgress.dataTypeSpecificMetadata,
                         jobProgressListener,
                         jobCoroutineContext)
         if (!jobCoroutineContext.isActive) {
-            return snapshotMetadata
+            return
         }
-        jobProgressListener.invoke(JobProgress(
-                progressMessage = "Compressing data"
-        ))
-        val archivePath = ArchiveUtil.archiveFolderAndMetadata(dataFolderPath,
-                snapshotMetadata)
+
+        GlobalScope.launch(Dispatchers.Main) { // todo rework threads
+            jobProgressListener.invoke(JobProgress(
+                    progressMessage = "Compressing data"
+            ))
+        }
+
+        // Switching over to complete metadata to archive with data.
+        // Note: starting from here existing data will be overwritten
+        // even if partially written before.
+        val completeMetadata = metadataInProgress.copy(status = SnapshotStatus.COMPLETE)
+
+        val archivePath = ArchiveUtil.archiveFolderAndMetadata(dataFolderPath, completeMetadata)
         val archiveHashPath = "$archivePath.sha1"
         DataCacheFolderUtil.writeTextToFile(HashUtil.getFileHash(archivePath), archiveHashPath)
 
-        snapshotMetadata.archiveFolderLocations.forEachIndexed { index, dataArchiveLocation -> run {
+        completeMetadata.archiveFolderLocations.forEachIndexed { index, dataArchiveLocation -> run {
             if (!jobCoroutineContext.isActive) {
-                return snapshotMetadata
+                return
             }
-            jobProgressListener.invoke(JobProgress(
-                    progressMessage = "Saving archive to " + dataArchiveLocation + " "
-                            + (index + 1) + " of " + snapshotMetadata.archiveFolderLocations
-            ))
+            GlobalScope.launch(Dispatchers.Main) {
+                jobProgressListener.invoke(JobProgress(
+                        progressMessage = "Saving archive to " + dataArchiveLocation + " "
+                                + (index + 1) + " of " + completeMetadata.archiveFolderLocations.size
+                ))
+            }
             getFileLocationUtil(dataArchiveLocation).writeArchive(
                     sourceArchivePath = archivePath,
                     sourceHashPath = archiveHashPath,
-                    artifactId = snapshotMetadata.artifactId,
-                    artifactAlias = getArtifactAlias(snapshotMetadata.title),
-                    date = snapshotMetadata.date,
+                    artifactId = completeMetadata.artifactId,
+                    artifactAlias = getArtifactAlias(completeMetadata.title),
+                    date = completeMetadata.date,
                     archiveFolderLocation = dataArchiveLocation
             )
         } }
-
         if (!jobCoroutineContext.isActive) {
-            return snapshotMetadata
+            return
         }
+
         jobProgressListener.invoke(JobProgress(
                 progressMessage = "Saving metadata to database"
         ))
-
-        SimplePersistableMetadataRepository.addSnapshotMetadata(snapshotMetadata)
+        // finally replacing incomplete metadata with complete one in database
+        SimplePersistableMetadataRepository.removeSnapshotMetadata(metadataInProgress.artifactId,
+                metadataInProgress.date)
+        SimplePersistableMetadataRepository.addSnapshotMetadata(completeMetadata)
         DataCacheFolderUtil.clearFiles() // folders remain
 
         if (jobCoroutineContext.isActive) {
             jobProgressListener.invoke(JobProgress(
                     progressMessage = "Done"
             ))
-            delay(1000)
+            delay(800)
             jobProgressListener.invoke(JobProgress(
-                    result = snapshotMetadata
+                    result = completeMetadata
             ))
         }
-        LongRunningJobManager.removeJob(jobCoroutineContext)
-
-        return snapshotMetadata
+        CoroutineJobManager.removeJob(jobCoroutineContext)
     }
 
     /**

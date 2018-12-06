@@ -74,7 +74,8 @@ class BlogTypeActivity : AppCompatActivity() {
                 val snapshotDataPath = IntegrityCore.fetchSnapshotData(snapshot.artifactId,
                         snapshot.date)
                 WebViewUtil.loadHtml(webView,"file://" + snapshotDataPath + "/index.mht",
-                        relatedLinkHashesFromFiles) {
+                        relatedLinkHashesFromFiles, getTypeMetadata().loadImages,
+                        getTypeMetadata().desktopSite) {
                     Log.d(TAG, "Loaded HTML from file")
                 }
             }
@@ -141,6 +142,12 @@ class BlogTypeActivity : AppCompatActivity() {
                 .debounce(800, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { updateMatchedRelatedLinkList() }
+
+        cbLoadImages.isEnabled = isEditable
+        cbLoadImages.isChecked = getTypeMetadata().loadImages
+        cbDesktopSite.isEnabled = isEditable
+        cbDesktopSite.isChecked = getTypeMetadata().desktopSite
+        // todo update web page with debounce. Fix these changes not applying on page reload
 
         cbUseRelatedLinks.isEnabled = isEditable
         cbUseRelatedLinks.isChecked = getTypeMetadata().relatedPageLinksUsed
@@ -260,6 +267,8 @@ class BlogTypeActivity : AppCompatActivity() {
                         } else {
                             webView.url // for editable snapshot, the one from loaded WebView
                         },
+                        loadImages = cbLoadImages.isChecked,
+                        desktopSite = cbDesktopSite.isChecked,
                         paginationUsed = cbUsePagination.isChecked,
                         pagination = Pagination(
                                 path = etPaginationPattern.text.toString(),
@@ -302,7 +311,8 @@ class BlogTypeActivity : AppCompatActivity() {
     }
 
     fun goToWebPage(urlToView: String): Boolean {
-        WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl(urlToView), setOf()) {
+        WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl(urlToView), setOf(),
+                getTypeMetadata().loadImages, getTypeMetadata().desktopSite) {
             Log.d(TAG, "Loaded page from: ${webView.url}")
             loadedHtml = it
             // Inputs are pre-filled only when creating new artifact

@@ -15,6 +15,9 @@ import com.alexvt.integrity.core.job.JobProgress
 import android.webkit.ConsoleMessage
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
+import android.webkit.WebSettings
+
+
 
 /**
  * Performs main operations with web pages in the provided WebView.
@@ -32,9 +35,10 @@ object WebViewUtil {
         }
     }
 
-    suspend fun loadHtml(webView: WebView, url: String, localLinkHashes: Collection<String>): String
+    suspend fun loadHtml(webView: WebView, url: String, loadImages: Boolean, desktopSite: Boolean,
+                         localLinkHashes: Collection<String>): String
             = suspendCoroutine { continuation ->
-        loadHtml(webView, url, localLinkHashes) {
+        loadHtml(webView, url, localLinkHashes, loadImages, desktopSite) {
             try {
                 continuation.resume(it)
             } catch (t: Throwable) {
@@ -43,10 +47,11 @@ object WebViewUtil {
         }
     }
 
-    fun loadHtml(rawWebView: WebView, startUrl: String, localLinkHashes: Collection<String>,
+    fun loadHtml(webView: WebView, startUrl: String, localLinkHashes: Collection<String>,
+                 loadImages: Boolean, desktopSite: Boolean,
                  pageLoadListener: (String) -> Unit) {
         WebViewUtil.pageLoadListener = pageLoadListener
-        val webView = setupWebView(rawWebView, isOfflineLoading(startUrl))
+        setupWebView(webView, isOfflineLoading(startUrl), loadImages, desktopSite)
 
         webView.addJavascriptInterface(this, "jsi") // registers onWebPageHtmlLoaded
 
@@ -115,12 +120,12 @@ object WebViewUtil {
     private fun getLocallySavedPageUrl(firstPageLocalUrl: String, newPageWebUrl: String)
             = firstPageLocalUrl.replace("index.mht", "page_${newPageWebUrl.hashCode()}.mht")
 
-
-    private fun setupWebView(webView: WebView, loadingOffline: Boolean): WebView {
+    private fun setupWebView(webView: WebView, loadingOffline: Boolean, loadImages: Boolean,
+                             desktopSite: Boolean) {
         webView.settings.allowFileAccess = true
         webView.settings.javaScriptEnabled = true
         webView.settings.saveFormData = false
-        webView.settings.loadsImagesAutomatically = true
+        webView.settings.loadsImagesAutomatically = loadImages
         webView.settings.setAppCacheEnabled(true)
         webView.settings.setAppCachePath(webView.context.cacheDir.absolutePath)
         webView.settings.setRenderPriority(WebSettings.RenderPriority.HIGH)
@@ -131,11 +136,25 @@ object WebViewUtil {
         } else {
             WebSettings.LOAD_NO_CACHE
         }
-        return webView
+        setDesktopMode(webView, desktopSite)
+    }
+
+    fun setDesktopMode(webView: WebView, enabled: Boolean) {
+        // see https://github.com/delight-im/Android-AdvancedWebView/blob/master/Source/library/src/main/java/im/delight/android/webview/AdvancedWebView.java
+        val newUserAgent = if (enabled) {
+            webView.settings.userAgentString.replace("Mobile", "eliboM").replace("Android", "diordnA")
+        } else {
+            webView.settings.userAgentString.replace("eliboM", "Mobile").replace("diordnA", "Android")
+        }
+        webView.settings.userAgentString = newUserAgent
+        webView.settings.useWideViewPort = enabled
+        webView.settings.loadWithOverviewMode = enabled
+        webView.settings.setSupportZoom(enabled)
+        webView.settings.builtInZoomControls = enabled
     }
 
     suspend fun saveArchives(webView: WebView, urlToArchivePathMap: Map<String, String>,
-                             loadIntervalMillis: Long,
+                             loadIntervalMillis: Long, loadImages: Boolean, desktopSite: Boolean,
                              jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
                              jobCoroutineContext: CoroutineContext) {
         urlToArchivePathMap.entries.forEachIndexed { index, entry -> run {
@@ -147,16 +166,18 @@ object WebViewUtil {
                     progressMessage = "Saving web archive " + (index + 1) + " of "
                             + urlToArchivePathMap.size
             ))
-            saveArchive(webView, entry.key, entry.value, loadIntervalMillis)
+            saveArchive(webView, entry.key, entry.value, loadIntervalMillis, loadImages, desktopSite)
         } }
     }
 
     // Async "nature" of saveWebArchive propagated to caller methods as "sync" method
     // using suspend coroutine of Kotlin
-    private suspend fun saveArchive(rawWebView: WebView, url: String, webArchivePath: String,
-                                    loadIntervalMillis: Long)
+    private suspend fun saveArchive(webView: WebView, url: String, webArchivePath: String,
+                                    loadIntervalMillis: Long, loadImages: Boolean,
+                                    desktopSite: Boolean)
             = suspendCoroutine<String> { continuation ->
-        val webView = setupWebView(webView = rawWebView, loadingOffline = false)
+        setupWebView(webView = webView, loadingOffline = false, loadImages = loadImages,
+                desktopSite = desktopSite)
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, urlNewString: String): Boolean {

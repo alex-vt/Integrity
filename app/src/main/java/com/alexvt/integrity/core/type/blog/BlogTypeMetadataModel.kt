@@ -19,6 +19,8 @@ import com.alexvt.integrity.core.TypeMetadata
  */
 data class BlogTypeMetadata(
         val url: String = "",
+        val loadImages: Boolean = true,
+        val desktopSite: Boolean = false,
         val paginationUsed: Boolean = false,
         val pagination: Pagination = Pagination(),
         val relatedPageLinksUsed: Boolean = false,

@@ -41,7 +41,8 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                 urlsToDownload.addAll(getPageLinks(
                         webView, blogMetadata.url, blogMetadata.url,
                         blogMetadata.relatedPageLinksUsed,
-                        blogMetadata.relatedPageLinksPattern
+                        blogMetadata.relatedPageLinksPattern,
+                        blogMetadata.loadImages, blogMetadata.desktopSite
                 ))
             } else {
                 for (pageIndex in blogMetadata.pagination.startIndex..blogMetadata.pagination.limit
@@ -57,7 +58,8 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                     urlsToDownload.addAll(getPageLinks(
                             webView, blogMetadata.url, pageUrl,
                             blogMetadata.relatedPageLinksUsed,
-                            blogMetadata.relatedPageLinksPattern
+                            blogMetadata.relatedPageLinksPattern,
+                            blogMetadata.loadImages, blogMetadata.desktopSite
                     ))
                 }
             }
@@ -69,7 +71,8 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                             .associate { it to "$snapshotDataDirectory/page_${it.hashCode()}.mht"})
 
             WebViewUtil.saveArchives(webView, allTargetUrlToArchivePathMap,
-                    blogMetadata.loadIntervalMillis, jobProgressListener, jobCoroutineContext)
+                    blogMetadata.loadIntervalMillis, blogMetadata.loadImages,
+                    blogMetadata.desktopSite, jobProgressListener, jobCoroutineContext)
 
             Log.d("BlogDataTypeUtil", "downloadData end")
         } catch (t: Throwable) {
@@ -84,9 +87,9 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
      * according to cssSelector.
      */
     private suspend fun getPageLinks(webView: WebView, firstPageUrl: String, pageUrl: String,
-                                     selectRelatedLinks: Boolean,
-                                     cssSelector: String): Set<String> {
-        val pageHtml = WebViewUtil.loadHtml(webView, pageUrl, setOf())
+                                     selectRelatedLinks: Boolean, cssSelector: String,
+                                     loadImages: Boolean, desktopSite: Boolean): Set<String> {
+        val pageHtml = WebViewUtil.loadHtml(webView, pageUrl, loadImages, desktopSite, setOf())
         val relatedPageUrls = linkedSetOf(pageUrl)
         if (selectRelatedLinks) {
             val selectedLinkMap = LinkUtil.getCssSelectedLinkMap(pageHtml, cssSelector, firstPageUrl)

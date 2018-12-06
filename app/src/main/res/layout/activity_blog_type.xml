@@ -232,8 +232,31 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:text="Content options"
+                    android:textSize="16sp"
+                    android:paddingBottom="8dp"
+                    />
+
+                <CheckBox
+                    android:id="@+id/cbLoadImages"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Load images"
+                    />
+
+                <CheckBox
+                    android:id="@+id/cbDesktopSite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Desktop site"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:text="Links options"
                     android:textSize="16sp"
+                    android:paddingTop="8dp"
                     android:paddingBottom="8dp"
                     />
 

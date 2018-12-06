@@ -16,7 +16,7 @@ import android.webkit.ConsoleMessage
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 import android.webkit.WebSettings
-
+import com.alexvt.integrity.core.util.DataCacheFolderUtil
 
 
 /**
@@ -139,7 +139,7 @@ object WebViewUtil {
         setDesktopMode(webView, desktopSite)
     }
 
-    fun setDesktopMode(webView: WebView, enabled: Boolean) {
+    private fun setDesktopMode(webView: WebView, enabled: Boolean) {
         // see https://github.com/delight-im/Android-AdvancedWebView/blob/master/Source/library/src/main/java/im/delight/android/webview/AdvancedWebView.java
         val newUserAgent = if (enabled) {
             webView.settings.userAgentString.replace("Mobile", "eliboM").replace("Android", "diordnA")
@@ -161,14 +161,25 @@ object WebViewUtil {
             if (!jobCoroutineContext.isActive) {
                 return
             }
-            Log.d("WebViewUtil", "saveArchives: saving " )
-            jobProgressListener.invoke(JobProgress(
-                    progressMessage = "Saving web archive " + (index + 1) + " of "
-                            + urlToArchivePathMap.size
-            ))
-            saveArchive(webView, entry.key, entry.value, loadIntervalMillis, loadImages, desktopSite)
+            if (!webArchiveDownloadComplete(urlToArchivePathMap.values.toList(), index)) {
+                Log.d("WebViewUtil", "saveArchives: saving " )
+                jobProgressListener.invoke(JobProgress(
+                        progressMessage = "Saving web archive " + (index + 1) + " of "
+                                + urlToArchivePathMap.size
+                ))
+                saveArchive(webView = webView, url = entry.key, webArchivePath = entry.value,
+                        loadIntervalMillis = loadIntervalMillis, loadImages = loadImages,
+                        desktopSite = desktopSite)
+            }
         } }
     }
+
+    /**
+     * Web archive is considered fully downloaded when the next one exists.
+     */
+    private fun webArchiveDownloadComplete(webArchivePaths: List<String>, index: Int)
+            = index + 1 < webArchivePaths.size
+            && DataCacheFolderUtil.fileExists(webArchivePaths[index + 1])
 
     // Async "nature" of saveWebArchive propagated to caller methods as "sync" method
     // using suspend coroutine of Kotlin

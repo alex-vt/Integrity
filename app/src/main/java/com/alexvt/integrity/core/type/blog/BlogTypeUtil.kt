@@ -30,40 +30,34 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
         Log.d("BlogDataTypeUtil", "downloadData start")
 
         val webView = WebView(IntegrityCore.context)
-        val snapshotDataDirectory = DataCacheFolderUtil.createEmptyFolder(artifactId, date)
-        val urlsToDownload = LinkedHashSet<String>()
+        val snapshotDataDirectory = DataCacheFolderUtil.createSnapshotFolder(artifactId, date)
 
         try {
             if (!blogMetadata.paginationUsed) {
-                jobProgressListener.invoke(JobProgress(
-                        progressMessage = "Collecting links for page:\n${blogMetadata.url}"
-                ))
-                urlsToDownload.addAll(getPageLinks(
-                        webView, blogMetadata.url,
-                        blogMetadata.relatedPageLinksUsed,
-                        blogMetadata.relatedPageLinksPattern,
-                        blogMetadata.loadImages, blogMetadata.desktopSite
-                ))
+                collectLinksAtPage(
+                        webView = webView,
+                        blogMetadata = blogMetadata,
+                        snapshotDataDirectory = snapshotDataDirectory,
+                        pageUrl = blogMetadata.url,
+                        pageFullIndex = "",
+                        jobProgressListener = jobProgressListener,
+                        jobCoroutineContext = jobCoroutineContext
+                )
             } else {
                 for (pageIndex in blogMetadata.pagination.startIndex..blogMetadata.pagination.limit
                         step blogMetadata.pagination.step) {
-                    if (!jobCoroutineContext.isActive) {
-                        break
-                    }
-                    val pageUrl = blogMetadata.url + blogMetadata.pagination.path + pageIndex
-                    jobProgressListener.invoke(JobProgress(
-                            progressMessage = "Collecting links for page $pageIndex " +
-                                    "of ${blogMetadata.pagination.limit}:\n$pageUrl"
-                    ))
-                    urlsToDownload.addAll(getPageLinks(
-                            webView, pageUrl,
-                            blogMetadata.relatedPageLinksUsed,
-                            blogMetadata.relatedPageLinksPattern,
-                            blogMetadata.loadImages, blogMetadata.desktopSite
-                    ))
+                    collectLinksAtPage(
+                            webView = webView,
+                            blogMetadata = blogMetadata,
+                            snapshotDataDirectory = snapshotDataDirectory,
+                            pageUrl = blogMetadata.url + blogMetadata.pagination.path + pageIndex,
+                            pageFullIndex = " $pageIndex of ${blogMetadata.pagination.limit}",
+                            jobProgressListener = jobProgressListener,
+                            jobCoroutineContext = jobCoroutineContext
+                    )
                 }
             }
-
+            val urlsToDownload = getLinksFromFile(snapshotDataDirectory)
             // first page should be saved as index.mht
             val allTargetUrlToArchivePathMap = urlsToDownload.take(1)
                     .associate { it to "$snapshotDataDirectory/index.mht" }
@@ -80,6 +74,46 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
         }
         return snapshotDataDirectory
     }
+
+    private suspend fun collectLinksAtPage(webView: WebView, blogMetadata: BlogTypeMetadata,
+                                           snapshotDataDirectory: String, pageUrl: String,
+                                           pageFullIndex: String,
+                                           jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
+                                           jobCoroutineContext: CoroutineContext) {
+        if (!jobCoroutineContext.isActive) {
+            return
+        }
+        if (pageAlreadyProcessed(pageUrl, snapshotDataDirectory)) {
+            return
+        }
+        jobProgressListener.invoke(JobProgress(
+                progressMessage = "Collecting links for page$pageFullIndex:\n$pageUrl"
+        ))
+        addLinksToFile(getPageLinks(
+                webView, pageUrl,
+                blogMetadata.relatedPageLinksUsed,
+                blogMetadata.relatedPageLinksPattern,
+                blogMetadata.loadImages, blogMetadata.desktopSite
+        ), snapshotDataDirectory)
+        addPageToFile(pageUrl, snapshotDataDirectory)
+    }
+
+    private fun pageAlreadyProcessed(pageUrl: String, snapshotDataDirectory: String)
+            = DataCacheFolderUtil.readTextFromFile("$snapshotDataDirectory/pagination.txt")
+            .contains(pageUrl + "\n") // while link in a line
+
+    private fun addPageToFile(pageLink: String, snapshotDataDirectory: String)
+            = DataCacheFolderUtil.addTextToFile(pageLink,
+            "$snapshotDataDirectory/pagination.txt")
+
+
+    private fun addLinksToFile(links: Collection<String>, snapshotDataDirectory: String)
+            = DataCacheFolderUtil.addTextToFile(links.joinToString("\n"),
+                "$snapshotDataDirectory/links.txt")
+
+    private fun getLinksFromFile(snapshotDataDirectory: String): Set<String>
+            = DataCacheFolderUtil.readTextFromFile("$snapshotDataDirectory/links.txt")
+            .split("\n").filter { it.isNotBlank() }.toSet()
 
     /**
      * Gets links from page based on its pageUrl,

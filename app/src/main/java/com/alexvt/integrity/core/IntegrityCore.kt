@@ -262,7 +262,6 @@ object IntegrityCore {
         jobProgressListener.invoke(JobProgress(
                 progressMessage = "Downloading data"
         ))
-        // todo support skipping operations which are already done (interrupted the previous time)
         val dataFolderPath = getDataTypeUtil(metadataInProgress.dataTypeSpecificMetadata)
                 .downloadData(metadataInProgress.artifactId,
                         metadataInProgress.date,
@@ -279,7 +278,9 @@ object IntegrityCore {
             ))
         }
 
-        // switching over to complete metadata to archive with data
+        // Switching over to complete metadata to archive with data.
+        // Note: starting from here existing data will be overwritten
+        // even if partially written before.
         val completeMetadata = metadataInProgress.copy(status = SnapshotStatus.COMPLETE)
 
         val archivePath = ArchiveUtil.archiveFolderAndMetadata(dataFolderPath, completeMetadata)

@@ -110,9 +110,9 @@ class BlogTypeActivity : AppCompatActivity() {
         }
     }
 
-    fun artifactExists(intent: Intent) = getArtifactIdFromIntent(intent) > 0
+    fun artifactExists(intent: Intent?) = getArtifactIdFromIntent(intent) > 0
 
-    fun snapshotDataExists(intent: Intent) = artifactExists(intent) && !getDateFromIntent(intent).isEmpty()
+    fun snapshotDataExists(intent: Intent?) = artifactExists(intent) && !getDateFromIntent(intent).isEmpty()
             && IntegrityCore.metadataRepository.getSnapshotMetadata(
             getArtifactIdFromIntent(intent), getDateFromIntent(intent))
             .status != SnapshotStatus.BLUEPRINT
@@ -194,12 +194,12 @@ class BlogTypeActivity : AppCompatActivity() {
             .replace("[", "")
             .replace("]", "")
 
-    fun getArtifactIdFromIntent(intent: Intent): Long {
-        return intent.getLongExtra("artifactId", -1)
+    fun getArtifactIdFromIntent(intent: Intent?): Long {
+        return intent?.getLongExtra("artifactId", -1) ?: -1
     }
 
-    fun getDateFromIntent(intent: Intent): String {
-        var date: String? = intent.getStringExtra("date")
+    fun getDateFromIntent(intent: Intent?): String {
+        var date: String? = intent?.getStringExtra("date")
         if (date == null) {
             date = ""
         }

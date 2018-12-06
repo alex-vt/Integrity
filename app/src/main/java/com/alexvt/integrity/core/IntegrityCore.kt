@@ -276,24 +276,27 @@ object IntegrityCore {
                 progressMessage = "Compressing data"
         ))
 
-        val archivePath = ArchiveUtil.archiveFolderAndMetadata(dataFolderPath, metadataInProgress)
+        // switching over to complete metadata to archive with data
+        val completeMetadata = metadataInProgress.copy(status = SnapshotStatus.COMPLETE)
+
+        val archivePath = ArchiveUtil.archiveFolderAndMetadata(dataFolderPath, completeMetadata)
         val archiveHashPath = "$archivePath.sha1"
         DataCacheFolderUtil.writeTextToFile(HashUtil.getFileHash(archivePath), archiveHashPath)
 
-        metadataInProgress.archiveFolderLocations.forEachIndexed { index, dataArchiveLocation -> run {
+        completeMetadata.archiveFolderLocations.forEachIndexed { index, dataArchiveLocation -> run {
             if (!jobCoroutineContext.isActive) {
                 return
             }
             jobProgressListener.invoke(JobProgress(
                     progressMessage = "Saving archive to " + dataArchiveLocation + " "
-                            + (index + 1) + " of " + metadataInProgress.archiveFolderLocations
+                            + (index + 1) + " of " + completeMetadata.archiveFolderLocations
             ))
             getFileLocationUtil(dataArchiveLocation).writeArchive(
                     sourceArchivePath = archivePath,
                     sourceHashPath = archiveHashPath,
-                    artifactId = metadataInProgress.artifactId,
-                    artifactAlias = getArtifactAlias(metadataInProgress.title),
-                    date = metadataInProgress.date,
+                    artifactId = completeMetadata.artifactId,
+                    artifactAlias = getArtifactAlias(completeMetadata.title),
+                    date = completeMetadata.date,
                     archiveFolderLocation = dataArchiveLocation
             )
         } }
@@ -301,11 +304,10 @@ object IntegrityCore {
             return
         }
 
-        val completeMetadata = metadataInProgress.copy(status = SnapshotStatus.COMPLETE)
         jobProgressListener.invoke(JobProgress(
                 progressMessage = "Saving metadata to database"
         ))
-        // replacing incomplete metadata with complete one in database
+        // finally replacing incomplete metadata with complete one in database
         SimplePersistableMetadataRepository.removeSnapshotMetadata(metadataInProgress.artifactId,
                 metadataInProgress.date)
         SimplePersistableMetadataRepository.addSnapshotMetadata(completeMetadata)

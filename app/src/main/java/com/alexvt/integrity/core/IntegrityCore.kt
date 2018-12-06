@@ -272,9 +272,12 @@ object IntegrityCore {
         if (!jobCoroutineContext.isActive) {
             return
         }
-        jobProgressListener.invoke(JobProgress(
-                progressMessage = "Compressing data"
-        ))
+
+        GlobalScope.launch(Dispatchers.Main) { // todo rework threads
+            jobProgressListener.invoke(JobProgress(
+                    progressMessage = "Compressing data"
+            ))
+        }
 
         // switching over to complete metadata to archive with data
         val completeMetadata = metadataInProgress.copy(status = SnapshotStatus.COMPLETE)
@@ -287,10 +290,12 @@ object IntegrityCore {
             if (!jobCoroutineContext.isActive) {
                 return
             }
-            jobProgressListener.invoke(JobProgress(
-                    progressMessage = "Saving archive to " + dataArchiveLocation + " "
-                            + (index + 1) + " of " + completeMetadata.archiveFolderLocations
-            ))
+            GlobalScope.launch(Dispatchers.Main) {
+                jobProgressListener.invoke(JobProgress(
+                        progressMessage = "Saving archive to " + dataArchiveLocation + " "
+                                + (index + 1) + " of " + completeMetadata.archiveFolderLocations.size
+                ))
+            }
             getFileLocationUtil(dataArchiveLocation).writeArchive(
                     sourceArchivePath = archivePath,
                     sourceHashPath = archiveHashPath,

@@ -187,11 +187,12 @@ object WebViewUtil {
         }
 
         webView.webChromeClient = object : WebChromeClient() {
-            var previousProgress = 0 // for dealing with possible multiple progress == 100
+            var loaded = false // for dealing with possible multiple progress == 100
 
             override fun onProgressChanged(view: WebView, progress: Int) {
                 Log.d("WebViewUtil", "Loading " + progress + "%: " + view.url)
-                if (progress == 100 && previousProgress != 100) {
+                if (progress == 100 && !loaded) {
+                    loaded = true
                     GlobalScope.launch(Dispatchers.Main) {
                         delay(loadIntervalMillis)
                         webView.saveWebArchive(webArchivePath, false) {
@@ -201,7 +202,6 @@ object WebViewUtil {
                     }
                     Log.d("WebViewUtil", "saveWebArchive started")
                 }
-                previousProgress = progress
             }
 
             override fun onConsoleMessage(cm: ConsoleMessage): Boolean {

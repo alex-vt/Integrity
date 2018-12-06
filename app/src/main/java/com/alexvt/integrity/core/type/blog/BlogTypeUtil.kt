@@ -39,7 +39,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                         progressMessage = "Collecting links for page:\n${blogMetadata.url}"
                 ))
                 urlsToDownload.addAll(getPageLinks(
-                        webView, blogMetadata.url, blogMetadata.url,
+                        webView, blogMetadata.url,
                         blogMetadata.relatedPageLinksUsed,
                         blogMetadata.relatedPageLinksPattern,
                         blogMetadata.loadImages, blogMetadata.desktopSite
@@ -56,7 +56,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                                     "of ${blogMetadata.pagination.limit}:\n$pageUrl"
                     ))
                     urlsToDownload.addAll(getPageLinks(
-                            webView, blogMetadata.url, pageUrl,
+                            webView, pageUrl,
                             blogMetadata.relatedPageLinksUsed,
                             blogMetadata.relatedPageLinksPattern,
                             blogMetadata.loadImages, blogMetadata.desktopSite
@@ -86,14 +86,14 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
      * and firstPageUrl to match links with (must contain it),
      * according to cssSelector.
      */
-    private suspend fun getPageLinks(webView: WebView, firstPageUrl: String, pageUrl: String,
+    private suspend fun getPageLinks(webView: WebView, pageUrl: String,
                                      selectRelatedLinks: Boolean, cssSelector: String,
                                      loadImages: Boolean, desktopSite: Boolean): Set<String> {
         val pageHtml = WebViewUtil.loadHtml(webView, pageUrl, loadImages, desktopSite, setOf())
         val relatedPageUrls = linkedSetOf(pageUrl)
         if (selectRelatedLinks) {
-            val selectedLinkMap = LinkUtil.getCssSelectedLinkMap(pageHtml, cssSelector, firstPageUrl)
-            Log.d("BlogDataTypeUtil", "getPageLinks: selectRelatedLinks = ${selectedLinkMap}")
+            val selectedLinkMap = LinkUtil.getCssSelectedLinkMap(pageHtml, cssSelector, pageUrl)
+            Log.d("BlogDataTypeUtil", "getPageLinks: selectRelatedLinks = ${selectedLinkMap.keys}")
             relatedPageUrls.addAll(selectedLinkMap.keys)
         }
         Log.d("BlogDataTypeUtil", "getPageLinks: Obtained ${relatedPageUrls.size} links" +
@@ -101,5 +101,4 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                 " by pattern $cssSelector \nat page $pageUrl")
         return relatedPageUrls
     }
-
 }

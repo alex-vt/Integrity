@@ -55,8 +55,10 @@ interface MetadataRepository {
     fun getAllArtifactMetadata(): MetadataCollection
 
     /**
-     * Returns list of the latest snapshots (complete if there are any, blueprints otherwise)
-     * of metadata for all artifacts.
+     * Returns list of the latest snapshots
+     * of metadata for all artifacts:
+     *
+     * Complete ones if there are any, otherwise incomplete if there are any, otherwise blueprints.
      */
     fun getAllArtifactLatestMetadata(): MetadataCollection
 

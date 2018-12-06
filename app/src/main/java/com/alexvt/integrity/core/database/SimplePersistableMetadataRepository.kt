@@ -7,9 +7,7 @@
 package com.alexvt.integrity.core.database
 
 import android.content.Context
-import com.alexvt.integrity.core.MetadataCollection
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.SnapshotMetadata
+import com.alexvt.integrity.core.*
 import com.alexvt.integrity.core.util.HashUtil
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.core.util.PreferencesUtil
@@ -63,8 +61,8 @@ object SimplePersistableMetadataRepository: MetadataRepository {
         val artifactSnapshotMetadataList = allMetadata.snapshotMetadataList
                 .groupBy { it.artifactId }
                 .map { it.value
-                        // in every group, getting the latest of preferably non-blueprint snapshots
-                        .sortedWith(compareBy<SnapshotMetadata> { it.blueprint }
+                        // sort by status Complete->Incomplete->Blueprint, then by date descending
+                        .sortedWith(SnapshotCompareUtil.statusComparator
                                 .thenByDescending { it.date })
                         .first() }
                 .sortedByDescending { it.date }
@@ -99,7 +97,8 @@ object SimplePersistableMetadataRepository: MetadataRepository {
     }
 
     override fun cleanupArtifactBlueprints(artifactId: Long) {
-        allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId && it.blueprint }
+        allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId
+                && it.status == SnapshotStatus.BLUEPRINT }
         allMetadata = HashUtil.updateHash(allMetadata)
         persistAll()
     }

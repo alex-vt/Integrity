@@ -22,6 +22,7 @@ class App : android.app.Application() {
         IntegrityCore.init(this)
         IntegrityCore.registerFileLocationUtil(LocalFolderLocation::class.java, LocalArchiveLocationUtil())
         IntegrityCore.registerDataTypeUtil(BlogTypeMetadata::class.java, BlogTypeUtil())
+        //IntegrityCore.metadataRepository.clear()
 
         // todo add in app
         IntegrityCore.presetRepository.addFolderLocation(LocalFolderLocation("/storage/emulated/0/Integrity"))

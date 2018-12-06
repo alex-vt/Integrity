@@ -287,8 +287,9 @@ class BlogTypeActivity : AppCompatActivity() {
         val job = IntegrityCore.createSnapshotFromBlueprint(snapshot.artifactId, snapshot.date) {
             onJobProgress(it, materialDialogProgress)
         }
-        materialDialogProgress.negativeButton(text = "Cancel") {
+        materialDialogProgress.negativeButton(text = "Stop") {
             IntegrityCore.cancelJob(job)
+            finish()
         }
     }
 

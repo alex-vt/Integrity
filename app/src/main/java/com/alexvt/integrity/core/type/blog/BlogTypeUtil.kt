@@ -13,6 +13,7 @@ import com.alexvt.integrity.core.SnapshotMetadata
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.alexvt.integrity.core.type.DataTypeUtil
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlin.coroutines.CoroutineContext
 
@@ -40,6 +41,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                         snapshotDataDirectory = snapshotDataDirectory,
                         pageUrl = blogMetadata.url,
                         pageFullIndex = "",
+                        loadIntervalMillis = blogMetadata.loadIntervalMillis,
                         jobProgressListener = jobProgressListener,
                         jobCoroutineContext = jobCoroutineContext
                 )
@@ -52,6 +54,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                             snapshotDataDirectory = snapshotDataDirectory,
                             pageUrl = blogMetadata.url + blogMetadata.pagination.path + pageIndex,
                             pageFullIndex = " $pageIndex of ${blogMetadata.pagination.limit}",
+                            loadIntervalMillis = blogMetadata.loadIntervalMillis,
                             jobProgressListener = jobProgressListener,
                             jobCoroutineContext = jobCoroutineContext
                     )
@@ -77,7 +80,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
 
     private suspend fun collectLinksAtPage(webView: WebView, blogMetadata: BlogTypeMetadata,
                                            snapshotDataDirectory: String, pageUrl: String,
-                                           pageFullIndex: String,
+                                           pageFullIndex: String, loadIntervalMillis: Long,
                                            jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
                                            jobCoroutineContext: CoroutineContext) {
         if (!jobCoroutineContext.isActive) {
@@ -90,7 +93,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                 progressMessage = "Collecting links for page$pageFullIndex:\n$pageUrl"
         ))
         addLinksToFile(getPageLinks(
-                webView, pageUrl,
+                webView, pageUrl, loadIntervalMillis,
                 blogMetadata.relatedPageLinksUsed,
                 blogMetadata.relatedPageLinksPattern,
                 blogMetadata.loadImages, blogMetadata.desktopSite
@@ -120,12 +123,13 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
      * and firstPageUrl to match links with (must contain it),
      * according to cssSelector.
      */
-    private suspend fun getPageLinks(webView: WebView, pageUrl: String,
+    private suspend fun getPageLinks(webView: WebView, pageUrl: String, loadIntervalMillis: Long,
                                      selectRelatedLinks: Boolean, cssSelector: String,
                                      loadImages: Boolean, desktopSite: Boolean): Set<String> {
         val relatedPageUrls = linkedSetOf(pageUrl)
         if (selectRelatedLinks) {
             val pageHtml = WebViewUtil.loadHtml(webView, pageUrl, loadImages, desktopSite, setOf())
+            delay(loadIntervalMillis)
             val selectedLinkMap = LinkUtil.getCssSelectedLinkMap(pageHtml, cssSelector, pageUrl)
             Log.d("BlogDataTypeUtil", "getPageLinks: selectRelatedLinks = ${selectedLinkMap.keys}")
             relatedPageUrls.addAll(selectedLinkMap.keys)

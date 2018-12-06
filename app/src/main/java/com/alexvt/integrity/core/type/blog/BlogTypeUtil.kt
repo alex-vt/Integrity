@@ -123,9 +123,9 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
     private suspend fun getPageLinks(webView: WebView, pageUrl: String,
                                      selectRelatedLinks: Boolean, cssSelector: String,
                                      loadImages: Boolean, desktopSite: Boolean): Set<String> {
-        val pageHtml = WebViewUtil.loadHtml(webView, pageUrl, loadImages, desktopSite, setOf())
         val relatedPageUrls = linkedSetOf(pageUrl)
         if (selectRelatedLinks) {
+            val pageHtml = WebViewUtil.loadHtml(webView, pageUrl, loadImages, desktopSite, setOf())
             val selectedLinkMap = LinkUtil.getCssSelectedLinkMap(pageHtml, cssSelector, pageUrl)
             Log.d("BlogDataTypeUtil", "getPageLinks: selectRelatedLinks = ${selectedLinkMap.keys}")
             relatedPageUrls.addAll(selectedLinkMap.keys)

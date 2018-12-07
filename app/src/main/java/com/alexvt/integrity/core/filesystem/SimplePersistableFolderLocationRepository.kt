@@ -62,6 +62,12 @@ object SimplePersistableFolderLocationRepository : FolderLocationRepository {
             .firstOrNull { it.title == folderLocation.title }
             ?: EmptyLocationCredentials()
 
+    override fun removeFolderLocationAndCredentials(title: String) {
+        folderLocations.folderLocationSet.removeIf { it.title == title }
+        folderLocations.folderLocationCredentialsSet.removeIf { it.title == title }
+        persistAll()
+    }
+
     override fun clear() {
         folderLocations.folderLocationSet.clear()
         folderLocations.folderLocationCredentialsSet.clear()

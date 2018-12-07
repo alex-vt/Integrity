@@ -23,7 +23,7 @@ class ArtifactViewActivity : AppCompatActivity() {
         setContentView(R.layout.activity_artifact_view)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view -> createNewSnapshot(getArtifactId()) }
+        fab.setOnClickListener { view -> createNewSnapshot(getArtifactIdFromIntent(intent)) }
 
         rvSnapshotList.adapter = SnapshotRecyclerAdapter(ArrayList(), this)
     }
@@ -33,12 +33,14 @@ class ArtifactViewActivity : AppCompatActivity() {
         refreshSnapshotList()
     }
 
-    fun getArtifactId(): Long = MainActivity.getArtifactIdFromIntent(intent)
+    fun getArtifactIdFromIntent(intent: Intent?): Long {
+        return intent?.getLongExtra("artifactId", -1) ?: -1
+    }
 
     private fun refreshSnapshotList() {
-        (rvSnapshotList.adapter as SnapshotRecyclerAdapter)
-                .setItems(IntegrityCore.metadataRepository.getArtifactMetadata(getArtifactId())
-                        .snapshotMetadataList)
+        (rvSnapshotList.adapter as SnapshotRecyclerAdapter).setItems(IntegrityCore
+                .metadataRepository.getArtifactMetadata(getArtifactIdFromIntent(intent))
+                .snapshotMetadataList)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

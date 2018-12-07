@@ -42,6 +42,8 @@ interface FolderLocationRepository {
      */
     fun getAllFolderLocations(): List<FolderLocation>
 
+    fun removeFolderLocationAndCredentials(title: String)
+
     /**
      * Deletes all folder locations and credentials from database
      */

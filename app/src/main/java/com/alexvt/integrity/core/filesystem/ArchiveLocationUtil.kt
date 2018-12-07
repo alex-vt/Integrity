@@ -6,6 +6,7 @@
 
 package com.alexvt.integrity.core.filesystem
 
+import android.app.Activity
 import com.alexvt.integrity.core.FolderLocation
 
 /**
@@ -16,6 +17,14 @@ interface ArchiveLocationUtil<F: FolderLocation> {
     fun getFolderLocationLabel(): String
 
     fun getFolderLocationDescription(folderLocation: F): String
+
+    /**
+     * Gets class of activity responsible for (starting) viewing or editing this file location
+     *
+     * Activity should accept in intent:
+     * title of file location to view/edit.
+     */
+    fun getViewMainActivityClass(): Class<out Activity>
 
     /**
      * Writes file from sourceFilePath

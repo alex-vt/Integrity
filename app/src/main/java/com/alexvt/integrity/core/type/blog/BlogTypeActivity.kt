@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItems
 import com.alexvt.integrity.R
+import com.alexvt.integrity.activity.FolderLocationsActivity
 import com.alexvt.integrity.core.FolderLocation
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.SnapshotMetadata
@@ -134,6 +135,9 @@ class BlogTypeActivity : AppCompatActivity() {
         bArchiveLocation.isEnabled = isEditable
         bArchiveLocation.setOnClickListener { askAddArchiveLocation() }
 
+        bManageArchiveLocations.isEnabled = isEditable
+        bManageArchiveLocations.setOnClickListener { openArchiveLocationList() }
+
         supportActionBar!!.subtitle = snapshot.title
 
         etLinkPattern.isEnabled = isEditable
@@ -178,6 +182,10 @@ class BlogTypeActivity : AppCompatActivity() {
             }
         }
         bContinueSaving.setOnClickListener { saveSnapshotAndFinish() }
+    }
+
+    fun openArchiveLocationList() {
+        startActivity(Intent(this, FolderLocationsActivity::class.java))
     }
 
     fun askAddArchiveLocation() {

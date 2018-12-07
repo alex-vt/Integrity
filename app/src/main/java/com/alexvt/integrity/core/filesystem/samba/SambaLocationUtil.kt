@@ -6,6 +6,7 @@
 
 package com.alexvt.integrity.core.filesystem.samba
 
+import android.app.Activity
 import android.util.Log
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
@@ -18,12 +19,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
 
-open class SambaFolderLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
+open class SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
 
     override fun getFolderLocationLabel() = "Samba"
 
     override fun getFolderLocationDescription(folderLocation: SambaFolderLocation)
             = folderLocation.fullPath
+
+    override fun getViewMainActivityClass() = SambaLocationActivity::class.java
 
     override fun writeArchive(sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,

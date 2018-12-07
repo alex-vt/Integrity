@@ -125,6 +125,18 @@ object IntegrityCore {
     }
 
     /**
+     * Returns intent for editing archive location defined by title.
+     */
+    fun getFolderLocationEditIntent(context: Context, title: String): Intent {
+        val folderLocation = SimplePersistableFolderLocationRepository.getAllFolderLocations()
+                .first { it.title == title }
+        val activityClass = getFileLocationUtil(folderLocation).getViewMainActivityClass()
+        val typeViewCreateIntent = Intent(context, activityClass)
+        typeViewCreateIntent.putExtra("title", title)
+        return typeViewCreateIntent
+    }
+
+    /**
      * Removes artifact specified by artifact ID, with all its snapshots metadata.
      * Optionally removes snapshot data as well.
      */
@@ -200,6 +212,16 @@ object IntegrityCore {
             .toSortedMap()
 
     /**
+     * Gets alphabetically sorted map of labels of registered folder location types
+     * to intents of main view activities for these folder location types.
+     */
+    fun getNamedFileLocationCreateIntentMap(context: Context): Map<String, Intent>
+            = archiveLocationUtilMap.map { it -> Pair(it.value.getFolderLocationLabel(),
+            Intent(context, it.value.getViewMainActivityClass())) }
+            .toMap()
+            .toSortedMap()
+
+    /**
      * Gets alphabetically sorted map of names of archive locations saved by user
      * to the archive locations themselves.
      */
@@ -216,7 +238,7 @@ object IntegrityCore {
             .toMap()
             .toSortedMap()
 
-    private fun getFolderLocationName(folderLocation: FolderLocation) = folderLocation.title +
+    fun getFolderLocationName(folderLocation: FolderLocation) = folderLocation.title +
             " (" + getFileLocationUtil(folderLocation).getFolderLocationLabel() + "): " +
             getFileLocationUtil(folderLocation).getFolderLocationDescription(folderLocation)
 

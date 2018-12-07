@@ -91,6 +91,10 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
+            R.id.action_folder_locations -> {
+                viewFolderLocations()
+                true
+            }
             R.id.action_delete_all -> {
                 askRemoveAll()
                 true
@@ -99,21 +103,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun viewArtifact(artifactId: Long) {
-        val intent = Intent(this, ArtifactViewActivity::class.java)
-        intent.putExtra(INTENT_ARTIFACT_ID, artifactId)
-        startActivity(intent)
+    fun viewFolderLocations() {
+        startActivity(Intent(this, FolderLocationsActivity::class.java))
     }
 
-    companion object {
-        val INTENT_ARTIFACT_ID = "artifactId"
-        fun getArtifactIdFromIntent(intent: Intent): Long {
-            return intent.getLongExtra(INTENT_ARTIFACT_ID, -1)
-        }
-
-        val INTENT_DATE = "date"
-        fun getDataFromIntent(intent: Intent): String {
-            return intent.getStringExtra(INTENT_DATE)
-        }
+    fun viewArtifact(artifactId: Long) {
+        val intent = Intent(this, ArtifactViewActivity::class.java)
+        intent.putExtra("artifactId", artifactId)
+        startActivity(intent)
     }
 }

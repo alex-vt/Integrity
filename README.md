@@ -132,6 +132,31 @@ Storage destinations:
 * Local network (Samba)
 
 
+### Roadmap
+
+*Sketch*
+
+Stage 1
+
+* Storage credentials manager
+* Data locations (storage) manager
+* Active jobs manager
+* Log
+* Error handling
+* Plugins support
+* Main screen
+
+Stage 2
+
+* UI design
+* Snapshot timeline
+* Universal search
+* Version migration
+* Conventional architecture
+* Testing
+* Data analyzers
+
+
 ### License
 
 This Source Code Form is subject to the terms of the Mozilla Public

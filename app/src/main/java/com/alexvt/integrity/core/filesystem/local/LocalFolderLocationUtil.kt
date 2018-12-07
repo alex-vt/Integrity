@@ -4,22 +4,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.core.filesystem
+package com.alexvt.integrity.core.filesystem.local
 
 import android.util.Log
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
 import com.snatik.storage.Storage
 import java.io.File
 
 open class LocalFolderLocationUtil : ArchiveLocationUtil<LocalFolderLocation> {
 
-    override fun getFolderLocationTypeName(): String {
-        return "Files on device"
-    }
+    override fun getFolderLocationLabel() = "Local"
 
-    override fun getFolderLocationDescription(folderLocation: LocalFolderLocation): String {
-        return folderLocation.folderPath
-    }
+    override fun getFolderLocationDescription(folderLocation: LocalFolderLocation)
+            = folderLocation.folderPath
 
     override fun writeArchive(sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,

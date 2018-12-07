@@ -20,21 +20,21 @@ import kotlinx.coroutines.runBlocking
 
 open class SambaFolderLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
 
-    override fun getFolderLocationTypeName(): String {
-        return "Files on local network (Samba)"
-    }
+    override fun getFolderLocationLabel() = "Samba"
 
-    override fun getFolderLocationDescription(folderLocation: SambaFolderLocation): String {
-        return folderLocation.fullPath
-    }
+    override fun getFolderLocationDescription(folderLocation: SambaFolderLocation)
+            = folderLocation.fullPath
 
     override fun writeArchive(sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,
                               archiveFolderLocation: SambaFolderLocation) {
         Log.d("SambaFolderLocationUtil", "writeArchive")
         runBlocking(Dispatchers.Default) {
+            val sambaFolderLocationCredentials = IntegrityCore.folderLocationRepository
+                    .getCredentials(archiveFolderLocation) as SambaFolderLocationCredentials
             val sambaAuth = NtlmPasswordAuthentication(
-                    null, archiveFolderLocation.user, archiveFolderLocation.password)
+                    null, sambaFolderLocationCredentials.user,
+                    sambaFolderLocationCredentials.password)
 
             val destinationArtifactFolderPath = archiveFolderLocation.fullPath + File.separator +
                     artifactAlias + "_" + artifactId

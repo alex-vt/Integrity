@@ -8,9 +8,10 @@ package com.alexvt.integrity
 
 import android.util.Log
 import com.alexvt.integrity.core.*
-import com.alexvt.integrity.core.filesystem.LocalFolderLocation
-import com.alexvt.integrity.core.filesystem.LocalFolderLocationUtil
+import com.alexvt.integrity.core.filesystem.local.LocalFolderLocation
+import com.alexvt.integrity.core.filesystem.local.LocalFolderLocationUtil
 import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocation
+import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocationCredentials
 import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocationUtil
 import com.alexvt.integrity.core.type.blog.BlogTypeUtil
 import com.alexvt.integrity.core.type.blog.BlogTypeMetadata
@@ -27,10 +28,16 @@ class App : android.app.Application() {
         IntegrityCore.registerDataTypeUtil(BlogTypeMetadata::class.java, BlogTypeUtil())
         //IntegrityCore.metadataRepository.clear()
 
+        /*
         // todo add in app
-        //IntegrityCore.presetRepository.clear()
-        IntegrityCore.presetRepository.addFolderLocation(LocalFolderLocation("/storage/emulated/0/Integrity"))
-        //IntegrityCore.presetRepository.addFolderLocation(SambaFolderLocation("user", "password", "smb://path"))
+        IntegrityCore.folderLocationRepository.clear()
+        IntegrityCore.folderLocationRepository.addFolderLocation(
+                LocalFolderLocation("Device storage", "/storage/emulated/0/Integrity"))
+        val sambaId = IntegrityCore.folderLocationRepository.addFolderLocation(
+                SambaFolderLocation("Samba server", "smb://path"))
+        IntegrityCore.folderLocationRepository.addFolderLocationCredentials(
+                SambaFolderLocationCredentials(sambaId, "user", "password"))
+        */
 
         Log.d("initialized", "Initialized")
     }

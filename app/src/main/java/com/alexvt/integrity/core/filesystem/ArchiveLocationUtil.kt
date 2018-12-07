@@ -13,7 +13,7 @@ import com.alexvt.integrity.core.FolderLocation
  */
 interface ArchiveLocationUtil<F: FolderLocation> {
 
-    fun getFolderLocationTypeName(): String
+    fun getFolderLocationLabel(): String
 
     fun getFolderLocationDescription(folderLocation: F): String
 

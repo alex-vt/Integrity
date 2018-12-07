@@ -12,8 +12,8 @@ import android.content.Intent
 import com.alexvt.integrity.core.database.MetadataRepository
 import com.alexvt.integrity.core.database.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
-import com.alexvt.integrity.core.filesystem.PresetRepository
-import com.alexvt.integrity.core.filesystem.SimplePersistablePresetRepository
+import com.alexvt.integrity.core.filesystem.FolderLocationRepository
+import com.alexvt.integrity.core.filesystem.SimplePersistableFolderLocationRepository
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.job.LongRunningJob
 import com.alexvt.integrity.core.job.CoroutineJobManager
@@ -31,7 +31,7 @@ import kotlin.coroutines.CoroutineContext
 object IntegrityCore {
 
     lateinit var metadataRepository: MetadataRepository
-    lateinit var presetRepository: PresetRepository
+    lateinit var folderLocationRepository: FolderLocationRepository
 
     lateinit var context: Context
 
@@ -42,8 +42,8 @@ object IntegrityCore {
         this.context = context
         metadataRepository = SimplePersistableMetadataRepository // todo replace with database
         metadataRepository.init(context)
-        presetRepository = SimplePersistablePresetRepository // todo replace with database
-        presetRepository.init(context)
+        folderLocationRepository = SimplePersistableFolderLocationRepository // todo replace with database
+        folderLocationRepository.init(context)
     }
 
     /**
@@ -200,26 +200,24 @@ object IntegrityCore {
             .toSortedMap()
 
     /**
-     * Gets alphabetically sorted map of given archive location names
-     * to the archive locations themselves.
-     */
-    fun getNamedFolderLocationMap(folderLocations: Collection<FolderLocation>): Map<String, FolderLocation> {
-        return folderLocations
-                .map { it -> Pair(getFolderLocationName(it), it) }
-                .toMap()
-                .toSortedMap()
-    }
-
-    /**
      * Gets alphabetically sorted map of names of archive locations saved by user
      * to the archive locations themselves.
      */
-    fun getNamedFolderLocationMap(): Map<String, FolderLocation> {
-        return getNamedFolderLocationMap(presetRepository.getAllFolderLocations())
-    }
+    fun getNamedFolderLocationMap()
+            = getNamedFolderLocationMap(folderLocationRepository.getAllFolderLocations())
 
-    private fun getFolderLocationName(folderLocation: FolderLocation)
-            = getFileLocationUtil(folderLocation).getFolderLocationTypeName() + " in " +
+    /**
+     * Gets alphabetically sorted map of given archive location names
+     * to the archive locations themselves.
+     */
+    fun getNamedFolderLocationMap(folderLocations: Collection<FolderLocation>)
+            = folderLocations
+            .map { it -> Pair(getFolderLocationName(it), it) }
+            .toMap()
+            .toSortedMap()
+
+    private fun getFolderLocationName(folderLocation: FolderLocation) = folderLocation.title +
+            " (" + getFileLocationUtil(folderLocation).getFolderLocationLabel() + "): " +
             getFileLocationUtil(folderLocation).getFolderLocationDescription(folderLocation)
 
     private val archiveLocationUtilMap: MutableMap<String, ArchiveLocationUtil<*>> = HashMap()
@@ -318,6 +316,7 @@ object IntegrityCore {
                 metadataInProgress.date)
         SimplePersistableMetadataRepository.addSnapshotMetadata(completeMetadata)
         DataCacheFolderUtil.clearFiles() // folders remain
+
 
         if (jobCoroutineContext.isActive) {
             jobProgressListener.invoke(JobProgress(

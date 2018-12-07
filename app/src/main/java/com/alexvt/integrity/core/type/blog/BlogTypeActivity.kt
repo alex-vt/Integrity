@@ -196,10 +196,9 @@ class BlogTypeActivity : AppCompatActivity() {
         tvArchiveLocations.text = getArchiveLocationsText(snapshot.archiveFolderLocations)
     }
 
-    fun getArchiveLocationsText(folderLocations: Collection<FolderLocation>): String
-            = IntegrityCore.getNamedFolderLocationMap(folderLocations).keys.toString()
-            .replace("[", "")
-            .replace("]", "")
+    fun getArchiveLocationsText(folderLocations: Collection<FolderLocation>)
+            = IntegrityCore.getNamedFolderLocationMap(folderLocations).keys
+            .joinToString(", ")
 
     fun getArtifactIdFromIntent(intent: Intent?): Long {
         return intent?.getLongExtra("artifactId", -1) ?: -1

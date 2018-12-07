@@ -7,30 +7,18 @@
 package com.alexvt.integrity.core.filesystem.samba
 
 import com.alexvt.integrity.core.FolderLocation
+import com.alexvt.integrity.core.FolderLocationCredentials
 
 /**
  * A location in Samba filesystem, defined by path, user name and password
  */
 data class SambaFolderLocation(
-        val user: String,
-        val password: String,
-        val fullPath: String
-): FolderLocation() {
-    constructor() : this("", "", "")
+        override val title: String = "",
+        val fullPath: String = ""
+): FolderLocation()
 
-    override fun hashCode(): Int {
-        return SambaFolderLocation::class.java.name.hashCode() + fullPath.hashCode() + user.hashCode()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return if (other is SambaFolderLocation) {
-            other.hashCode() == hashCode()
-        } else {
-            false
-        }
-    }
-
-    override fun toString(): String {
-        return fullPath
-    }
-}
+data class SambaFolderLocationCredentials(
+        override val title: String = "",
+        val user: String = "",
+        val password: String = ""
+): FolderLocationCredentials()

@@ -8,13 +8,14 @@ package com.alexvt.integrity.core.filesystem
 
 import android.content.Context
 import com.alexvt.integrity.core.FolderLocation
+import com.alexvt.integrity.core.FolderLocationCredentials
 import com.alexvt.integrity.core.MetadataCollection
 import com.alexvt.integrity.core.SnapshotMetadata
 
 /**
- * Manager of repository of presets for creating artifact snapshots
+ * Manager of repository of folder locations for saving artifact snapshots to
  */
-interface PresetRepository {
+interface FolderLocationRepository {
     /**
      * Prepares database for use
      */
@@ -22,9 +23,19 @@ interface PresetRepository {
 
     /**
      * Adds a unique folder location to choose archive destination from.
-     * Adding the existing one does nothing.
+     * Returns folder location ID
      */
-    fun addFolderLocation(folderLocation: FolderLocation)
+    fun addFolderLocation(folderLocation: FolderLocation): String
+
+    /**
+     * Adds folder location credentials which are stored separately.
+     */
+    fun addFolderLocationCredentials(folderLocationCredentials: FolderLocationCredentials)
+
+    /**
+     * Gets credentials for the provided folder location. If none, returns empty ones.
+     */
+    fun getCredentials(folderLocation: FolderLocation): FolderLocationCredentials
 
     /**
      * Gets all unique folder locations to choose archive destination from
@@ -32,7 +43,7 @@ interface PresetRepository {
     fun getAllFolderLocations(): List<FolderLocation>
 
     /**
-     * Deletes all folder locations from database
+     * Deletes all folder locations and credentials from database
      */
     fun clear()
 }

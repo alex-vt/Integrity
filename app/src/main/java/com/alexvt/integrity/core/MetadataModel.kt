@@ -64,7 +64,22 @@ data class MetadataCollection(val snapshotMetadataList: ArrayList<SnapshotMetada
  * Archive location is defined in different ways
  * depending on if a local or some kind of remote filesystem is used.
  */
-abstract class FolderLocation
+abstract class FolderLocation {
+    abstract val title: String
+}
+
+/**
+ * Archive location credentials are stored separately from location, but with the same title.
+ * Not stored in data archives.
+ */
+abstract class FolderLocationCredentials {
+    abstract val title: String
+}
+
+/**
+ * Credentials placeholder
+ */
+data class EmptyLocationCredentials(override val title: String = ""): FolderLocationCredentials()
 
 /**
  * Content type specific part of metadata, describes the corresponding data.

@@ -138,8 +138,7 @@ Storage destinations:
 
 Stage 1
 
-* Storage credentials manager
-* Data locations (storage) manager
+* Storage manager
 * Active jobs manager
 * Log
 * Error handling

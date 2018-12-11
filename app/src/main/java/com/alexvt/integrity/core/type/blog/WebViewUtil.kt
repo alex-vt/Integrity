@@ -16,6 +16,7 @@ import android.webkit.ConsoleMessage
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 import android.webkit.WebSettings
+import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 
 
@@ -73,8 +74,9 @@ object WebViewUtil {
 
         webView.webChromeClient = object : WebChromeClient() {
             var previousProgress = 0 // for dealing with possible multiple progress == 100
+
             override fun onProgressChanged(view: WebView, progress: Int) {
-                Log.d("WebViewUtil", "Loading " + progress + "%: " + view.url)
+                Log.v("WebViewUtil", "Loading " + progress + "%: " + view.url)
                 if (progress == 100 && previousProgress != 100) {
                     Log.d("WebViewUtil", "Loading complete: ${view.url}")
                     if (view.url.startsWith("http")) {
@@ -107,7 +109,7 @@ object WebViewUtil {
      *
      * Locally stored web archives have names
      * that contain the corresponding web page link hash codes.
-      */
+     */
     private fun isLocallySavedLinkHit(localLinkHashes: Collection<String>, url: String)
             = localLinkHashes.contains(url.hashCode().toString())
 
@@ -153,40 +155,63 @@ object WebViewUtil {
         webView.settings.builtInZoomControls = enabled
     }
 
-    suspend fun saveArchives(webView: WebView, urlToArchivePathMap: Map<String, String>,
+    suspend fun saveArchives(webView: WebView, urlsToDownload: Set<String>,
+                             snapshotPath: String,
+                             isFirstPage: Boolean,
+                             paginationProgressText: String,
                              loadIntervalMillis: Long, loadImages: Boolean, desktopSite: Boolean,
                              jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
                              jobCoroutineContext: CoroutineContext) {
-        urlToArchivePathMap.entries.forEachIndexed { index, entry -> run {
-            if (!jobCoroutineContext.isActive) {
-                return
+        val urlToArchivePathMap = mapOf<String, String>()
+                .plus(
+                        urlsToDownload
+                                .take(1) // first archive of the first page is named differently
+                                .associate { it to getArchiveName(it, snapshotPath, isFirstPage) }
+                ).plus(
+                        urlsToDownload
+                                .drop(1)
+                                .associate { it to getArchiveName(it, snapshotPath) }
+                )
+
+        urlToArchivePathMap.entries.forEachIndexed { index, entry ->
+            run {
+                if (!jobCoroutineContext.isActive) {
+                    return
+                }
+                if (!webArchiveDownloadComplete(urlToArchivePathMap.values.toList(), index)) {
+                    IntegrityCore.postProgress(jobProgressListener,
+                            "Saving web archive " + (index + 1) + " of "
+                                    + urlToArchivePathMap.size + "\n"
+                                    + paginationProgressText)
+                    saveArchive(webView = webView, url = entry.key, webArchivePath = entry.value,
+                            loadIntervalMillis = loadIntervalMillis, loadImages = loadImages,
+                            desktopSite = desktopSite)
+                }
             }
-            if (!webArchiveDownloadComplete(urlToArchivePathMap.values.toList(), index)) {
-                Log.d("WebViewUtil", "saveArchives: saving " )
-                jobProgressListener.invoke(JobProgress(
-                        progressMessage = "Saving web archive " + (index + 1) + " of "
-                                + urlToArchivePathMap.size
-                ))
-                saveArchive(webView = webView, url = entry.key, webArchivePath = entry.value,
-                        loadIntervalMillis = loadIntervalMillis, loadImages = loadImages,
-                        desktopSite = desktopSite)
-            }
-        } }
+        }
     }
+
+    /**
+     * First archive in snapshot should be named index.mht
+     */
+    private fun getArchiveName(url: String, snapshotPath: String, isFirstPage: Boolean = false) =
+            if (isFirstPage) {
+                "$snapshotPath/index.mht"
+            } else {
+                "$snapshotPath/page_${url.hashCode()}.mht"
+            }
 
     /**
      * Web archive is considered fully downloaded when the next one exists.
      */
-    private fun webArchiveDownloadComplete(webArchivePaths: List<String>, index: Int)
-            = index + 1 < webArchivePaths.size
+    private fun webArchiveDownloadComplete(webArchivePaths: List<String>, index: Int) = index + 1 < webArchivePaths.size
             && DataCacheFolderUtil.fileExists(webArchivePaths[index + 1])
 
     // Async "nature" of saveWebArchive propagated to caller methods as "sync" method
     // using suspend coroutine of Kotlin
     private suspend fun saveArchive(webView: WebView, url: String, webArchivePath: String,
                                     loadIntervalMillis: Long, loadImages: Boolean,
-                                    desktopSite: Boolean)
-            = suspendCoroutine<String> { continuation ->
+                                    desktopSite: Boolean) = suspendCoroutine<String> { continuation ->
         setupWebView(webView = webView, loadingOffline = false, loadImages = loadImages,
                 desktopSite = desktopSite)
 
@@ -198,21 +223,27 @@ object WebViewUtil {
         }
 
         webView.webChromeClient = object : WebChromeClient() {
-            var loaded = false // for dealing with possible multiple progress == 100
+            var previousProgress = 0 // for dealing with possible multiple progress == 100
 
             override fun onProgressChanged(view: WebView, progress: Int) {
-                Log.d("WebViewUtil", "Loading " + progress + "%: " + view.url)
-                if (progress == 100 && !loaded) {
-                    loaded = true
+                Log.v("WebViewUtil", "Loading " + progress + "%: " + view.url)
+                if (progress == 100 && previousProgress != 100) {
+                    webView.stopLoading()
                     GlobalScope.launch(Dispatchers.Main) {
                         delay(loadIntervalMillis)
+                        // always have some delay to prevent saveWebArchive from being stuck, todo investigate
                         webView.saveWebArchive(webArchivePath, false) {
                             Log.d("WebViewUtil", "saveWebArchive ended")
-                            continuation.resume(webArchivePath)
+                            try {
+                                continuation.resume(webArchivePath)
+                            } catch (t: Throwable) {
+                                Log.e("WebViewUtil", "saveWebArchive: already resumed")
+                            }
                         }
+                        Log.d("WebViewUtil", "saveWebArchive started")
                     }
-                    Log.d("WebViewUtil", "saveWebArchive started")
                 }
+                previousProgress = progress
             }
 
             override fun onConsoleMessage(cm: ConsoleMessage): Boolean {

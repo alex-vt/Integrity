@@ -9,6 +9,7 @@ package com.alexvt.integrity.core
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.alexvt.integrity.core.database.MetadataRepository
 import com.alexvt.integrity.core.database.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
@@ -74,7 +75,7 @@ object IntegrityCore {
                 .getSnapshotMetadata(blueprintSnapshotArtifactId, blueprintSnapshotDate)
                 .copy(status = SnapshotStatus.INCOMPLETE)
 
-        val coroutineJobId = CoroutineJobManager.addJob(GlobalScope.launch (Dispatchers.Main) {
+        val coroutineJobId = CoroutineJobManager.addJob(GlobalScope.launch (Dispatchers.Default) {
             createSnapshot(metadataInProgress, jobProgressListener, coroutineContext)
         })
         return LongRunningJob(coroutineJobId, metadataInProgress)
@@ -279,9 +280,7 @@ object IntegrityCore {
                 metadataInProgress.date)
         SimplePersistableMetadataRepository.addSnapshotMetadata(metadataInProgress)
 
-        jobProgressListener.invoke(JobProgress(
-                progressMessage = "Downloading data"
-        ))
+        postProgress(jobProgressListener, "Downloading data")
         val dataFolderPath = getDataTypeUtil(metadataInProgress.dataTypeSpecificMetadata)
                 .downloadData(metadataInProgress.artifactId,
                         metadataInProgress.date,
@@ -292,11 +291,7 @@ object IntegrityCore {
             return
         }
 
-        GlobalScope.launch(Dispatchers.Main) { // todo rework threads
-            jobProgressListener.invoke(JobProgress(
-                    progressMessage = "Compressing data"
-            ))
-        }
+        postProgress(jobProgressListener, "Compressing data")
 
         // Switching over to complete metadata to archive with data.
         // Note: starting from here existing data will be overwritten
@@ -311,12 +306,8 @@ object IntegrityCore {
             if (!jobCoroutineContext.isActive) {
                 return
             }
-            GlobalScope.launch(Dispatchers.Main) {
-                jobProgressListener.invoke(JobProgress(
-                        progressMessage = "Saving archive to " + dataArchiveLocation + " "
-                                + (index + 1) + " of " + completeMetadata.archiveFolderLocations.size
-                ))
-            }
+            postProgress(jobProgressListener, "Saving archive to " + dataArchiveLocation + " "
+                    + (index + 1) + " of " + completeMetadata.archiveFolderLocations.size)
             getFileLocationUtil(dataArchiveLocation).writeArchive(
                     sourceArchivePath = archivePath,
                     sourceHashPath = archiveHashPath,
@@ -330,9 +321,7 @@ object IntegrityCore {
             return
         }
 
-        jobProgressListener.invoke(JobProgress(
-                progressMessage = "Saving metadata to database"
-        ))
+        postProgress(jobProgressListener, "Saving metadata to database")
         // finally replacing incomplete metadata with complete one in database
         SimplePersistableMetadataRepository.removeSnapshotMetadata(metadataInProgress.artifactId,
                 metadataInProgress.date)
@@ -341,15 +330,30 @@ object IntegrityCore {
 
 
         if (jobCoroutineContext.isActive) {
-            jobProgressListener.invoke(JobProgress(
-                    progressMessage = "Done"
-            ))
+            postProgress(jobProgressListener, "Done")
             delay(800)
-            jobProgressListener.invoke(JobProgress(
-                    result = completeMetadata
-            ))
+            postResult(jobProgressListener, completeMetadata)
         }
         CoroutineJobManager.removeJob(jobCoroutineContext)
+    }
+
+    fun postProgress(jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit, message: String) {
+        Log.d("IntegrityCore", "Job progress: " + message)
+        GlobalScope.launch(Dispatchers.Main) {
+            jobProgressListener.invoke(JobProgress(
+                    progressMessage = message
+            ))
+        }
+    }
+
+    private fun postResult(jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
+                           result: SnapshotMetadata) {
+        Log.d("IntegrityCore", "Job result: " + result)
+        GlobalScope.launch(Dispatchers.Main) {
+            jobProgressListener.invoke(JobProgress(
+                    result = result
+            ))
+        }
     }
 
     /**

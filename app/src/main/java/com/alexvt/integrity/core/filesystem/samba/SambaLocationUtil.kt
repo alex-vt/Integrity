@@ -32,24 +32,22 @@ open class SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
                               artifactId: Long, artifactAlias: String, date: String,
                               archiveFolderLocation: SambaFolderLocation) {
         Log.d("SambaFolderLocationUtil", "writeArchive")
-        runBlocking(Dispatchers.Default) {
-            val sambaFolderLocationCredentials = IntegrityCore.folderLocationRepository
-                    .getCredentials(archiveFolderLocation) as SambaFolderLocationCredentials
-            val sambaAuth = NtlmPasswordAuthentication(
-                    null, sambaFolderLocationCredentials.user,
-                    sambaFolderLocationCredentials.password)
+        val sambaFolderLocationCredentials = IntegrityCore.folderLocationRepository
+                .getCredentials(archiveFolderLocation) as SambaFolderLocationCredentials
+        val sambaAuth = NtlmPasswordAuthentication(
+                null, sambaFolderLocationCredentials.user,
+                sambaFolderLocationCredentials.password)
 
-            val destinationArtifactFolderPath = archiveFolderLocation.fullPath + File.separator +
-                    artifactAlias + "_" + artifactId
-            createFolders(destinationArtifactFolderPath, sambaAuth)
+        val destinationArtifactFolderPath = archiveFolderLocation.fullPath + File.separator +
+                artifactAlias + "_" + artifactId
+        createFolders(destinationArtifactFolderPath, sambaAuth)
 
-            val destinationArchivePath = destinationArtifactFolderPath + File.separator +
-                    "artifact_" + artifactId + "_snapshot_" + date + ".zip"
-            copyFileToSamba(sourceArchivePath, sambaAuth, destinationArchivePath)
+        val destinationArchivePath = destinationArtifactFolderPath + File.separator +
+                "artifact_" + artifactId + "_snapshot_" + date + ".zip"
+        copyFileToSamba(sourceArchivePath, sambaAuth, destinationArchivePath)
 
-            val destinationHashPath = "$destinationArchivePath.sha1"
-            copyFileToSamba(sourceHashPath, sambaAuth, destinationHashPath)
-        }
+        val destinationHashPath = "$destinationArchivePath.sha1"
+        copyFileToSamba(sourceHashPath, sambaAuth, destinationHashPath)
     }
 
     private fun createFolders(folderPath: String, sambaAuth: NtlmPasswordAuthentication) {

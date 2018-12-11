@@ -28,7 +28,7 @@ object DataCacheFolderUtil {
                 .toSet()
     }
 
-    fun createSnapshotFolder(artifactId: Long, date: String): String {
+    fun ensureSnapshotFolder(artifactId: Long, date: String): String {
         val snapshotDataDirectory = getSnapshotFolderPath(artifactId, date)
         getStorage().createDirectory(snapshotDataDirectory, false)
         return snapshotDataDirectory

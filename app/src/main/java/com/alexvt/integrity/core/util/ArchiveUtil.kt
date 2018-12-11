@@ -17,6 +17,7 @@ object ArchiveUtil {
 
     fun archiveFolderAndMetadata(dataCacheFolderPath: String,
                                  snapshotMetadata: SnapshotMetadata): String {
+        // todo watch job cancellation, split archive
         val archiveMetadataJsonString = JsonSerializerUtil.toJson(snapshotMetadata)
 
         val storage = Storage(IntegrityCore.context)

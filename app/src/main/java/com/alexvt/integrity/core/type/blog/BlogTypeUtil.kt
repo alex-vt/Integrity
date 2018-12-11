@@ -87,7 +87,7 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
         val index = BlogTypeHelper.getPreviousPaginationLinks(snapshotPath).size + 1
         val count = BlogTypeHelper.getAllKnownPaginationLinks(blogMetadata).size
         if (count > 1) {
-            return "$forPageText ($index of $count)"
+            return "$forPageText\n($index of $count)"
         }
         return forPageText
     }

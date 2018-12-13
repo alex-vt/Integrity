@@ -25,6 +25,7 @@ import com.alexvt.integrity.core.SnapshotMetadata
 import com.alexvt.integrity.core.SnapshotStatus
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
+import com.jakewharton.rxbinding3.widget.checkedChanges
 import com.jakewharton.rxbinding3.widget.textChanges
 import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_blog_type.*
@@ -155,16 +156,36 @@ class BlogTypeActivity : AppCompatActivity() {
 
         cbUseRelatedLinks.isEnabled = isEditable
         cbUseRelatedLinks.isChecked = getTypeMetadata().relatedPageLinksUsed
-        cbUsePagination.isEnabled = isEditable
+        cbUsePagination.isEnabled = false // todo implement for both types of pagination
         cbUsePagination.isChecked = getTypeMetadata().paginationUsed
-        etPaginationPattern.isEnabled = isEditable
-        etPaginationPattern.setText(getTypeMetadata().pagination.path)
-        etPaginationStartIndex.isEnabled = isEditable
-        etPaginationStartIndex.setText(getTypeMetadata().pagination.startIndex.toString())
-        etPaginationStep.isEnabled = isEditable
-        etPaginationStep.setText(getTypeMetadata().pagination.step.toString())
-        etPaginationLimit.isEnabled = isEditable
-        etPaginationLimit.setText(getTypeMetadata().pagination.limit.toString())
+
+        sLinkedPagination.isEnabled = isEditable
+        sLinkedPagination.isChecked = isLinkedPagination()
+        sLinkedPagination.checkedChanges()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    // indexed pagination when editable and not checked
+                    etIndexedPaginationPattern.isEnabled = isEditable && !it
+                    etIndexedPaginationStartIndex.isEnabled = isEditable && !it
+                    etIndexedPaginationStep.isEnabled = isEditable && !it
+                    etIndexedPaginationLimit.isEnabled = isEditable && !it
+                    // linked pagination when editable and checked
+                    etLinkedPaginationPattern.isEnabled = isEditable && it
+                    etLinkedPaginationLimit.isEnabled = isEditable && it
+                }
+
+        val snapshotPagination = getTypeMetadata().pagination
+        val initialIndexedPagination = if (snapshotPagination is IndexedPagination)
+            snapshotPagination else IndexedPagination()
+        val initialLinkedPagination = if (snapshotPagination is LinkedPagination)
+            snapshotPagination else LinkedPagination()
+        etIndexedPaginationLimit.setText(initialIndexedPagination.limit.toString())
+        etIndexedPaginationStep.setText(initialIndexedPagination.step.toString())
+        etIndexedPaginationPattern.setText(initialIndexedPagination.path)
+        etIndexedPaginationStartIndex.setText(initialIndexedPagination.startIndex.toString())
+        etLinkedPaginationPattern.setText(initialLinkedPagination.pathPrefix)
+        etLinkedPaginationLimit.setText(initialLinkedPagination.limit.toString())
+
         etLoadInterval.isEnabled = isEditable
         etLoadInterval.setText((getTypeMetadata().loadIntervalMillis / 1000).toString())
 
@@ -183,6 +204,22 @@ class BlogTypeActivity : AppCompatActivity() {
         }
         bContinueSaving.setOnClickListener { saveSnapshotAndFinish() }
     }
+
+    fun getPaginationFromOptions() = if (sLinkedPagination.isChecked) {
+        LinkedPagination(
+                pathPrefix = etLinkedPaginationPattern.text.toString(),
+                limit = etLinkedPaginationLimit.text.toString().toInt()
+        )
+    } else {
+        IndexedPagination(
+                path = etIndexedPaginationPattern.text.toString(),
+                startIndex = etIndexedPaginationStartIndex.text.toString().toInt(),
+                step = etIndexedPaginationStep.text.toString().toInt(),
+                limit = etIndexedPaginationLimit.text.toString().toInt()
+        )
+    }
+
+    fun isLinkedPagination() = getTypeMetadata().pagination is LinkedPagination
 
     fun openArchiveLocationList() {
         startActivity(Intent(this, FolderLocationsActivity::class.java))
@@ -277,12 +314,7 @@ class BlogTypeActivity : AppCompatActivity() {
                         loadImages = cbLoadImages.isChecked,
                         desktopSite = cbDesktopSite.isChecked,
                         paginationUsed = cbUsePagination.isChecked,
-                        pagination = Pagination(
-                                path = etPaginationPattern.text.toString(),
-                                startIndex = etPaginationStartIndex.text.toString().toInt(),
-                                step = etPaginationStep.text.toString().toInt(),
-                                limit = etPaginationLimit.text.toString().toInt()
-                        ),
+                        pagination = getPaginationFromOptions(),
                         relatedPageLinksUsed = cbUseRelatedLinks.isChecked,
                         relatedPageLinksPattern = etLinkPattern.text.toString(),
                         loadIntervalMillis = etLoadInterval.text.toString().toInt() * 1000L

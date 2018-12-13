@@ -12,11 +12,14 @@ internal object BlogTypeHelper {
 
     fun getAllKnownPaginationLinks(blogMetadata: BlogTypeMetadata)
             = if (blogMetadata.paginationUsed) {
+        listOf(blogMetadata.url)
+        /* // todo support both types of pagination
         IntProgression.fromClosedRange(
                 blogMetadata.pagination.startIndex,
                 blogMetadata.pagination.limit,
                 blogMetadata.pagination.step
         ).map { blogMetadata.url + blogMetadata.pagination.path + it }
+        */
     } else {
         listOf(blogMetadata.url)
     }

@@ -320,6 +320,13 @@
                     android:text="Load multiple blog pages"
                     />
 
+                <Switch
+                    android:id="@+id/sLinkedPagination"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Follow links to next page"
+                    />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -327,7 +334,7 @@
                     />
 
                 <EditText
-                    android:id="@+id/etPaginationPattern"
+                    android:id="@+id/etIndexedPaginationPattern"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="/page/"
@@ -341,7 +348,7 @@
                     />
 
                 <EditText
-                    android:id="@+id/etPaginationStartIndex"
+                    android:id="@+id/etIndexedPaginationStartIndex"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="1"
@@ -355,7 +362,7 @@
                     />
 
                 <EditText
-                    android:id="@+id/etPaginationStep"
+                    android:id="@+id/etIndexedPaginationStep"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="1"
@@ -369,7 +376,35 @@
                     />
 
                 <EditText
-                    android:id="@+id/etPaginationLimit"
+                    android:id="@+id/etIndexedPaginationLimit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="5"
+                    android:inputType="numberDecimal"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Pattern to load next page"
+                    />
+
+                <EditText
+                    android:id="@+id/etLinkedPaginationPattern"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="/after="
+                    android:inputType="text"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Max pages to load"
+                    />
+
+                <EditText
+                    android:id="@+id/etLinkedPaginationLimit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="5"

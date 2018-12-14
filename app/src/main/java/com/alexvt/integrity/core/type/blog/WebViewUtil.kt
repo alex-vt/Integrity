@@ -18,6 +18,8 @@ import kotlin.coroutines.CoroutineContext
 import android.webkit.WebSettings
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
+import java.util.*
+import kotlin.concurrent.schedule
 
 
 /**
@@ -227,13 +229,16 @@ object WebViewUtil {
 
             override fun onProgressChanged(view: WebView, progress: Int) {
                 Log.v("WebViewUtil", "Loading " + progress + "%: " + view.url)
+                resetLoadingTimeoutTimer(webView)
                 if (progress == 100 && previousProgress != 100) {
                     webView.stopLoading()
                     GlobalScope.launch(Dispatchers.Main) {
                         delay(loadIntervalMillis)
                         // always have some delay to prevent saveWebArchive from being stuck, todo investigate
+                        maintainProcessPriority()
                         webView.saveWebArchive(webArchivePath, false) {
                             Log.d("WebViewUtil", "saveWebArchive ended")
+                            cancelLoadingTimeoutTimer()
                             try {
                                 continuation.resume(webArchivePath)
                             } catch (t: Throwable) {
@@ -254,5 +259,37 @@ object WebViewUtil {
         }
         webView.loadUrl(url)
         Log.d("WebViewUtil", "saveArchive: loading $url")
+    }
+
+
+    private fun maintainProcessPriority() {
+        val worstTargetProcessPriority = android.os.Process.THREAD_PRIORITY_MORE_FAVORABLE
+        val processId = android.os.Process.myTid()
+        val originalPriority = android.os.Process.getThreadPriority(processId)
+        if (originalPriority > worstTargetProcessPriority) {
+            android.os.Process.setThreadPriority(worstTargetProcessPriority)
+            Log.d("WebViewUtil", "maintaining thread priority: " +
+                    "$originalPriority -> ${android.os.Process.getThreadPriority(processId)}")
+        } else {
+            Log.d("WebViewUtil", "maintaining thread priority: " +
+                    "$originalPriority")
+        }
+    }
+
+    private var loadingTimeoutTimer: TimerTask = Timer().schedule(0) {}
+
+    private fun resetLoadingTimeoutTimer(webView: WebView) {
+        cancelLoadingTimeoutTimer()
+        val loadingTimeoutMillis = 15000L
+        loadingTimeoutTimer = Timer().schedule(loadingTimeoutMillis) {
+                    GlobalScope.launch(Dispatchers.Main) {
+                        Log.e("WebViewUtil", "saveWebArchive Reloading on timeout: ${webView.url}")
+                        webView.reload()
+                    }
+                }
+    }
+
+    private fun cancelLoadingTimeoutTimer() {
+        loadingTimeoutTimer.cancel()
     }
 }

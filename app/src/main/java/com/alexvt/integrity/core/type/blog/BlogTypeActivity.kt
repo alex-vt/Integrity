@@ -156,7 +156,7 @@ class BlogTypeActivity : AppCompatActivity() {
 
         cbUseRelatedLinks.isEnabled = isEditable
         cbUseRelatedLinks.isChecked = getTypeMetadata().relatedPageLinksUsed
-        cbUsePagination.isEnabled = false // todo implement for both types of pagination
+        cbUsePagination.isEnabled = isEditable
         cbUsePagination.isChecked = getTypeMetadata().paginationUsed
 
         sLinkedPagination.isEnabled = isEditable

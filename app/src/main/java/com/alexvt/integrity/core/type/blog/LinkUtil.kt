@@ -20,6 +20,12 @@ object LinkUtil {
             .filter { it.key.contains(getDomainName(pageUrl)) }
             .filter { !it.key.contains("#") }
 
+    fun getMatchedLinks(html: String, linkPattern: String): Set<String>
+            = Jsoup.parse(html).select("a[href]")
+            .map { it.attr("abs:href") }
+            .filter { it.contains(linkPattern) }
+            .toSet()
+
     fun getShortFormUrl(url: String): String {
         if (url.startsWith("http://") || url.startsWith("https://")) {
             return url.replaceFirst("http://", "").replaceFirst("https://", "")

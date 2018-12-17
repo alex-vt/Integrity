@@ -7,12 +7,10 @@
 package com.alexvt.integrity.core.type.blog
 
 import android.util.Log
-import com.alexvt.integrity.core.type.blog.CommonPaginationHelper.getRelatedPageLinks
-import com.alexvt.integrity.core.type.blog.CommonPaginationHelper.isRunning
-import com.alexvt.integrity.core.type.blog.CommonPaginationHelper.saveArchives
-import com.alexvt.integrity.core.type.blog.CommonPaginationHelper.saveLinks
+import com.alexvt.integrity.core.IntegrityCore
+import kotlinx.coroutines.delay
 
-internal object LinkedPaginationHelper {
+internal class LinkedPaginationHelper : CommonPaginationHelper() {
 
     /**
      * Linked pagination:
@@ -22,40 +20,62 @@ internal object LinkedPaginationHelper {
      *
      * Starts from the provided main page.
      */
-    suspend fun loadPages(dl: BlogTypeUtil.BlogMetadataDownload) = loadPages(dl.metadata.url, dl)
+    override suspend fun downloadPages(dl: BlogMetadataDownload) = loadPages(dl.metadata.url, dl)
 
     private tailrec suspend fun loadPages(currentPageLink: String,
-                                          dl: BlogTypeUtil.BlogMetadataDownload): Boolean {
+                                          dl: BlogMetadataDownload): Boolean {
         if (!dl.metadata.paginationUsed || dl.metadata.pagination !is LinkedPagination) {
             return false // no linked pagination
         }
         if (!isRunning(dl)) {
             return true // interrupted - no more pages
         }
-        Log.d("LinkedPaginationHelper", "loadPages: $currentPageLink")
-        val nextPageLinkPattern = dl.metadata.pagination.pathPrefix
-        val relatedPageLinks = getRelatedPageLinks(currentPageLink, dl, nextPageLinkPattern)
-        // todo don't save archives and links for next page yet
-        saveArchives(currentPageLink, relatedPageLinks, dl)
-        saveLinks(currentPageLink, relatedPageLinks, dl)
-        if (!hasNextPageLink(relatedPageLinks, nextPageLinkPattern, dl)) {
+        Log.d("LinkedPaginationHelper", "downloadPages: $currentPageLink")
+        val pageContents = getPageContents(currentPageLink, dl) // always needed to look for next page link
+        val additionalLinksOnPage = getAdditionalLinksOnPage(currentPageLink, pageContents, dl)
+        saveArchives(currentPageLink, additionalLinksOnPage, dl)
+        saveLinks(currentPageLink, additionalLinksOnPage, dl)
+        if (!hasNextPageLink(pageContents, dl)) {
             return true // no more pages exist or allowed
         }
-        return loadPages(getNextPageLink(relatedPageLinks, nextPageLinkPattern), dl)
+        return loadPages(getNextPageLink(pageContents, dl), dl)
     }
 
+    private suspend fun getPageContents(currentPageLink: String, dl: BlogMetadataDownload): String {
+        IntegrityCore.postProgress(dl.jobProgressListener,
+                "Looking for links\n${getPaginationProgressText(currentPageLink, dl)}")
+        val contents = WebViewUtil.loadHtml(dl.webView, currentPageLink, dl.metadata.loadImages,
+                dl.metadata.desktopSite, setOf())
+        delay(dl.metadata.loadIntervalMillis)
+        return contents
+    }
+
+    private fun getAdditionalLinksOnPage(currentPageLink: String, currentPageHtml: String,
+                                         dl: BlogMetadataDownload) =
+            if (dl.metadata.relatedPageLinksUsed) {
+                LinkUtil.ccsSelectLinksInSameDomain(currentPageHtml,
+                        dl.metadata.relatedPageLinksPattern, currentPageLink)
+                        .keys
+                        .minus(getNextPageLink(currentPageHtml, dl)) // next page link is not additional
+            } else {
+                setOf()
+            }
+
+    override fun getPaginationCount(pageLink: String, dl: BlogMetadataDownload)
+            = (dl.metadata.pagination as LinkedPagination).limit
 
     /**
      * Determines if there's another page in case of linked pagination.
-     * True if provided pages contain pattern for next page.
+     * True if provided HTML contains link for next page.
      */
-    private fun hasNextPageLink(relatedPageLinks: Set<String>, nextPageLinkPattern: String,
-                                dl: BlogTypeUtil.BlogMetadataDownload)
-            = dl.metadata.pagination is LinkedPagination
-            && CommonPaginationHelper.getPreviousPageLinks(dl.snapshotPath).size < dl.metadata.pagination.limit
-            && relatedPageLinks.any { it.contains(nextPageLinkPattern) }
+    private fun hasNextPageLink(currentPageHtml: String, dl: BlogMetadataDownload)
+            = getPreviousPageLinks(dl.snapshotPath).size <
+            (dl.metadata.pagination as LinkedPagination).limit
+            && LinkUtil.getMatchedLinks(currentPageHtml, dl.metadata.pagination.pathPrefix)
+            .isNotEmpty()
 
-    private fun getNextPageLink(relatedPageLinks: Set<String>, nextPageLinkPattern: String)
-            = relatedPageLinks.first { it.contains(nextPageLinkPattern) }
+    private fun getNextPageLink(currentPageHtml: String, dl: BlogMetadataDownload)
+            = LinkUtil.getMatchedLinks(currentPageHtml,
+            (dl.metadata.pagination as LinkedPagination).pathPrefix).first()
 
 }

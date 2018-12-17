@@ -7,13 +7,10 @@
 package com.alexvt.integrity.core.type.blog
 
 import android.util.Log
-import com.alexvt.integrity.core.type.blog.CommonPaginationHelper.getPreviousPageLinks
-import com.alexvt.integrity.core.type.blog.CommonPaginationHelper.getRelatedPageLinks
-import com.alexvt.integrity.core.type.blog.CommonPaginationHelper.isRunning
-import com.alexvt.integrity.core.type.blog.CommonPaginationHelper.saveArchives
-import com.alexvt.integrity.core.type.blog.CommonPaginationHelper.saveLinks
+import com.alexvt.integrity.core.IntegrityCore
+import kotlinx.coroutines.delay
 
-internal object IndexedPaginationHelper {
+internal class IndexedPaginationHelper : CommonPaginationHelper() {
 
     /**
      * Indexed pagination or no pagination:
@@ -21,19 +18,41 @@ internal object IndexedPaginationHelper {
      * this page is obtained when related links needed,
      * then page is archived.
      */
-    suspend fun loadPages(dl: BlogTypeUtil.BlogMetadataDownload) {
+    override suspend fun downloadPages(dl: BlogMetadataDownload): Boolean {
         while (isRunning(dl) && hasNextPageLink(dl)) {
             val currentPageLink = getNextPageLink(dl)
-            Log.d("IndexedPaginationHelper", "loadPages: $currentPageLink")
-            val relatedPageLinks = getRelatedPageLinks(currentPageLink, dl)
-            saveArchives(currentPageLink, relatedPageLinks, dl)
-            Log.d("IndexedPaginationHelper", "loadPages, saving links: $currentPageLink, $relatedPageLinks")
-            saveLinks(currentPageLink, relatedPageLinks, dl)
+            Log.d("IndexedPaginationHelper", "downloadPages: $currentPageLink")
+            val additionalLinksOnPage = getAdditionalLinksOnPage(currentPageLink, dl)
+            saveArchives(currentPageLink, additionalLinksOnPage, dl)
+            Log.d("IndexedPaginationHelper", "downloadPages, " +
+                    "saving links: $currentPageLink, $additionalLinksOnPage")
+            saveLinks(currentPageLink, additionalLinksOnPage, dl)
+        }
+        return true
+    }
+
+    override fun getPaginationCount(pageLink: String, dl: BlogMetadataDownload)
+            = getAllPageLinks(dl.metadata).size
+
+    private suspend fun getAdditionalLinksOnPage(currentPageLink: String,
+                                                 dl: BlogMetadataDownload): Set<String> {
+        IntegrityCore.postProgress(dl.jobProgressListener,
+                "Collecting links\n${getPaginationProgressText(currentPageLink, dl)}")
+        return if (pageContentsNeeded(dl)) {
+            val currentPageHtml = WebViewUtil.loadHtml(dl.webView, currentPageLink,
+                    dl.metadata.loadImages, dl.metadata.desktopSite, setOf())
+            delay(dl.metadata.loadIntervalMillis)
+            LinkUtil.ccsSelectLinksInSameDomain(currentPageHtml,
+                    dl.metadata.relatedPageLinksPattern, currentPageLink)
+                    .keys
+        } else {
+            linkedSetOf()
         }
     }
 
+    private fun pageContentsNeeded(dl: BlogMetadataDownload) = dl.metadata.relatedPageLinksUsed
 
-    fun getAllPageLinks(blogMetadata: BlogTypeMetadata)
+    private fun getAllPageLinks(blogMetadata: BlogTypeMetadata)
             = if (blogMetadata.paginationUsed && blogMetadata.pagination is IndexedPagination) {
         IntProgression.fromClosedRange(
                 blogMetadata.pagination.startIndex,
@@ -41,14 +60,14 @@ internal object IndexedPaginationHelper {
                 blogMetadata.pagination.step
         ).map { blogMetadata.url + blogMetadata.pagination.path + it }
     } else {
-        listOf(blogMetadata.url)
+        listOf(blogMetadata.url) // only the start page
     }
 
-    private fun hasNextPageLink(dl: BlogTypeUtil.BlogMetadataDownload)
+    private fun hasNextPageLink(dl: BlogMetadataDownload)
             = getNextPageLinks(dl.metadata, dl.snapshotPath)
             .isNotEmpty()
 
-    private fun getNextPageLink(dl: BlogTypeUtil.BlogMetadataDownload)
+    private fun getNextPageLink(dl: BlogMetadataDownload)
             = getNextPageLinks(dl.metadata, dl.snapshotPath)
             .first()
 

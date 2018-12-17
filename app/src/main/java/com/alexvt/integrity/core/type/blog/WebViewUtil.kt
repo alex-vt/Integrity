@@ -113,7 +113,7 @@ object WebViewUtil {
      * that contain the corresponding web page link hash codes.
      */
     private fun isLocallySavedLinkHit(localLinkHashes: Collection<String>, url: String)
-            = localLinkHashes.contains(url.hashCode().toString())
+            = localLinkHashes.contains(url.trimEnd('/').hashCode().toString())
 
     /**
      * Returns a redirect link to load page from file instead of loading by its web URL.
@@ -122,7 +122,8 @@ object WebViewUtil {
      * named page_<linkHash>.mht, similarly to first page name index.mht.
      */
     private fun getLocallySavedPageUrl(firstPageLocalUrl: String, newPageWebUrl: String)
-            = firstPageLocalUrl.replace("index.mht", "page_${newPageWebUrl.hashCode()}.mht")
+            = firstPageLocalUrl.replace("index.mht",
+            "page_${newPageWebUrl.trimEnd('/').hashCode()}.mht")
 
     private fun setupWebView(webView: WebView, loadingOffline: Boolean, loadImages: Boolean,
                              desktopSite: Boolean) {

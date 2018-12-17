@@ -11,19 +11,20 @@ import java.net.URL
 
 object LinkUtil {
 
-    fun getCssSelectedLinkMap(html: String, cssSelector: String,
-                              pageUrl: String): Map<String, String>
+    fun ccsSelectLinksInSameDomain(html: String, cssSelector: String,
+                                   pageUrl: String): Map<String, String>
             = Jsoup.parse(html).select(cssSelector.trim() + " a[href]")
-            .distinctBy { it.attr("abs:href") } // dropping duplicates before putting to map to preserve first
-            .associate { it.attr("abs:href") to it.cssSelector() }
+            // dropping duplicates before putting to map to preserve first
+            .distinctBy { it.attr("abs:href").trimEnd('/') }
+            .associate { it.attr("abs:href").trimEnd('/') to it.cssSelector() }
             .filter { it.key.isNotEmpty() }
             .filter { it.key.contains(getDomainName(pageUrl)) }
-            .filter { !it.key.contains("#") }
+            .filterNot { it.key == pageUrl.trimEnd('/') }
 
-    fun getMatchedLinks(html: String, linkPattern: String): Set<String>
+    fun getMatchedLinks(html: String, partOfLink: String): Set<String>
             = Jsoup.parse(html).select("a[href]")
-            .map { it.attr("abs:href") }
-            .filter { it.contains(linkPattern) }
+            .map { it.attr("abs:href").trimEnd('/') }
+            .filter { it.contains(partOfLink) }
             .toSet()
 
     fun getShortFormUrl(url: String): String {

@@ -24,19 +24,6 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
 
     override fun getOperationMainActivityClass() = BlogTypeActivity::class.java
 
-    /**
-     * Holds Blog Type metadata and properties of environment for its data downloading.
-     *
-     * Serves for downloading algorithm code clarity.
-     */
-    internal data class BlogMetadataDownload(
-            val webView: WebView,
-            val metadata: BlogTypeMetadata,
-            val snapshotPath: String,
-            val jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
-            val jobContext: CoroutineContext
-    )
-
     override suspend fun downloadData(artifactId: Long, date: String,
                                       blogMetadata: BlogTypeMetadata,
                                       jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
@@ -53,13 +40,25 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
                     jobContext = jobContext
             )
 
-            if (!LinkedPaginationHelper.loadPages(dl)) {
-                IndexedPaginationHelper.loadPages(dl)
+            if (!LinkedPaginationHelper().downloadPages(dl)) {
+                IndexedPaginationHelper().downloadPages(dl)
             }
         }
 
         Log.d("BlogDataTypeUtil", "downloadData end")
         return snapshotPath
     }
-
 }
+
+/**
+ * Holds Blog Type metadata and properties of environment for its data downloading.
+ *
+ * Serves for downloading algorithm code clarity.
+ */
+internal data class BlogMetadataDownload(
+        val webView: WebView,
+        val metadata: BlogTypeMetadata,
+        val snapshotPath: String,
+        val jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
+        val jobContext: CoroutineContext
+)

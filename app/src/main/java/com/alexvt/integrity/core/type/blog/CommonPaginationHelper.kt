@@ -12,12 +12,14 @@ import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
-internal object CommonPaginationHelper {
+internal abstract class CommonPaginationHelper {
 
-    fun isRunning(dl: BlogTypeUtil.BlogMetadataDownload) = dl.jobContext.isActive
+    abstract suspend fun downloadPages(dl: BlogMetadataDownload): Boolean
 
-    suspend fun saveArchives(currentPageLink: String, relatedPageLinks: Set<String>,
-                             dl: BlogTypeUtil.BlogMetadataDownload) {
+    protected fun isRunning(dl: BlogMetadataDownload) = dl.jobContext.isActive
+
+    protected suspend fun saveArchives(currentPageLink: String, relatedPageLinks: Set<String>,
+                             dl: BlogMetadataDownload) {
         if (!isRunning(dl)) {
             return
         }
@@ -29,62 +31,13 @@ internal object CommonPaginationHelper {
                 dl.metadata.desktopSite, dl.jobProgressListener, dl.jobContext)
     }
 
-    /**
-     * Gets links from page based on its currentPageUrl,
-     * linkPattern to match links with (must contain it),
-     * and possible cssSelector in metadata.
-     */
-    suspend fun getRelatedPageLinks(currentPageUrl: String, dl: BlogTypeUtil.BlogMetadataDownload,
-                                    linkPattern: String = ""): Set<String> {
-        IntegrityCore.postProgress(dl.jobProgressListener,
-                "Collecting links\n${getPaginationProgressText(currentPageUrl, dl)}")
-        val relatedPageUrls = linkedSetOf<String>()
-        if (dl.metadata.relatedPageLinksUsed || linkPattern.isNotBlank()) {
-            val pageHtml = WebViewUtil.loadHtml(dl.webView, currentPageUrl, dl.metadata.loadImages,
-                    dl.metadata.desktopSite, setOf())
-            delay(dl.metadata.loadIntervalMillis)
-            if (dl.metadata.relatedPageLinksUsed) {
-                val selectedLinkMap = LinkUtil.getCssSelectedLinkMap(pageHtml,
-                        dl.metadata.relatedPageLinksPattern, currentPageUrl)
-                Log.d("BlogDataTypeUtil", "getRelatedPageLinks: selectRelatedLinks" +
-                        " = ${selectedLinkMap.keys}")
-                relatedPageUrls.addAll(selectedLinkMap.keys)
-            }
-            if (linkPattern.isNotBlank()) {
-                val matchedLinkMap = LinkUtil.getMatchedLinks(pageHtml, linkPattern)
-                Log.d("BlogDataTypeUtil", "getRelatedPageLinks: getMatchedLinks" +
-                        " = $matchedLinkMap")
-                relatedPageUrls.addAll(matchedLinkMap)
-            }
-        }
-        Log.d("BlogDataTypeUtil", "getRelatedPageLinks: Obtained ${relatedPageUrls.size} links" +
-                " (related links selected: ${dl.metadata.relatedPageLinksUsed})" +
-                " by pattern ${dl.metadata.relatedPageLinksPattern} \nat page $currentPageUrl")
-        return relatedPageUrls.minus(currentPageUrl)
-    }
-    
-    private fun getPaginationProgressText(pageLink: String,
-                                          dl: BlogTypeUtil.BlogMetadataDownload): String {
-        val forPageText = "for page: $pageLink"
-        val index = getPreviousPageLinks(dl.snapshotPath).size + 1
-        val count = if (dl.metadata.pagination is LinkedPagination) {
-            dl.metadata.pagination.limit
-        } else {
-            IndexedPaginationHelper.getAllPageLinks(dl.metadata).size
-        }
-        if (count > 1) {
-            return "$forPageText\n($index of $count)"
-        }
-        return forPageText
-    }
+    protected abstract fun getPaginationCount(pageLink: String, dl: BlogMetadataDownload): Int
 
-    private fun isFirstPage(snapshotPath: String) = getPreviousPageLinks(snapshotPath).isEmpty()
-
-    fun getPreviousPageLinks(snapshotPath: String)
+    protected fun getPreviousPageLinks(snapshotPath: String)
             = getLinksFromFile(getPaginationPath(snapshotPath))
 
-    fun saveLinks(pageLink: String, relatedPageLinks: Collection<String>,
-                  dl: BlogTypeUtil.BlogMetadataDownload) {
+    protected fun saveLinks(pageLink: String, relatedPageLinks: Collection<String>,
+                  dl: BlogMetadataDownload) {
         if (!isRunning(dl)) {
             return
         }
@@ -94,6 +47,20 @@ internal object CommonPaginationHelper {
         addTextsToFile(setOf(pageLink),
                 getPaginationPath(dl.snapshotPath))
     }
+
+
+    protected fun getPaginationProgressText(pageLink: String,
+                                            dl: BlogMetadataDownload): String {
+        val forPageText = "for page: $pageLink"
+        val index = getPreviousPageLinks(dl.snapshotPath).size + 1
+        val count = getPaginationCount(pageLink, dl)
+        return when {
+            count > 1 -> "$forPageText\n($index of $count)"
+            else -> forPageText
+        }
+    }
+
+    private fun isFirstPage(snapshotPath: String) = getPreviousPageLinks(snapshotPath).isEmpty()
 
 
     // file operations

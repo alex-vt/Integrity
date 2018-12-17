@@ -259,8 +259,8 @@ class BlogTypeActivity : AppCompatActivity() {
 
     fun updateMatchedRelatedLinkList() {
         try {
-            val allLinkMap = LinkUtil.getCssSelectedLinkMap(loadedHtml, "", webView.url)
-            val matchedLinkMap = LinkUtil.getCssSelectedLinkMap(loadedHtml,
+            val allLinkMap = LinkUtil.ccsSelectLinksInSameDomain(loadedHtml, "", webView.url)
+            val matchedLinkMap = LinkUtil.ccsSelectLinksInSameDomain(loadedHtml,
                     etLinkPattern.text.toString(), webView.url)
             val unmatchedLinkMap = allLinkMap.minus(matchedLinkMap)
             // marched shown first
@@ -309,7 +309,7 @@ class BlogTypeActivity : AppCompatActivity() {
                         url = if (snapshotDataExists(intent)) {
                             getTypeMetadata().url // for read only snapshot, same as it was
                         } else {
-                            webView.url // for editable snapshot, the one from loaded WebView
+                            webView.url.trimEnd('/') // for editable snapshot, the one from loaded WebView
                         },
                         loadImages = cbLoadImages.isChecked,
                         desktopSite = cbDesktopSite.isChecked,

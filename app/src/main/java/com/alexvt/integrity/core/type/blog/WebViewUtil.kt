@@ -13,6 +13,7 @@ import kotlin.coroutines.suspendCoroutine
 import android.webkit.ConsoleMessage
 import kotlinx.coroutines.*
 import android.webkit.WebSettings
+import android.widget.Toast
 import java.util.*
 import kotlin.concurrent.schedule
 
@@ -33,10 +34,9 @@ object WebViewUtil {
         }
     }
 
-    suspend fun loadHtml(webView: WebView, url: String, loadImages: Boolean, desktopSite: Boolean,
-                         localLinkHashes: Collection<String>): String
+    suspend fun loadHtml(webView: WebView, url: String, loadImages: Boolean, desktopSite: Boolean): String
             = suspendCoroutine { continuation ->
-        loadHtml(webView, url, localLinkHashes, loadImages, desktopSite) {
+        loadHtml(webView, url, emptyMap(), loadImages, desktopSite) {
             try {
                 continuation.resume(it)
             } catch (t: Throwable) {
@@ -45,7 +45,7 @@ object WebViewUtil {
         }
     }
 
-    fun loadHtml(webView: WebView, startUrl: String, localLinkHashes: Collection<String>,
+    fun loadHtml(webView: WebView, startUrl: String, urlRedirectMap: Map<String, String>,
                  loadImages: Boolean, desktopSite: Boolean,
                  pageLoadListener: (String) -> Unit) {
         WebViewUtil.pageLoadListener = pageLoadListener
@@ -54,16 +54,19 @@ object WebViewUtil {
         webView.addJavascriptInterface(this, "jsi") // registers onWebPageHtmlLoaded
 
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView, newUrl: String): Boolean {
+            override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
                 // links from locally loaded HTML can be redirected to corresponding locally saved pages
-                if (isOfflineLoading(startUrl) && isLocallySavedLinkHit(localLinkHashes, newUrl)) {
-                    webView.loadUrl(getLocallySavedPageUrl(startUrl, newUrl))
+                if (isUrlRedirected(urlRedirectMap, url)) {
+                    webView.loadUrl(getRedirectUrl(urlRedirectMap, url))
                 } else {
                     if (isOfflineLoading(startUrl)) {
-                        Log.w("WebViewUtil", "Offline archives don't store page: $newUrl " +
-                                "(hash ${newUrl.hashCode()})")
+                        Log.w("WebViewUtil", "Page $url isn't archived.")
+                        Toast.makeText(webView.context, "Page $url isn't archived.",
+                                Toast.LENGTH_SHORT).show()
+                        return true
+                    } else {
+                        webView.loadUrl(url)
                     }
-                    webView.loadUrl(newUrl)
                 }
                 return false
             }
@@ -101,24 +104,11 @@ object WebViewUtil {
 
     private fun isOfflineLoading(firstPageUrl: String) = firstPageUrl.startsWith("file:")
 
-    /**
-     * Determines if a page with given URL is stored locally.
-     *
-     * Locally stored web archives have names
-     * that contain the corresponding web page link hash codes.
-     */
-    private fun isLocallySavedLinkHit(localLinkHashes: Collection<String>, url: String)
-            = localLinkHashes.contains(url.trimEnd('/').hashCode().toString())
+    private fun isUrlRedirected(urlRedirectMap: Map<String, String>, url: String)
+            = urlRedirectMap.containsKey(url.trimEnd('/'))
 
-    /**
-     * Returns a redirect link to load page from file instead of loading by its web URL.
-     *
-     * Links from locally loaded HTML can be redirected to corresponding local pages
-     * named page_<linkHash>.mht, similarly to first page name index.mht.
-     */
-    private fun getLocallySavedPageUrl(firstPageLocalUrl: String, newPageWebUrl: String)
-            = firstPageLocalUrl.replace("index.mht",
-            "page_${newPageWebUrl.trimEnd('/').hashCode()}.mht")
+    private fun getRedirectUrl(urlRedirectMap: Map<String, String>, url: String)
+            = urlRedirectMap[url.trimEnd('/')]
 
     private fun setupWebView(webView: WebView, loadingOffline: Boolean, loadImages: Boolean,
                              desktopSite: Boolean) {

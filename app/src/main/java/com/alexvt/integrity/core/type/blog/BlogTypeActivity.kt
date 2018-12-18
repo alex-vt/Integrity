@@ -24,7 +24,6 @@ import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.SnapshotMetadata
 import com.alexvt.integrity.core.SnapshotStatus
 import com.alexvt.integrity.core.job.JobProgress
-import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.jakewharton.rxbinding3.widget.checkedChanges
 import com.jakewharton.rxbinding3.widget.textChanges
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -52,6 +51,7 @@ class BlogTypeActivity : AppCompatActivity() {
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         rvRelatedLinkList.adapter = RelatedLinkRecyclerAdapter(arrayListOf(), this)
+        rvOfflineLinkList.adapter = OfflineLinkRecyclerAdapter(arrayListOf(), this)
 
         if (snapshotDataExists(intent)) {
             snapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(
@@ -69,14 +69,18 @@ class BlogTypeActivity : AppCompatActivity() {
             fillInOptions(isEditable = false)
 
             GlobalScope.launch (Dispatchers.Main) {
-                // links from locally loaded HTML can point to local pages named page_<linkHash>
-                val relatedLinkHashesFromFiles = DataCacheFolderUtil.getSnapshotFileSimpleNames(
-                        snapshot.artifactId, snapshot.date)
-                        .map { it.replace("page_", "") }
-                val snapshotDataPath = IntegrityCore.fetchSnapshotData(snapshot.artifactId,
+                val snapshotPath = IntegrityCore.fetchSnapshotData(snapshot.artifactId,
                         snapshot.date)
-                WebViewUtil.loadHtml(webView,"file://" + snapshotDataPath + "/index.mht",
-                        relatedLinkHashesFromFiles, getTypeMetadata().loadImages,
+                val linkToArchivePathRedirectMap = WebArchiveFilesUtil
+                        .getPageIndexLinkToArchivePathMap(snapshotPath, "file://$snapshotPath/")
+                (rvOfflineLinkList.adapter as OfflineLinkRecyclerAdapter)
+                        .setItems(linkToArchivePathRedirectMap
+                                .map { OfflineLink(it.key, it.value) })
+                val firstArchivePath = linkToArchivePathRedirectMap.entries.first().value
+                WebViewUtil.loadHtml(webView,
+                        firstArchivePath,
+                        linkToArchivePathRedirectMap,
+                        getTypeMetadata().loadImages,
                         getTypeMetadata().desktopSite) {
                     Log.d(TAG, "Loaded HTML from file")
                 }
@@ -196,6 +200,10 @@ class BlogTypeActivity : AppCompatActivity() {
         etLoadInterval.setText((getTypeMetadata().loadIntervalMillis / 1000).toString())
 
         tvPageLinksPreview.visibility = if (isEditable) View.VISIBLE else View.GONE
+        rvRelatedLinkList.visibility = if (isEditable) View.VISIBLE else View.GONE
+
+        tvOfflineLinks.visibility = if (isEditable) View.GONE else View.VISIBLE
+        rvOfflineLinkList.visibility = if (isEditable) View.GONE else View.VISIBLE
 
         bSaveBlueprint.setOnClickListener {
             if (checkAndSaveBlueprint()) {
@@ -356,8 +364,13 @@ class BlogTypeActivity : AppCompatActivity() {
         }
     }
 
+    fun goToOfflinePageDirectly(urlToView: String) {
+        webView.loadUrl(urlToView) // todo use WebViewUtil; show current URL above when offline or editing
+        dlAllContent.closeDrawers()
+    }
+
     fun goToWebPage(urlToView: String): Boolean {
-        WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl(urlToView), setOf(),
+        WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl(urlToView), emptyMap(),
                 getTypeMetadata().loadImages, getTypeMetadata().desktopSite) {
             Log.d(TAG, "Loaded page from: ${webView.url}")
             loadedHtml = it

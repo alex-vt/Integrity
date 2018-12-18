@@ -8,6 +8,8 @@ package com.alexvt.integrity.core.type.blog
 
 import android.util.Log
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.type.blog.WebArchiveFilesUtil.getPageIndexArchiveLinks
+import com.alexvt.integrity.core.type.blog.WebArchiveFilesUtil.getPageIndexLinks
 import kotlinx.coroutines.delay
 
 internal class IndexedPaginationHelper : CommonPaginationHelper() {
@@ -50,7 +52,7 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
                 "Collecting links\n${getPaginationProgressText(currentPageLink, dl)}")
         return if (pageContentsNeeded(dl)) {
             val currentPageHtml = WebViewUtil.loadHtml(dl.webView, currentPageLink,
-                    dl.metadata.loadImages, dl.metadata.desktopSite, setOf())
+                    dl.metadata.loadImages, dl.metadata.desktopSite)
             delay(dl.metadata.loadIntervalMillis)
             LinkUtil.ccsSelectLinks(currentPageHtml, dl.metadata.relatedPageLinksPattern,
                     dl.metadata.relatedPageLinksFilter, currentPageLink)

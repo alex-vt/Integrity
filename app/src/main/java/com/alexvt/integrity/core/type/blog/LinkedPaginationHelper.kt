@@ -66,9 +66,10 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
     private fun getAdditionalLinksOnPage(currentPageLink: String, currentPageHtml: String,
                                          dl: BlogMetadataDownload) =
             if (dl.metadata.relatedPageLinksUsed) {
-                LinkUtil.ccsSelectLinksInSameDomain(currentPageHtml,
-                        dl.metadata.relatedPageLinksPattern, currentPageLink)
+                LinkUtil.ccsSelectLinks(currentPageHtml, dl.metadata.relatedPageLinksPattern,
+                        dl.metadata.relatedPageLinksFilter, currentPageLink)
                         .keys
+                        .minus(currentPageLink)
                         .minus(getNextPageLink(currentPageHtml, dl)) // next page link is not additional
             } else {
                 setOf()
@@ -98,7 +99,7 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
      */
     private fun hasNextPageLink(currentPageHtml: String, dl: BlogMetadataDownload): Boolean {
         val nextPageLinks = LinkUtil.getMatchedLinks(currentPageHtml,
-                (dl.metadata.pagination as LinkedPagination).pathPrefix)
+                (dl.metadata.pagination as LinkedPagination).nextPageLinkFilter)
         Log.d("LinkedPaginationHelper", "hasNextPageLink: $nextPageLinks")
         return getPageIndexArchiveLinks(dl.snapshotPath).size < dl.metadata.pagination.limit
                 && nextPageLinks.isNotEmpty()
@@ -106,6 +107,6 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
 
     private fun getNextPageLink(currentPageHtml: String, dl: BlogMetadataDownload)
             = LinkUtil.getMatchedLinks(currentPageHtml,
-            (dl.metadata.pagination as LinkedPagination).pathPrefix).first()
+            (dl.metadata.pagination as LinkedPagination).nextPageLinkFilter).first()
 
 }

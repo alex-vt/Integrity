@@ -141,6 +141,12 @@ class BlogTypeActivity : AppCompatActivity() {
 
         supportActionBar!!.subtitle = snapshot.title
 
+        etRelatedLinkFilter.isEnabled = isEditable
+        etRelatedLinkFilter.append(getTypeMetadata().relatedPageLinksFilter)
+        etRelatedLinkFilter.textChanges()
+                .debounce(800, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { updateMatchedRelatedLinkList() }
         etLinkPattern.isEnabled = isEditable
         etLinkPattern.append(getTypeMetadata().relatedPageLinksPattern)
         etLinkPattern.textChanges()
@@ -170,7 +176,7 @@ class BlogTypeActivity : AppCompatActivity() {
                     etIndexedPaginationStep.isEnabled = isEditable && !it
                     etIndexedPaginationLimit.isEnabled = isEditable && !it
                     // linked pagination when editable and checked
-                    etLinkedPaginationPattern.isEnabled = isEditable && it
+                    etLinkedPaginationLinkFilter.isEnabled = isEditable && it
                     etLinkedPaginationLimit.isEnabled = isEditable && it
                 }
 
@@ -183,7 +189,7 @@ class BlogTypeActivity : AppCompatActivity() {
         etIndexedPaginationStep.setText(initialIndexedPagination.step.toString())
         etIndexedPaginationPattern.setText(initialIndexedPagination.path)
         etIndexedPaginationStartIndex.setText(initialIndexedPagination.startIndex.toString())
-        etLinkedPaginationPattern.setText(initialLinkedPagination.pathPrefix)
+        etLinkedPaginationLinkFilter.setText(initialLinkedPagination.nextPageLinkFilter)
         etLinkedPaginationLimit.setText(initialLinkedPagination.limit.toString())
 
         etLoadInterval.isEnabled = isEditable
@@ -207,7 +213,7 @@ class BlogTypeActivity : AppCompatActivity() {
 
     fun getPaginationFromOptions() = if (sLinkedPagination.isChecked) {
         LinkedPagination(
-                pathPrefix = etLinkedPaginationPattern.text.toString(),
+                nextPageLinkFilter = etLinkedPaginationLinkFilter.text.toString(),
                 limit = etLinkedPaginationLimit.text.toString().toInt()
         )
     } else {
@@ -259,9 +265,9 @@ class BlogTypeActivity : AppCompatActivity() {
 
     fun updateMatchedRelatedLinkList() {
         try {
-            val allLinkMap = LinkUtil.ccsSelectLinksInSameDomain(loadedHtml, "", webView.url)
-            val matchedLinkMap = LinkUtil.ccsSelectLinksInSameDomain(loadedHtml,
-                    etLinkPattern.text.toString(), webView.url)
+            val allLinkMap = LinkUtil.ccsSelectLinks(loadedHtml, "", "", webView.url)
+            val matchedLinkMap = LinkUtil.ccsSelectLinks(loadedHtml,
+                    etLinkPattern.text.toString(), etRelatedLinkFilter.text.toString(), webView.url)
             val unmatchedLinkMap = allLinkMap.minus(matchedLinkMap)
             // marched shown first
             (rvRelatedLinkList.adapter as RelatedLinkRecyclerAdapter).setItems(
@@ -316,6 +322,7 @@ class BlogTypeActivity : AppCompatActivity() {
                         paginationUsed = cbUsePagination.isChecked,
                         pagination = getPaginationFromOptions(),
                         relatedPageLinksUsed = cbUseRelatedLinks.isChecked,
+                        relatedPageLinksFilter = etRelatedLinkFilter.text.toString(),
                         relatedPageLinksPattern = etLinkPattern.text.toString(),
                         loadIntervalMillis = etLoadInterval.text.toString().toInt() * 1000L
                 )

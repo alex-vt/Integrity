@@ -24,6 +24,7 @@ data class BlogTypeMetadata(
         val paginationUsed: Boolean = false,
         val pagination: Pagination = IndexedPagination(),
         val relatedPageLinksUsed: Boolean = false,
+        val relatedPageLinksFilter: String = "",
         val relatedPageLinksPattern: String = "",// CSS selector, or null when saving only this page
         val loadIntervalMillis: Long = 1000
 ) : TypeMetadata()
@@ -48,15 +49,15 @@ data class IndexedPagination(
 ): Pagination()
 
 /**
- * Pagination with links to next page. Finds link to next page by pattern url + pathPrefix.
+ * Pagination with links to next page. Finds link to next page by pattern url + nextPageLinkFilter.
  *
  * For example, for url = http://example.com/,
- * pagination with pathPrefix = after= and limit = 3
+ * pagination with nextPageLinkFilter = after= and limit = 3
  * finds link http://example.com/after=AA on page http://example.com/,
  * then finds link http://example.com/after=BB on page http://example.com/after=AA,
  * yields pages http://example.com/, http://example.com/after=AA and http://example.com/after=BB.
  */
 data class LinkedPagination(
-        val pathPrefix: String = "after=",
+        val nextPageLinkFilter: String = "after=",
         val limit: Int = 3 // requires attention to prevent missing or excessive pages
 ): Pagination()

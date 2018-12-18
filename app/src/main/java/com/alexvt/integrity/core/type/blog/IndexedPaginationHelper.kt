@@ -52,9 +52,10 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
             val currentPageHtml = WebViewUtil.loadHtml(dl.webView, currentPageLink,
                     dl.metadata.loadImages, dl.metadata.desktopSite, setOf())
             delay(dl.metadata.loadIntervalMillis)
-            LinkUtil.ccsSelectLinksInSameDomain(currentPageHtml,
-                    dl.metadata.relatedPageLinksPattern, currentPageLink)
+            LinkUtil.ccsSelectLinks(currentPageHtml, dl.metadata.relatedPageLinksPattern,
+                    dl.metadata.relatedPageLinksFilter, currentPageLink)
                     .keys
+                    .minus(currentPageLink)
         } else {
             linkedSetOf()
         }

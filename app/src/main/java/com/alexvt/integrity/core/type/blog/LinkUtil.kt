@@ -12,19 +12,18 @@ import java.util.regex.Pattern
 
 object LinkUtil {
 
-    fun ccsSelectLinksInSameDomain(html: String, cssSelector: String,
-                                   pageUrl: String): Map<String, String>
+    fun ccsSelectLinks(html: String, cssSelector: String, partOfLink: String,
+                       pageUrl: String): Map<String, String>
             = Jsoup.parse(html).select(cssSelector.trim() + " a[href]")
             // dropping duplicates before putting to map to preserve first
-            .distinctBy { it.attr("abs:href").trimEnd('/') }
-            .associate { it.attr("abs:href").trimEnd('/') to it.cssSelector() }
+            .distinctBy { it.attr("href").trimEnd('/') }
+            .associate { getFullUrl(it.attr("href"), pageUrl) to it.cssSelector() }
             .filter { it.key.isNotEmpty() }
-            .filter { it.key.contains(getDomainName(pageUrl)) }
-            .filterNot { it.key == pageUrl.trimEnd('/') }
+            .filter { it.key.contains(partOfLink) }
 
     fun getMatchedLinks(html: String, partOfLink: String): Set<String>
             = Jsoup.parse(html).select("a[href]")
-            .map { it.attr("abs:href").trimEnd('/') }
+            .map { it.attr("href").trimEnd('/') }
             .filter { it.contains(partOfLink) }
             .toSet()
 
@@ -59,9 +58,10 @@ object LinkUtil {
         }
     }
 
-    private fun getDomainName(url: String) = if (URL(url).host.startsWith("www.")) {
-        URL(url).host.replaceFirst("www.", "")
-    } else {
-        URL(url).host
-    }
+    private fun getFullUrl(url: String, baseUrl: String) =
+            if (url.startsWith("/")) {
+                URL(baseUrl).protocol + "://" + URL(baseUrl).host + url.trimEnd('/')
+            } else {
+                url.trimEnd('/')
+            }
 }

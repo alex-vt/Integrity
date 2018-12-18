@@ -10,14 +10,9 @@ import android.util.Log
 import android.webkit.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import com.alexvt.integrity.core.SnapshotMetadata
-import com.alexvt.integrity.core.job.JobProgress
 import android.webkit.ConsoleMessage
 import kotlinx.coroutines.*
-import kotlin.coroutines.CoroutineContext
 import android.webkit.WebSettings
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import java.util.*
 import kotlin.concurrent.schedule
 
@@ -158,61 +153,9 @@ object WebViewUtil {
         webView.settings.builtInZoomControls = enabled
     }
 
-    suspend fun saveArchives(webView: WebView, urlsToDownload: Set<String>,
-                             snapshotPath: String,
-                             isFirstPage: Boolean,
-                             paginationProgressText: String,
-                             loadIntervalMillis: Long, loadImages: Boolean, desktopSite: Boolean,
-                             jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
-                             jobCoroutineContext: CoroutineContext) {
-        val urlToArchivePathMap = mapOf<String, String>()
-                .plus(
-                        urlsToDownload
-                                .take(1) // first archive of the first page is named differently
-                                .associate { it to getArchiveName(it, snapshotPath, isFirstPage) }
-                ).plus(
-                        urlsToDownload
-                                .drop(1)
-                                .associate { it to getArchiveName(it, snapshotPath) }
-                )
-
-        urlToArchivePathMap.entries.forEachIndexed { index, entry ->
-            run {
-                if (!jobCoroutineContext.isActive) {
-                    return
-                }
-                if (!webArchiveDownloadComplete(urlToArchivePathMap.values.toList(), index)) {
-                    IntegrityCore.postProgress(jobProgressListener,
-                            "Saving web archive " + (index + 1) + " of "
-                                    + urlToArchivePathMap.size + "\n"
-                                    + paginationProgressText)
-                    saveArchive(webView = webView, url = entry.key, webArchivePath = entry.value,
-                            loadIntervalMillis = loadIntervalMillis, loadImages = loadImages,
-                            desktopSite = desktopSite)
-                }
-            }
-        }
-    }
-
-    /**
-     * First archive in snapshot should be named index.mht
-     */
-    private fun getArchiveName(url: String, snapshotPath: String, isFirstPage: Boolean = false) =
-            if (isFirstPage) {
-                "$snapshotPath/index.mht"
-            } else {
-                "$snapshotPath/page_${url.hashCode()}.mht"
-            }
-
-    /**
-     * Web archive is considered fully downloaded when the next one exists.
-     */
-    private fun webArchiveDownloadComplete(webArchivePaths: List<String>, index: Int) = index + 1 < webArchivePaths.size
-            && DataCacheFolderUtil.fileExists(webArchivePaths[index + 1])
-
     // Async "nature" of saveWebArchive propagated to caller methods as "sync" method
     // using suspend coroutine of Kotlin
-    private suspend fun saveArchive(webView: WebView, url: String, webArchivePath: String,
+    suspend fun saveArchive(webView: WebView, url: String, webArchivePath: String,
                                     loadIntervalMillis: Long, loadImages: Boolean,
                                     desktopSite: Boolean) = suspendCoroutine<String> { continuation ->
         setupWebView(webView = webView, loadingOffline = false, loadImages = loadImages,

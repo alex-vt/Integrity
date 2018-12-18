@@ -17,6 +17,9 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
      * while page link can be determined from metadata and previous page link list,
      * this page is obtained when related links needed,
      * then page is archived.
+     *
+     * Pagination position is saved after page archiving:
+     * on resume getNextPageLink will return the next page after the saved pagination position.
      */
     override suspend fun downloadPages(dl: BlogMetadataDownload): Boolean {
         while (isRunning(dl) && hasNextPageLink(dl)) {
@@ -24,15 +27,22 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
             Log.d("IndexedPaginationHelper", "downloadPages: $currentPageLink")
             val additionalLinksOnPage = getAdditionalLinksOnPage(currentPageLink, dl)
             saveArchives(currentPageLink, additionalLinksOnPage, dl)
-            Log.d("IndexedPaginationHelper", "downloadPages, " +
-                    "saving links: $currentPageLink, $additionalLinksOnPage")
-            saveLinks(currentPageLink, additionalLinksOnPage, dl)
+            persistPaginationProgress(currentPageLink, dl)
         }
         return true
     }
 
     override fun getPaginationCount(pageLink: String, dl: BlogMetadataDownload)
             = getAllPageLinks(dl.metadata).size
+
+    /**
+     * Gets pagination progress starting from 0.
+     *
+     * As pagination position is saved after page archiving,
+     * progress index equals pagination position.
+     */
+    override fun getPaginationProgress(dl: BlogMetadataDownload)
+            = getPageIndexArchiveLinks(dl.snapshotPath).size
 
     private suspend fun getAdditionalLinksOnPage(currentPageLink: String,
                                                  dl: BlogMetadataDownload): Set<String> {
@@ -73,6 +83,6 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
 
     private fun getNextPageLinks(blogMetadata: BlogTypeMetadata, snapshotPath: String)
             = getAllPageLinks(blogMetadata)
-            .minus(getPreviousPageLinks(snapshotPath))
+            .minus(getPageIndexLinks(snapshotPath))
 
 }

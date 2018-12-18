@@ -8,6 +8,7 @@ package com.alexvt.integrity.core.type.blog
 
 import org.jsoup.Jsoup
 import java.net.URL
+import java.util.regex.Pattern
 
 object LinkUtil {
 
@@ -25,6 +26,22 @@ object LinkUtil {
             = Jsoup.parse(html).select("a[href]")
             .map { it.attr("abs:href").trimEnd('/') }
             .filter { it.contains(partOfLink) }
+            .toSet()
+
+    val linkRegexString = "(?<=" + Pattern.quote("href=\"") + ")" +
+            "[^\"]+" +
+            "(?=" + Pattern.quote("\"") + ")"
+
+    fun getLinks(html: String) = linkRegexString.toRegex().findAll(html)
+            .map { it.value.trim() }
+            .toSet()
+
+    val linkTextRegexString = "(?<=" + Pattern.quote("\">") + ")" +
+            "[^\"]+" +
+            "(?=" + Pattern.quote("</a>") + ")"
+
+    fun getLinkTexts(html: String) = linkTextRegexString.toRegex().findAll(html)
+            .map { it.value.trim() }
             .toSet()
 
     fun getShortFormUrl(url: String): String {

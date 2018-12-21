@@ -61,8 +61,8 @@ object SimplePersistableMetadataRepository: MetadataRepository {
         val artifactSnapshotMetadataList = allMetadata.snapshotMetadataList
                 .groupBy { it.artifactId }
                 .map { it.value
-                        // sort by status Complete->Incomplete->Blueprint, then by date descending
-                        .sortedWith(SnapshotCompareUtil.statusComparator
+                        // sort by status (Blueprint after anything else), then by date descending
+                        .sortedWith(SnapshotCompareUtil.blueprintLowPriorityComparator
                                 .thenByDescending { it.date })
                         .first() }
                 .sortedByDescending { it.date }

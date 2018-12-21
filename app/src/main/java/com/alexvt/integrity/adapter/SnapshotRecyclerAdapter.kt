@@ -41,6 +41,8 @@ class SnapshotRecyclerAdapter(val items: ArrayList<SnapshotMetadata>, val artifa
                 items.get(position).date +
                 if (items.get(position).status == SnapshotStatus.BLUEPRINT) {
                     " (blueprint)"
+                } else if (items.get(position).status == SnapshotStatus.IN_PROGRESS) {
+                    " (downloading)"
                 } else if (items.get(position).status == SnapshotStatus.COMPLETE) {
                     ""
                 } else {

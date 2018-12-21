@@ -26,17 +26,17 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
 
     override suspend fun downloadData(artifactId: Long, date: String,
                                       blogMetadata: BlogTypeMetadata,
-                                      jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
                                       jobContext: CoroutineContext): String {
         Log.d("BlogDataTypeUtil", "downloadData start")
         val snapshotPath = DataCacheFolderUtil.ensureSnapshotFolder(artifactId, date)
 
         runBlocking(Dispatchers.Main) {
             val dl = BlogMetadataDownload(
+                    artifactId = artifactId,
+                    date = date,
                     webView = WebView(IntegrityCore.context),
                     metadata = blogMetadata,
                     snapshotPath = snapshotPath,
-                    jobProgressListener = jobProgressListener,
                     jobContext = jobContext
             )
 
@@ -56,9 +56,10 @@ class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
  * Serves for downloading algorithm code clarity.
  */
 internal data class BlogMetadataDownload(
+        val artifactId: Long,
+        val date: String,
         val webView: WebView,
         val metadata: BlogTypeMetadata,
         val snapshotPath: String,
-        val jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
         val jobContext: CoroutineContext
 )

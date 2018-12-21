@@ -40,7 +40,6 @@ interface DataTypeUtil<T: TypeMetadata> {
      * returns: path in data cache folder where the data is downloaded to.
      */
     suspend fun downloadData(artifactId: Long, date: String, dataTypeSpecificMetadata: T,
-                             jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit,
                              jobCoroutineContext: CoroutineContext): String
 
 }

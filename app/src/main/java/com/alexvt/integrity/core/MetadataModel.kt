@@ -26,26 +26,34 @@ data class SnapshotMetadata(val artifactId: Long = 0,
                             val status: String = SnapshotStatus.BLUEPRINT
 )
 
+/**
+ * Snapshot downloading status.
+ *
+ * Lifecycle:
+ * BLUEPRINT -+-> IN_PROGRESS -+-> COMPLETE
+ *  create    | download  stop |    done
+ *            +<- INCOMPLETE <-+
+ */
 object SnapshotStatus {
     val BLUEPRINT = "blueprint" // no corresponding data downloaded
-    val INCOMPLETE = "incomplete" // data partially downloaded
+    val IN_PROGRESS = "in_progress" // downloading data now
+    val INCOMPLETE = "incomplete" // data partially downloaded, then interrupted
     val COMPLETE = "complete" // data downloaded
 }
 
-object SnapshotCompareUtil { // todo simplify
-    // COMPLETE < INCOMPLETE < BLUEPRINT
-    val statusComparator = Comparator<SnapshotMetadata> { first, second -> when { // total 3 cases
-        first.status == second.status -> 0 // 3 cases
-        first.status == SnapshotStatus.COMPLETE -> -1 // COMPLETE < {INCOMPLETE or BLUEPRINT}, 2 cases
-        first.status == SnapshotStatus.BLUEPRINT -> 1 // BLUEPRINT > {COMPLETE or INCOMPLETE}, 2 cases
-        first.status == SnapshotStatus.INCOMPLETE
-                && second.status == SnapshotStatus.COMPLETE -> 1 // INCOMPLETE > COMPLETE, 1 case
-        else -> -1 // INCOMPLETE < BLUEPRINT, 1 case
-    } }
+object SnapshotCompareUtil {
+    // COMPLETE = INCOMPLETE = IN_PROGRESS > BLUEPRINT
+    private val blueprintLowPriorityOrderMap = mapOf(
+            Pair(SnapshotStatus.COMPLETE, 0),
+            Pair(SnapshotStatus.INCOMPLETE, 0),
+            Pair(SnapshotStatus.IN_PROGRESS, 0),
+            Pair(SnapshotStatus.BLUEPRINT, -1)
+    )
+    val blueprintLowPriorityComparator = Comparator<SnapshotMetadata> {
+        first, second -> blueprintLowPriorityOrderMap[second.status]!!
+        - blueprintLowPriorityOrderMap[first.status]!!
+    }
 }
-
-
-
 
 
 /**

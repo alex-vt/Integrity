@@ -30,7 +30,7 @@ internal abstract class CommonPaginationHelper {
         linksToArchive.forEachIndexed { linkIndex, link -> run {
             if (!isRunning(dl)) return
             if (!webArchiveAlreadyDownloaded(link, dl.snapshotPath)) {
-                IntegrityCore.postProgress(dl.jobProgressListener,
+                IntegrityCore.postProgress(dl.artifactId, dl.date,
                         "Saving web archive " + (linkIndex + 1) + " of "
                                 + linksToArchive.size + "\n"
                                 + getPaginationProgressText(currentPageLink, dl))

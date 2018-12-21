@@ -41,6 +41,8 @@ class ArtifactRecyclerAdapter(val items: ArrayList<SnapshotMetadata>, val mainAc
                     "blueprint only"
                 } else if (items.get(position).status == SnapshotStatus.COMPLETE) {
                     "at "  + items.get(position).date
+                } else if (items.get(position).status == SnapshotStatus.IN_PROGRESS) {
+                    "at "  + items.get(position).date + " (downloading)"
                 } else {
                     "at "  + items.get(position).date + " (incomplete)"
                 }

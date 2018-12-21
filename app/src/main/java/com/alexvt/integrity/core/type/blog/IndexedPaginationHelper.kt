@@ -48,7 +48,7 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
 
     private suspend fun getAdditionalLinksOnPage(currentPageLink: String,
                                                  dl: BlogMetadataDownload): Set<String> {
-        IntegrityCore.postProgress(dl.jobProgressListener,
+        IntegrityCore.postProgress(dl.artifactId, dl.date,
                 "Collecting links\n${getPaginationProgressText(currentPageLink, dl)}")
         return if (pageContentsNeeded(dl)) {
             val currentPageHtml = WebViewUtil.loadHtml(dl.webView, currentPageLink,

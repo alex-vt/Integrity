@@ -62,7 +62,12 @@ class BlogTypeActivity : AppCompatActivity() {
                 toolbar.title = "Incomplete Blog Type Snapshot"
                 bContinueSaving.visibility = View.VISIBLE
             } else {
-                toolbar.title = "Viewing Blog Type Snapshot"
+                if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
+                    toolbar.title = "Viewing Blog Type Snapshot (downloading)"
+                    showSnapshotSavingProgress()
+                } else { // COMPLETE
+                    toolbar.title = "Viewing Blog Type Snapshot"
+                }
                 bContinueSaving.visibility = View.GONE
             }
 
@@ -76,7 +81,8 @@ class BlogTypeActivity : AppCompatActivity() {
                 (rvOfflineLinkList.adapter as OfflineLinkRecyclerAdapter)
                         .setItems(linkToArchivePathRedirectMap
                                 .map { OfflineLink(it.key, it.value) })
-                val firstArchivePath = linkToArchivePathRedirectMap.entries.first().value
+                val firstArchivePath = linkToArchivePathRedirectMap.entries.firstOrNull()?.value
+                        ?: "file:blank" // todo replace
                 WebViewUtil.loadHtml(webView,
                         firstArchivePath,
                         linkToArchivePathRedirectMap,
@@ -213,10 +219,10 @@ class BlogTypeActivity : AppCompatActivity() {
         bSave.visibility = if (isEditable) View.VISIBLE else View.GONE
         bSave.setOnClickListener {
             if (checkAndSaveBlueprint()) {
-                saveSnapshotAndFinish()
+                saveSnapshotAndShowProgress()
             }
         }
-        bContinueSaving.setOnClickListener { saveSnapshotAndFinish() }
+        bContinueSaving.setOnClickListener { saveSnapshotAndShowProgress() }
     }
 
     fun getPaginationFromOptions() = if (sLinkedPagination.isChecked) {
@@ -339,7 +345,12 @@ class BlogTypeActivity : AppCompatActivity() {
         return true
     }
 
-    fun saveSnapshotAndFinish() {
+    fun saveSnapshotAndShowProgress() {
+        IntegrityCore.createSnapshotFromBlueprint(snapshot.artifactId, snapshot.date)
+        showSnapshotSavingProgress()
+    }
+
+    fun showSnapshotSavingProgress() {
         val materialDialogProgress = MaterialDialog(this)
                 .title(text = "Creating snapshot of " + snapshot.title)
                 .cancelable(false)
@@ -347,11 +358,11 @@ class BlogTypeActivity : AppCompatActivity() {
                     finish() // todo track job elsewhere, listen to data changes
                 }
         materialDialogProgress.show()
-        val job = IntegrityCore.createSnapshotFromBlueprint(snapshot.artifactId, snapshot.date) {
+        IntegrityCore.subscribeToJobProgress(snapshot.artifactId, snapshot.date) {
             onJobProgress(it, materialDialogProgress)
         }
         materialDialogProgress.negativeButton(text = "Stop") {
-            IntegrityCore.cancelJob(job)
+            IntegrityCore.cancelSnapshotCreation(snapshot.artifactId, snapshot.date)
             finish()
         }
     }

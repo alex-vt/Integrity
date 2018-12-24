@@ -16,12 +16,14 @@ import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
 import com.alexvt.integrity.core.filesystem.FolderLocationRepository
 import com.alexvt.integrity.core.filesystem.SimplePersistableFolderLocationRepository
 import com.alexvt.integrity.core.job.JobProgress
-import com.alexvt.integrity.core.job.SnapshotJobManager
+import com.alexvt.integrity.core.job.RunningJobManager
+import com.alexvt.integrity.core.job.ScheduledJobManager
 import com.alexvt.integrity.core.type.DataTypeUtil
 import com.alexvt.integrity.core.util.ArchiveUtil
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.alexvt.integrity.core.util.HashUtil
 import kotlinx.coroutines.*
+import java.text.SimpleDateFormat
 import kotlin.coroutines.CoroutineContext
 
 @SuppressLint("StaticFieldLeak") // context // todo DI
@@ -45,6 +47,7 @@ object IntegrityCore {
         folderLocationRepository = SimplePersistableFolderLocationRepository // todo replace with database
         folderLocationRepository.init(context)
         resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
+        ScheduledJobManager.updateSchedule()
     }
 
     private fun resetInProgressSnapshotStatuses() {
@@ -59,9 +62,15 @@ object IntegrityCore {
     /**
      * Saves preliminary (intended) snapshot metadata to database. No data is processed here.
      */
-    fun saveSnapshotBlueprint(snapshotMetadata: SnapshotMetadata) {
+    fun saveSnapshotBlueprint(snapshotMetadata: SnapshotMetadata): String {
+        val date = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(System.currentTimeMillis())
         metadataRepository.cleanupArtifactBlueprints(snapshotMetadata.artifactId) // no old ones
-        metadataRepository.addSnapshotMetadata(snapshotMetadata.copy(status = SnapshotStatus.BLUEPRINT))
+        metadataRepository.addSnapshotMetadata(snapshotMetadata.copy(
+                date = date,
+                status = SnapshotStatus.BLUEPRINT
+        ))
+        ScheduledJobManager.updateSchedule()
+        return date
     }
 
     /**
@@ -92,13 +101,13 @@ object IntegrityCore {
             createSnapshot(metadataInProgress, coroutineContext)
         }
 
-        SnapshotJobManager.addJob(metadataInProgress, coroutineJob)
+        RunningJobManager.addJob(metadataInProgress, coroutineJob)
     }
 
     fun subscribeToJobProgress(artifactId: Long, date: String,
                                jobProgressListener: (JobProgress<SnapshotMetadata>) -> Unit) {
         val snapshotMetadataInProgress = metadataRepository.getSnapshotMetadata(artifactId, date)
-        SnapshotJobManager.setJobProgressListener(snapshotMetadataInProgress, jobProgressListener)
+        RunningJobManager.setJobProgressListener(snapshotMetadataInProgress, jobProgressListener)
     }
 
     /**
@@ -106,12 +115,13 @@ object IntegrityCore {
      */
     fun cancelSnapshotCreation(artifactId: Long, date: String) {
         val snapshotMetadataInProgress = metadataRepository.getSnapshotMetadata(artifactId, date)
-        SnapshotJobManager.removeJob(snapshotMetadataInProgress)
+        RunningJobManager.removeJob(snapshotMetadataInProgress)
 
         val incompleteMetadata = snapshotMetadataInProgress.copy(status = SnapshotStatus.INCOMPLETE)
         metadataRepository.removeSnapshotMetadata(incompleteMetadata.artifactId,
                 incompleteMetadata.date)
         metadataRepository.addSnapshotMetadata(incompleteMetadata)
+        ScheduledJobManager.updateSchedule()
     }
 
     /**
@@ -352,7 +362,8 @@ object IntegrityCore {
             delay(800)
             postResult(completeMetadata)
         }
-        SnapshotJobManager.removeJob(completeMetadata)
+        RunningJobManager.removeJob(completeMetadata)
+        ScheduledJobManager.updateSchedule()
     }
 
     fun postProgress(artifactId: Long, date: String, message: String) {
@@ -362,7 +373,7 @@ object IntegrityCore {
     private fun postProgress(snapshotMetadata: SnapshotMetadata, message: String) {
         Log.d("IntegrityCore", "Job progress: " + message)
         GlobalScope.launch(Dispatchers.Main) {
-            SnapshotJobManager.invokeJobProgressListener(snapshotMetadata, JobProgress(
+            RunningJobManager.invokeJobProgressListener(snapshotMetadata, JobProgress(
                     progressMessage = message
             ))
         }
@@ -371,7 +382,7 @@ object IntegrityCore {
     private fun postResult(result: SnapshotMetadata) {
         Log.d("IntegrityCore", "Job result: " + result)
         GlobalScope.launch(Dispatchers.Main) {
-            SnapshotJobManager.invokeJobProgressListener(result, JobProgress(
+            RunningJobManager.invokeJobProgressListener(result, JobProgress(
                     result = result
             ))
         }

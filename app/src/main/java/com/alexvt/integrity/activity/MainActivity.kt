@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshArtifactList() {
         (rvArtifactList.adapter as ArtifactRecyclerAdapter)
-                .setItems(IntegrityCore.metadataRepository.getAllArtifactLatestMetadata()
+                .setItems(IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(true)
                         .snapshotMetadataList.toList())
     }
 

@@ -359,7 +359,6 @@ class BlogTypeActivity : AppCompatActivity() {
         // todo either construct snapshot here completely or modify it on option change
         snapshot = snapshot.copy(
                 title = etName.text.toString(),
-                date = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(timestamp),
                 description = etDescription.text.toString(),
                 downloadSchedule = snapshot.downloadSchedule.copy( // period is already set
                         allowOnWifi = sDownloadOnWifi.isChecked,

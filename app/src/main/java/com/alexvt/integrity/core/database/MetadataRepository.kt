@@ -56,11 +56,12 @@ interface MetadataRepository {
 
     /**
      * Returns list of the latest snapshots
-     * of metadata for all artifacts:
+     * of metadata for all artifacts.
      *
-     * Complete ones if there are any, otherwise incomplete if there are any, otherwise blueprints.
+     * If deprioritizeBlueprints is true and there are non-blueprint snapshots,
+     * the latest of them will be used.
      */
-    fun getAllArtifactLatestMetadata(): MetadataCollection
+    fun getAllArtifactLatestMetadata(deprioritizeBlueprints: Boolean): MetadataCollection
 
     /**
      * Returns artifact with all snapshots of metadata by given artifactId.

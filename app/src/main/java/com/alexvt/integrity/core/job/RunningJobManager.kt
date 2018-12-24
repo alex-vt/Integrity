@@ -14,7 +14,7 @@ import kotlinx.coroutines.Job
  * registering job progress listener,
  * and invoking now progress listeners for existing jobs with recent progress.
  */
-object SnapshotJobManager {
+object RunningJobManager {
 
     var coroutineJobMap: Map<String, Job> = mapOf()
     var jobProgressListenerMap: Map<String, ((JobProgress<SnapshotMetadata>) -> Unit)> = mapOf()
@@ -24,6 +24,9 @@ object SnapshotJobManager {
         coroutineJobMap = coroutineJobMap
                 .plus(Pair(getId(snapshotMetadata), coroutineJob))
     }
+
+    fun isRunning(snapshotMetadata: SnapshotMetadata)
+            = coroutineJobMap.containsKey(getId(snapshotMetadata))
 
     fun setJobProgressListener(snapshotMetadata: SnapshotMetadata,
                                progressListener: (JobProgress<SnapshotMetadata>) -> Unit) {

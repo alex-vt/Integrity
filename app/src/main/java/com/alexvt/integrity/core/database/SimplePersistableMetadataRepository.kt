@@ -57,13 +57,16 @@ object SimplePersistableMetadataRepository: MetadataRepository {
         return allMetadata
     }
 
-    override fun getAllArtifactLatestMetadata(): MetadataCollection {
+    override fun getAllArtifactLatestMetadata(deprioritizeBlueprints: Boolean): MetadataCollection {
+        val snapshotComparator = if (deprioritizeBlueprints) {
+            SnapshotCompareUtil.blueprintLowPriorityComparator.thenByDescending { it.date }
+        } else {
+            compareByDescending { it.date }
+        }
         val artifactSnapshotMetadataList = allMetadata.snapshotMetadataList
                 .groupBy { it.artifactId }
                 .map { it.value
-                        // sort by status (Blueprint after anything else), then by date descending
-                        .sortedWith(SnapshotCompareUtil.blueprintLowPriorityComparator
-                                .thenByDescending { it.date })
+                        .sortedWith(snapshotComparator)
                         .first() }
                 .sortedByDescending { it.date }
         return MetadataCollection(ArrayList(artifactSnapshotMetadataList),

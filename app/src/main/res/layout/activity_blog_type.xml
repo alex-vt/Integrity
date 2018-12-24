@@ -145,8 +145,8 @@
                     android:inputType="text"
                     />
 
+                <!-- Archive locations -->
                 <RelativeLayout
-                    android:id="@+id/llArchiveLocation"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     >
@@ -177,6 +177,45 @@
 
                 </RelativeLayout>
 
+                <!-- Download schedule options -->
+
+                <Switch
+                    android:id="@+id/sDownloadOnWifi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Allow downloading on WiFi"
+                    />
+
+                <Switch
+                    android:id="@+id/sDownloadOnMobileData"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Allow downloading on mobile data"
+                    />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    >
+
+                    <Button
+                        android:id="@+id/bDownloadSchedule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Downloading schedule"
+                        />
+
+                    <TextView
+                        android:id="@+id/tvDownloadSchedule"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="(please choose)"
+                        android:layout_toRightOf="@+id/bDownloadSchedule"
+                        />
+
+                </RelativeLayout>
+
+                <!-- Save actions -->
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

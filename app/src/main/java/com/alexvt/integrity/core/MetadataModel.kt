@@ -21,9 +21,18 @@ data class SnapshotMetadata(val artifactId: Long = 0,
                             val date: String = "",
                             val title: String = "",
                             val description: String = "",
+                            val downloadSchedule: DownloadSchedule = DownloadSchedule(),
                             val archiveFolderLocations: ArrayList<FolderLocation> = arrayListOf(),
                             val dataTypeSpecificMetadata: TypeMetadata = BlogTypeMetadata(),
                             val status: String = SnapshotStatus.BLUEPRINT
+)
+
+/**
+ * Snapshot downloading schedule: period and conditions.
+ */
+data class DownloadSchedule(val periodSeconds: Long = 0, // <= 0 for single time download
+                            val allowOnWifi: Boolean = true,
+                            val allowOnMobileData: Boolean = false
 )
 
 /**

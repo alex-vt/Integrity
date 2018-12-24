@@ -19,10 +19,7 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItems
 import com.alexvt.integrity.R
 import com.alexvt.integrity.activity.FolderLocationsActivity
-import com.alexvt.integrity.core.FolderLocation
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.SnapshotMetadata
-import com.alexvt.integrity.core.SnapshotStatus
+import com.alexvt.integrity.core.*
 import com.alexvt.integrity.core.job.JobProgress
 import com.jakewharton.rxbinding3.widget.checkedChanges
 import com.jakewharton.rxbinding3.widget.textChanges
@@ -149,6 +146,15 @@ class BlogTypeActivity : AppCompatActivity() {
         bManageArchiveLocations.isEnabled = isEditable
         bManageArchiveLocations.setOnClickListener { openArchiveLocationList() }
 
+        tvDownloadSchedule.text = getDownloadScheduleText(snapshot.downloadSchedule)
+        bDownloadSchedule.isEnabled = isEditable
+        bDownloadSchedule.setOnClickListener { askSetDownloadSchedule() }
+
+        sDownloadOnWifi.isEnabled = isEditable
+        sDownloadOnWifi.isChecked = snapshot.downloadSchedule.allowOnWifi
+        sDownloadOnMobileData.isEnabled = isEditable
+        sDownloadOnMobileData.isChecked = snapshot.downloadSchedule.allowOnMobileData
+
         supportActionBar!!.subtitle = snapshot.title
 
         etRelatedLinkFilter.isEnabled = isEditable
@@ -265,6 +271,35 @@ class BlogTypeActivity : AppCompatActivity() {
             = IntegrityCore.getNamedFolderLocationMap(folderLocations).keys
             .joinToString(", ")
 
+    // todo improve this option
+    fun getDownloadScheduleText(downloadSchedule: DownloadSchedule)
+            = "Every " + downloadSchedule.periodSeconds + " s"
+
+    val downloadScheduleOptionMap = mapOf(
+            Pair("Never", 0L),
+            Pair("Every minute", 60L),
+            Pair("Every hour", 60 * 60L),
+            Pair("Every day", 24 * 60 * 60L),
+            Pair("Every week", 7 * 24 * 60 * 60L),
+            Pair("Every month", 30 * 7 * 24 * 60 * 60L)
+    )
+
+    fun askSetDownloadSchedule() {
+        MaterialDialog(this)
+                .listItems(items = ArrayList(downloadScheduleOptionMap.keys)) { _, _, text ->
+                    setDownloadSchedule(text)
+                }
+                .show()
+    }
+
+    fun setDownloadSchedule(optionText: String) {
+        snapshot = snapshot.copy(
+                downloadSchedule = snapshot.downloadSchedule
+                        .copy(periodSeconds = downloadScheduleOptionMap[optionText]!!)
+        )
+        tvDownloadSchedule.text = optionText
+    }
+
     fun getArtifactIdFromIntent(intent: Intent?): Long {
         return intent?.getLongExtra("artifactId", -1) ?: -1
     }
@@ -321,15 +356,23 @@ class BlogTypeActivity : AppCompatActivity() {
         if (snapshot.artifactId < 1) {
             snapshot = snapshot.copy(artifactId = timestamp)
         }
+        // todo either construct snapshot here completely or modify it on option change
         snapshot = snapshot.copy(
                 title = etName.text.toString(),
                 date = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(timestamp),
                 description = etDescription.text.toString(),
+                downloadSchedule = snapshot.downloadSchedule.copy( // period is already set
+                        allowOnWifi = sDownloadOnWifi.isChecked,
+                        allowOnMobileData = sDownloadOnMobileData.isChecked
+                ),
+                // archive locations already set
                 dataTypeSpecificMetadata = BlogTypeMetadata(
                         url = if (snapshotDataExists(intent)) {
                             getTypeMetadata().url // for read only snapshot, same as it was
+                        } else if (webView.url != null) {
+                            webView.url.trim('/', ' ') // for editable snapshot, the one from loaded WebView
                         } else {
-                            webView.url.trimEnd('/') // for editable snapshot, the one from loaded WebView
+                            etShortUrl.text.toString().trim('/', ' ')
                         },
                         loadImages = cbLoadImages.isChecked,
                         desktopSite = cbDesktopSite.isChecked,

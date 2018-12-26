@@ -61,7 +61,7 @@ class BlogTypeActivity : AppCompatActivity() {
             } else {
                 if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
                     toolbar.title = "Viewing Blog Type Snapshot (downloading)"
-                    showSnapshotSavingProgress()
+                    showSnapshotSavingProgress(snapshot.artifactId, snapshot.date)
                 } else { // COMPLETE
                     toolbar.title = "Viewing Blog Type Snapshot"
                 }
@@ -388,31 +388,14 @@ class BlogTypeActivity : AppCompatActivity() {
     }
 
     fun saveSnapshotAndShowProgress() {
-        IntegrityCore.createSnapshotFromBlueprint(snapshot.artifactId, snapshot.date)
-        showSnapshotSavingProgress()
+        val blueprintDate = IntegrityCore.metadataRepository
+                .getLatestSnapshotMetadata(snapshot.artifactId).date
+        IntegrityCore.createSnapshotFromBlueprint(snapshot.artifactId, blueprintDate)
+        showSnapshotSavingProgress(snapshot.artifactId, blueprintDate)
     }
 
-    fun showSnapshotSavingProgress() {
-        val materialDialogProgress = MaterialDialog(this)
-                .title(text = "Creating snapshot of " + snapshot.title)
-                .cancelable(false)
-                .positiveButton(text = "In background") {
-                    finish() // todo track job elsewhere, listen to data changes
-                }
-        materialDialogProgress.show()
-        IntegrityCore.subscribeToJobProgress(snapshot.artifactId, snapshot.date) {
-            onJobProgress(it, materialDialogProgress)
-        }
-        materialDialogProgress.negativeButton(text = "Stop") {
-            IntegrityCore.cancelSnapshotCreation(snapshot.artifactId, snapshot.date)
-            finish()
-        }
-    }
-
-    fun onJobProgress(jobProgress: JobProgress<SnapshotMetadata>, dialog: MaterialDialog) {
-        dialog.message(text = jobProgress.progressMessage)
-        if (jobProgress.result != null) {
-            dialog.cancel()
+    fun showSnapshotSavingProgress(artifactId: Long, date: String) {
+        IntegrityCore.showRunningJobProgressDialog(this, artifactId, date).setOnCancelListener {
             finish()
         }
     }

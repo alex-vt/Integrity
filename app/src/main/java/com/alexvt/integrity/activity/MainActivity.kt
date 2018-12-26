@@ -10,10 +10,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.adapter.ArtifactRecyclerAdapter
+import com.alexvt.integrity.adapter.JobRecyclerAdapter
 import com.alexvt.integrity.core.IntegrityCore
 import com.leinardi.android.speeddial.SpeedDialActionItem
 
@@ -26,6 +28,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+
+        setupDrawerToggle()
+        toolbar.title = "Artifacts"
 
         // Float Action Button action items for each available data type
         // Data type map is sorted by key, so the value will be obtained by index of clicked action
@@ -43,11 +48,38 @@ class MainActivity : AppCompatActivity() {
         }
 
         rvArtifactList.adapter = ArtifactRecyclerAdapter(ArrayList(), this)
+        rvJobs.adapter = JobRecyclerAdapter(ArrayList(), this)
+    }
+
+    fun setupDrawerToggle() {
+        supportActionBar!!.setDisplayShowTitleEnabled(false)
+        val drawerToggle = ActionBarDrawerToggle(this, dlAllContent, toolbar, 0, 0)
+        dlAllContent.setDrawerListener(drawerToggle)
+        drawerToggle.syncState()
     }
 
     override fun onStart() {
         super.onStart()
-        refreshArtifactList()
+        refreshArtifactList() // todo change to listener
+        IntegrityCore.subscribeToScheduledJobListing(MainActivity::class.java.simpleName) {
+            refreshJobList(it, false)
+        }
+        IntegrityCore.subscribeToRunningJobListing(MainActivity::class.java.simpleName) {
+            refreshJobList(it, true)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        IntegrityCore.unsubscribeFromScheduledJobListing(MainActivity::class.java.simpleName)
+        IntegrityCore.unsubscribeFromRunningJobListing(MainActivity::class.java.simpleName)
+    }
+
+    private fun refreshJobList(scheduledJobIds: List<Pair<Long, String>>, isRunning: Boolean) {
+        (rvJobs.adapter as JobRecyclerAdapter)
+                .setItems(scheduledJobIds.map {
+                    IntegrityCore.metadataRepository.getSnapshotMetadata(it.first, it.second)
+                }, isRunning)
     }
 
     fun askRemoveArtifact(artifactId: Long) {

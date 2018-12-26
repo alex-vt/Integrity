@@ -7,7 +7,10 @@
 package com.alexvt.integrity.core.job
 
 import com.alexvt.integrity.core.SnapshotMetadata
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 /**
  * Allows canceling coroutine jobs by given corresponding SnapshotMetadata,
@@ -23,6 +26,7 @@ object RunningJobManager {
     fun addJob(snapshotMetadata: SnapshotMetadata, coroutineJob: Job) {
         coroutineJobMap = coroutineJobMap
                 .plus(Pair(getId(snapshotMetadata), coroutineJob))
+        invokeJobListListeners()
     }
 
     fun isRunning(snapshotMetadata: SnapshotMetadata)
@@ -45,8 +49,33 @@ object RunningJobManager {
     fun removeJob(snapshotMetadata: SnapshotMetadata) {
         coroutineJobMap[getId(snapshotMetadata)]?.cancel()
         coroutineJobMap = coroutineJobMap.minus(getId(snapshotMetadata))
+        invokeJobListListeners()
         jobProgressListenerMap = jobProgressListenerMap.minus(getId(snapshotMetadata))
         recentJobProgressMap = recentJobProgressMap.minus(getId(snapshotMetadata))
+    }
+
+
+    private var runningJobsListenerMap: Map<String, ((List<Pair<Long, String>>) -> Unit)> = emptyMap()
+
+    fun addJobListListener(tag: String, jobsListener: (List<Pair<Long, String>>) -> Unit) {
+        runningJobsListenerMap = runningJobsListenerMap.plus(Pair(tag, jobsListener))
+        invokeJobListListeners()
+    }
+
+    fun removeJobListListener(tag: String) {
+        runningJobsListenerMap = runningJobsListenerMap.minus(tag)
+    }
+
+    /**
+     * Feeds listeners with scheduled jobs at the moment
+     */
+    private fun invokeJobListListeners() {
+        val runningJobSnapshotIds = coroutineJobMap.keys.map { getArtifactIdAndDate(it) }
+        GlobalScope.launch (Dispatchers.Main) {
+            runningJobsListenerMap.forEach {
+                it.value.invoke(runningJobSnapshotIds)
+            }
+        }
     }
 
 
@@ -61,5 +90,14 @@ object RunningJobManager {
      */
     private fun getId(snapshotMetadata: SnapshotMetadata)
             = "" + snapshotMetadata.artifactId + "_" + snapshotMetadata.date
+
+
+    /**
+     * Reversing unique snapshot ID based on artifact ID and date to artifact ID and date
+     */
+    private fun getArtifactIdAndDate(uniqueId: String) = Pair(
+            uniqueId.substringBefore('_').toLong(),
+            uniqueId.substringAfter('_')
+    )
 
 }

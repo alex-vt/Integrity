@@ -10,6 +10,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.core.database.MetadataRepository
 import com.alexvt.integrity.core.database.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
@@ -57,6 +58,47 @@ object IntegrityCore {
                     metadataRepository.removeSnapshotMetadata(it.artifactId, it.date)
                     metadataRepository.addSnapshotMetadata(it.copy(status = SnapshotStatus.INCOMPLETE))
                 }
+    }
+
+    fun subscribeToRunningJobListing(tag: String, jobsListener: (List<Pair<Long, String>>) -> Unit) {
+        RunningJobManager.addJobListListener(tag, jobsListener)
+    }
+
+    fun unsubscribeFromRunningJobListing(tag: String) {
+        RunningJobManager.removeJobListListener(tag)
+    }
+
+    fun subscribeToScheduledJobListing(tag: String, jobsListener: (List<Pair<Long, String>>) -> Unit) {
+        ScheduledJobManager.addScheduledJobsListener(tag, jobsListener)
+    }
+
+    fun unsubscribeFromScheduledJobListing(tag: String) {
+        ScheduledJobManager.removeScheduledJobsListener(tag)
+    }
+
+    fun getNextJobRunTimestamp(snapshotMetadata: SnapshotMetadata)
+            = ScheduledJobManager.getNextRunTimestamp(snapshotMetadata)
+
+    fun showRunningJobProgressDialog(context: Context, artifactId: Long, date: String): MaterialDialog {
+        val title = metadataRepository.getSnapshotMetadata(artifactId, date).title
+        val progressDialog = MaterialDialog(context)
+                .title(text = "Creating snapshot of $title")
+                .cancelable(false)
+                .positiveButton(text = "In background") {
+                    it.cancel()
+                }
+        progressDialog.show()
+        IntegrityCore.subscribeToJobProgress(artifactId, date) {
+            progressDialog.message(text = it.progressMessage)
+            if (it.result != null) {
+                progressDialog.cancel()
+            }
+        }
+        progressDialog.negativeButton(text = "Stop") {
+            IntegrityCore.cancelSnapshotCreation(artifactId, date)
+            it.cancel()
+        }
+        return progressDialog
     }
 
     /**

@@ -11,8 +11,13 @@ import android.util.Log
 import androidx.work.*
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.SnapshotMetadata
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.schedule
 
 /**
  * Provides info about jobs on snapshots scheduled in the future,
@@ -20,26 +25,72 @@ import java.util.concurrent.TimeUnit
  */
 object ScheduledJobManager {
 
+    private var scheduledJobsListenerMap: Map<String, ((List<Pair<Long, String>>) -> Unit)> = emptyMap()
+
+    fun addScheduledJobsListener(tag: String, jobsListener: (List<Pair<Long, String>>) -> Unit) {
+        if (scheduledJobsListenerMap.isEmpty()) {
+            startJobStatusUpdateTimer()
+        }
+        scheduledJobsListenerMap = scheduledJobsListenerMap.plus(Pair(tag, jobsListener))
+        invokeListenersWithCurrentData()
+    }
+
+    fun removeScheduledJobsListener(tag: String) {
+        scheduledJobsListenerMap = scheduledJobsListenerMap.minus(tag)
+        if (scheduledJobsListenerMap.isEmpty()) {
+            stopJobStatusUpdateTimer()
+        }
+    }
+
+    private lateinit var jobsStatusUpdateTimer: TimerTask // todo extract to universal timer
+
+    private fun startJobStatusUpdateTimer() {
+        val statusPollingPeriodMillis = 2000L
+        jobsStatusUpdateTimer = Timer().schedule(delay = statusPollingPeriodMillis,
+                period = statusPollingPeriodMillis) {
+            invokeListenersWithCurrentData()
+        }
+    }
+
+    private fun stopJobStatusUpdateTimer() {
+        if (!::jobsStatusUpdateTimer.isInitialized) {
+            return
+        }
+        jobsStatusUpdateTimer.cancel()
+    }
+
     /**
-     * Gets map of snapshots scheduled to download next to scheduled timestamps.
-     * Currently running jobs are excluded.
+     * Feeds listeners with artifactIDs and dates of scheduled jobs at the moment
      */
-    fun getUpcomingJobMap()
+    private fun invokeListenersWithCurrentData() {
+        val scheduledJobIds = getScheduledJobs().map { Pair(it.artifactId, it.date) }
+        GlobalScope.launch (Dispatchers.Main) {
+            scheduledJobsListenerMap.forEach {
+                it.value.invoke(scheduledJobIds)
+            }
+        }
+    }
+
+    /**
+     * Gets list of snapshots scheduled to download next to scheduled timestamps.
+     *
+     * Sorted by time remaining until job starts.
+     */
+    private fun getScheduledJobs()
             = IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(false)
             .snapshotMetadataList
             .filter { it.downloadSchedule.periodSeconds > 0L } // todo also resume jobs interrupted not by user
-            .filterNot { RunningJobManager.isRunning(it) }
-            .associate { it to getNextJobTimestamp(it) }
+            .sortedBy { getNextRunTimestamp(it) }
 
-    private fun getNextJobTimestamp(snapshotMetadata: SnapshotMetadata)
+    fun getNextRunTimestamp(snapshotMetadata: SnapshotMetadata)
             = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").parse(snapshotMetadata.date).time +
             snapshotMetadata.downloadSchedule.periodSeconds * 1000
 
     private fun getNextJobDelay(snapshotMetadata: SnapshotMetadata)
-            = getNextJobTimestamp(snapshotMetadata) - System.currentTimeMillis()
+            = getNextRunTimestamp(snapshotMetadata) - System.currentTimeMillis()
 
     /**
-     * Schedules jobs eligible to scheduling at the moment of calling
+     * Schedules jobs eligible for scheduling at the moment of calling
      * todo edit only changed jobs
      */
     fun updateSchedule() {
@@ -47,7 +98,7 @@ object ScheduledJobManager {
         val workManagerJobTag = "downloading"
         WorkManager.getInstance().pruneWork()
         WorkManager.getInstance().cancelAllWorkByTag(workManagerJobTag)
-        val workList = getUpcomingJobMap().keys.map {
+        val workList = getScheduledJobs().map {
             Log.d(ScheduledJobManager::class.java.simpleName, "Scheduling download job " +
                     "in ${getNextJobDelay(it)} ms for ${it.title} (artifactID ${it.artifactId})")
             OneTimeWorkRequest.Builder(SnapshotDownloadWorker::class.java)
@@ -62,6 +113,7 @@ object ScheduledJobManager {
         if (workList.isNotEmpty()) {
             WorkManager.getInstance().enqueue(workList)
         }
+        invokeListenersWithCurrentData()
         Log.d(ScheduledJobManager::class.java.simpleName, "Updated schedule: " +
                 "${workList.size} jobs added")
     }

@@ -139,7 +139,6 @@ Storage destinations:
 Stage 1
 
 * Storage manager
-* Active jobs manager
 * Log
 * Error handling
 * Plugins support

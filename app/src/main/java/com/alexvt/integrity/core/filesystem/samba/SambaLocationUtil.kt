@@ -6,7 +6,6 @@
 
 package com.alexvt.integrity.core.filesystem.samba
 
-import android.app.Activity
 import android.util.Log
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
@@ -15,8 +14,6 @@ import java.io.File
 import jcifs.smb.SmbFile
 import jcifs.smb.NtlmPasswordAuthentication
 import jcifs.smb.SmbFileOutputStream
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 
 
 open class SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {

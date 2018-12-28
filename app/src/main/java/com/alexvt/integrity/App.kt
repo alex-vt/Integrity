@@ -11,10 +11,9 @@ import com.alexvt.integrity.core.*
 import com.alexvt.integrity.core.filesystem.local.LocalFolderLocation
 import com.alexvt.integrity.core.filesystem.local.LocalLocationUtil
 import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocation
-import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocationCredentials
 import com.alexvt.integrity.core.filesystem.samba.SambaLocationUtil
-import com.alexvt.integrity.core.type.blog.BlogTypeUtil
-import com.alexvt.integrity.core.type.blog.BlogTypeMetadata
+import com.alexvt.integrity.type.blog.BlogTypeUtil
+import com.alexvt.integrity.type.blog.BlogTypeMetadata
 
 class App : android.app.Application() {
 

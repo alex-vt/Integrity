@@ -1,0 +1,8 @@
+# Gradle files
+build/
+
+# Keystore files
+*.jks
+
+# Local module specific Gradle properties
+gradle.properties

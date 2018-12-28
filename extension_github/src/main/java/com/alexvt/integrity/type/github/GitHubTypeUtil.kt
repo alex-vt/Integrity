@@ -7,59 +7,30 @@
 package com.alexvt.integrity.type.github
 
 import android.util.Log
-import android.webkit.WebView
-import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.alexvt.integrity.core.type.DataTypeUtil
-import com.alexvt.integrity.type.blog.IndexedPaginationHelper
-import com.alexvt.integrity.type.blog.LinkedPaginationHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlin.coroutines.CoroutineContext
 
 
-class BlogTypeUtil: DataTypeUtil<BlogTypeMetadata> {
+class GitHubTypeUtil: DataTypeUtil<GitHubTypeMetadata> {
 
     override fun getTypeScreenName(): String = "Website (Blog) Pages"
 
     override fun getOperationMainActivityClass() = GitHubTypeActivity::class.java
 
     override suspend fun downloadData(artifactId: Long, date: String,
-                                      blogMetadata: BlogTypeMetadata,
+                                      metadata: GitHubTypeMetadata,
                                       jobContext: CoroutineContext): String {
-        Log.d("BlogDataTypeUtil", "downloadData start")
+        Log.d("GitHubTypeUtil", "downloadData start")
         val snapshotPath = DataCacheFolderUtil.ensureSnapshotFolder(artifactId, date)
 
         runBlocking(Dispatchers.Main) {
-            val dl = BlogMetadataDownload(
-                    artifactId = artifactId,
-                    date = date,
-                    webView = WebView(IntegrityCore.context),
-                    metadata = blogMetadata,
-                    snapshotPath = snapshotPath,
-                    jobContext = jobContext
-            )
-
-            if (!LinkedPaginationHelper().downloadPages(dl)) {
-                IndexedPaginationHelper().downloadPages(dl)
-            }
+            // todo
         }
 
-        Log.d("BlogDataTypeUtil", "downloadData end")
+        Log.d("GitHubTypeUtil", "downloadData end")
         return snapshotPath
     }
 }
-
-/**
- * Holds Blog Type metadata and properties of environment for its data downloading.
- *
- * Serves for downloading algorithm code clarity.
- */
-internal data class BlogMetadataDownload(
-        val artifactId: Long,
-        val date: String,
-        val webView: WebView,
-        val metadata: BlogTypeMetadata,
-        val snapshotPath: String,
-        val jobContext: CoroutineContext
-)

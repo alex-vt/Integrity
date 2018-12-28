@@ -1,0 +1,17 @@
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".base.activity.MainActivity">
+    <item
+        android:id="@+id/action_options"
+        android:orderInCategory="100"
+        android:title="Options"
+        android:icon="@drawable/baseline_settings_black_24"
+        app:showAsAction="always" />
+</menu>

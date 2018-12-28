@@ -22,6 +22,17 @@ interface MetadataRepository {
     fun init(context: Context)
 
     /**
+     * Registers database contents changes listener with a tag.
+     * todo narrow down to tracking changes of subset of data
+     */
+    fun addChangesListener(tag: String, changesListener: () -> Unit)
+
+    /**
+     * Removes database contents changes listener by a tag
+     */
+    fun removeChangesListener(tag: String)
+
+    /**
      * Writes snapshot metadata to database.
      *
      * If snapshots with the same artifactId don't exist,

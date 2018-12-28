@@ -30,7 +30,14 @@ class ArtifactViewActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        refreshSnapshotList()
+        IntegrityCore.metadataRepository.addChangesListener(ArtifactViewActivity::class.java.simpleName) {
+            refreshSnapshotList()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        IntegrityCore.metadataRepository.removeChangesListener(ArtifactViewActivity::class.java.simpleName)
     }
 
     fun getArtifactIdFromIntent(intent: Intent?): Long {

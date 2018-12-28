@@ -60,7 +60,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        refreshArtifactList() // todo change to listener
+        IntegrityCore.metadataRepository.addChangesListener(MainActivity::class.java.simpleName) {
+            refreshArtifactList()
+        }
         IntegrityCore.subscribeToScheduledJobListing(MainActivity::class.java.simpleName) {
             refreshJobList(it, false)
         }
@@ -71,6 +73,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        IntegrityCore.metadataRepository.removeChangesListener(MainActivity::class.java.simpleName)
         IntegrityCore.unsubscribeFromScheduledJobListing(MainActivity::class.java.simpleName)
         IntegrityCore.unsubscribeFromRunningJobListing(MainActivity::class.java.simpleName)
     }
@@ -88,7 +91,6 @@ class MainActivity : AppCompatActivity() {
                 .positiveButton(text = "Delete") {
                     dialog ->
                     IntegrityCore.removeArtifact(artifactId, false)
-                    refreshArtifactList()
                 }
                 .negativeButton(text = "Cancel")
                 .show()
@@ -100,7 +102,6 @@ class MainActivity : AppCompatActivity() {
                 .positiveButton(text = "Delete") {
                     dialog ->
                     IntegrityCore.removeAll(false)
-                    refreshArtifactList()
                 }
                 .negativeButton(text = "Cancel")
                 .show()

@@ -11,6 +11,9 @@ import com.alexvt.integrity.core.*
 import com.alexvt.integrity.core.util.HashUtil
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.core.util.PreferencesUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /**
  * Stores metadata simply in Java objects and persists them to Android SharedPreferences
@@ -35,22 +38,47 @@ object SimplePersistableMetadataRepository: MetadataRepository {
         }
     }
 
+    private var changesListenerMap: Map<String, (() -> Unit)> = emptyMap()
+
+    /**
+     * Registers database contents changes listener with a tag.
+     */
+    override fun addChangesListener(tag: String, changesListener: () -> Unit) {
+        changesListenerMap = changesListenerMap.plus(Pair(tag, changesListener))
+        invokeChangesListeners()
+    }
+
+    /**
+     * Removes database contents changes listener by a tag
+     */
+    override fun removeChangesListener(tag: String) {
+        changesListenerMap = changesListenerMap.minus(tag)
+    }
+
+    private fun invokeChangesListeners() {
+        GlobalScope.launch (Dispatchers.Main) {
+            changesListenerMap.forEach {
+                it.value.invoke()
+            }
+        }
+    }
+
     override fun addSnapshotMetadata(snapshotMetadata: SnapshotMetadata) {
         allMetadata.snapshotMetadataList.add(snapshotMetadata)
         allMetadata = HashUtil.updateHash(allMetadata)
-        persistAll()
+        saveChanges()
     }
 
     override fun removeArtifactMetadata(artifactId: Long) {
         allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId }
         allMetadata = HashUtil.updateHash(allMetadata)
-        persistAll()
+        saveChanges()
     }
 
     override fun removeSnapshotMetadata(artifactId: Long, date: String) {
         allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId && it.date == date }
         allMetadata = HashUtil.updateHash(allMetadata)
-        persistAll()
+        saveChanges()
     }
 
     override fun getAllArtifactMetadata(): MetadataCollection {
@@ -96,22 +124,23 @@ object SimplePersistableMetadataRepository: MetadataRepository {
     override fun clear() {
         allMetadata.snapshotMetadataList.clear()
         allMetadata = HashUtil.updateHash(allMetadata)
-        persistAll()
+        saveChanges()
     }
 
     override fun cleanupArtifactBlueprints(artifactId: Long) {
         allMetadata.snapshotMetadataList.removeIf { it.artifactId == artifactId
                 && it.status == SnapshotStatus.BLUEPRINT }
         allMetadata = HashUtil.updateHash(allMetadata)
-        persistAll()
+        saveChanges()
     }
 
     /**
-     * Persists metadata to JSON in SharedPreferences.
+     * Invokes changes listener and persists metadata to JSON in SharedPreferences.
      *
      * Should be called after every metadata modification.
      */
-    @Synchronized private fun persistAll() {
+    @Synchronized private fun saveChanges() {
+        invokeChangesListeners()
         val fullMetadataJson = JsonSerializerUtil.toJson(allMetadata)!!
         PreferencesUtil.setFullMetadataJson(IntegrityCore.context, fullMetadataJson)
     }

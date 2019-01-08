@@ -90,9 +90,8 @@ class GitHubTypeActivity : DataTypeActivity() {
         }
     }
 
-
-    override fun updateFolderLocationSelectionInViews(folderLocationText: String) {
-        tvArchiveLocations.text = folderLocationText
+    override fun updateFolderLocationSelectionInViews(folderLocationTexts: Array<String>) {
+        tvArchiveLocations.text = folderLocationTexts.joinToString(separator = ", ")
     }
 
     override fun updateDownloadScheduleInViews(optionText: String) {
@@ -106,6 +105,10 @@ class GitHubTypeActivity : DataTypeActivity() {
         }
         if (etName.text.trim().isEmpty()) {
             Toast.makeText(this, "Please enter name", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (snapshot.archiveFolderLocations.isEmpty()) {
+            Toast.makeText(this, "Please add location where to save archive", Toast.LENGTH_SHORT).show()
             return false
         }
         val timestamp = System.currentTimeMillis()
@@ -172,12 +175,12 @@ class GitHubTypeActivity : DataTypeActivity() {
         etDescription.isEnabled = isEditable
         etDescription.append(snapshot.description)
 
-        tvArchiveLocations.text = getArchiveLocationsText(snapshot.archiveFolderLocations)
+        updateFolderLocationSelectionInViews(IntentUtil.getFolderLocationNames(intent))
         bArchiveLocation.isEnabled = isEditable
-        bArchiveLocation.setOnClickListener { askAddArchiveLocation() }
+        bArchiveLocation.setOnClickListener { openFolderLocationList(selectMode = true) }
 
         bManageArchiveLocations.isEnabled = isEditable
-        bManageArchiveLocations.setOnClickListener { openArchiveLocationList() }
+        bManageArchiveLocations.setOnClickListener { openFolderLocationList(selectMode = false) }
 
         tvDownloadSchedule.text = getDownloadScheduleText(snapshot.downloadSchedule)
         bDownloadSchedule.isEnabled = isEditable

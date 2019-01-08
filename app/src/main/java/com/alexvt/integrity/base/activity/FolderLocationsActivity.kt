@@ -6,23 +6,34 @@
 
 package com.alexvt.integrity.base.activity
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.adapter.FolderLocationRecyclerAdapter
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.FolderLocation
+import com.alexvt.integrity.lib.util.IntentUtil
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import kotlinx.android.synthetic.main.activity_folder_locations.*
 
 class FolderLocationsActivity : AppCompatActivity() {
 
+    var selectedFolderLocations: List<FolderLocation> = emptyList()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_folder_locations)
         setSupportActionBar(toolbar)
+
+        if (IntentUtil.getSnapshot(intent) != null) {
+            selectedFolderLocations = IntentUtil.getSnapshot(intent)!!.archiveFolderLocations
+        }
 
         // Float Action Button action items for each available folder location type
         // Folder location type map is sorted by key, so the value will be obtained by index of clicked action
@@ -39,6 +50,9 @@ class FolderLocationsActivity : AppCompatActivity() {
             false
         }
         rvFolderLocationList.adapter = FolderLocationRecyclerAdapter(ArrayList(), this)
+
+        bDone.visibility = if (isSelectMode()) View.VISIBLE else View.GONE
+        bDone.setOnClickListener { returnSelection() }
     }
 
     override fun onStart() {
@@ -46,9 +60,41 @@ class FolderLocationsActivity : AppCompatActivity() {
         refreshFolderLocationList()
     }
 
+
     private fun refreshFolderLocationList() {
         (rvFolderLocationList.adapter as FolderLocationRecyclerAdapter)
-                .setItems(IntegrityCore.folderLocationRepository.getAllFolderLocations())
+                .setItems(getItemSelection())
+    }
+
+    private fun getItemSelection()
+            = IntegrityCore.folderLocationRepository.getAllFolderLocations().map {
+                Pair(it, selectedFolderLocations.contains(it))
+            }
+
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_delete_all -> true
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+
+    fun viewFolderLocation(title: String) {
+        startActivity(IntegrityCore.getFolderLocationEditIntent(this, title))
+    }
+
+    fun toggleSelection(folderLocation: FolderLocation) {
+        if (selectedFolderLocations.contains(folderLocation)) {
+            selectedFolderLocations = selectedFolderLocations.minus(folderLocation)
+        } else {
+            selectedFolderLocations = selectedFolderLocations.plus(folderLocation)
+        }
+        refreshFolderLocationList()
     }
 
     fun askRemoveFolderLocation(title: String) {
@@ -63,23 +109,18 @@ class FolderLocationsActivity : AppCompatActivity() {
                 .show()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        //menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
+    fun isSelectMode() = IntentUtil.isSelectMode(intent)
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_delete_all -> true
-            else -> super.onOptionsItemSelected(item)
+    private fun returnSelection() {
+        val returnIntent = Intent()
+        if (IntentUtil.getSnapshot(intent) != null) {
+            val snapshot = IntentUtil.getSnapshot(intent)!!.copy(
+                    archiveFolderLocations = ArrayList(selectedFolderLocations)
+            )
+            IntentUtil.putSnapshot(returnIntent, snapshot)
+            IntentUtil.putFolderLocationNames(returnIntent, IntegrityCore.getFolderNames(snapshot))
         }
-    }
-
-    fun viewFolderLocation(title: String) {
-        startActivity(IntegrityCore.getFolderLocationEditIntent(this, title))
+        setResult(Activity.RESULT_OK, returnIntent)
+        finish()
     }
 }

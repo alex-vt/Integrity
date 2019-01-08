@@ -15,7 +15,13 @@ import com.alexvt.integrity.lib.FolderLocationCredentials
 data class SambaFolderLocation(
         override val title: String = "",
         val fullPath: String = ""
-): FolderLocation()
+): FolderLocation() {
+    override fun equals(other: Any?): Boolean {
+        return other is SambaFolderLocation
+                && other.title == title
+                && other.fullPath == fullPath
+    }
+}
 
 data class SambaFolderLocationCredentials(
         override val title: String = "",

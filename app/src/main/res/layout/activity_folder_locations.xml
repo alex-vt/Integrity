@@ -32,22 +32,42 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvFolderLocationList"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            >
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvFolderLocationList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:layout_above="@id/bDone"
+                />
+
+            <Button
+                android:visibility="gone"
+                android:id="@+id/bDone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Done"
+                android:layout_alignParentBottom="true"
+                />
+
+            <com.leinardi.android.speeddial.SpeedDialView
+                android:id="@+id/sdAdd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/rvFolderLocationList"
+                android:layout_alignParentRight="true"
+                android:layout_margin="@dimen/fab_margin"
+                app:sdMainFabClosedSrc="@android:drawable/ic_input_add"
+                app:sdMainFabOpenedSrc="@android:drawable/ic_menu_close_clear_cancel"
+                />
+
+        </RelativeLayout>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <com.leinardi.android.speeddial.SpeedDialView
-        android:id="@+id/sdAdd"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        app:sdMainFabClosedSrc="@android:drawable/ic_input_add"
-        app:sdMainFabOpenedSrc="@android:drawable/ic_menu_close_clear_cancel"
-        />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

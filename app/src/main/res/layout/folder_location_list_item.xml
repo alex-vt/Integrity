@@ -9,16 +9,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
+        android:id="@+id/llItem"
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="20dp">
 
         <TextView
-            android:id="@+id/tvTitle"
+            android:id="@+id/tvName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="20sp"
-            android:padding="20dp"/>
+            />
+
+        <TextView
+            android:visibility="gone"
+            android:id="@+id/tvSelected"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2dp"
+            android:text="Selected for saving"
+            android:textColor="#227722"
+            android:textSize="12sp"
+            />
 
     </LinearLayout>
 

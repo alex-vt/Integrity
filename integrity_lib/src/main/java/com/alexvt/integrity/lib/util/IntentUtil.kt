@@ -20,6 +20,8 @@ object IntentUtil {
     private const val message = "message"
     private const val downloaded = "downloaded"
     private const val snapshot = "snapshot"
+    private const val selectMode = "selectMode"
+    private const val folderLocationNames = "folderLocationNames"
 
     fun putArtifactId(intent: Intent?, artifactId: Long): Intent {
         intent!!.putExtra(IntentUtil.artifactId, artifactId)
@@ -61,4 +63,20 @@ object IntentUtil {
     } else {
         null
     }
+
+    fun putSelectMode(intent: Intent?, selectMode: Boolean): Intent {
+        intent!!.putExtra(IntentUtil.selectMode, selectMode)
+        return intent
+    }
+
+    fun isSelectMode(intent: Intent?) = intent!!.getBooleanExtra(selectMode, false)
+
+
+    fun putFolderLocationNames(intent: Intent?, folderLocationNames: Array<String>): Intent {
+        intent!!.putExtra(IntentUtil.folderLocationNames, folderLocationNames)
+        return intent
+    }
+
+    fun getFolderLocationNames(intent: Intent?) = intent!!.getStringArrayExtra(folderLocationNames)!!
+
 }

@@ -111,8 +111,8 @@ class BlogTypeActivity : DataTypeActivity() {
         }
     }
 
-    override fun updateFolderLocationSelectionInViews(folderLocationText: String) {
-        tvArchiveLocations.text = folderLocationText
+    override fun updateFolderLocationSelectionInViews(folderLocationTexts: Array<String>) {
+        tvArchiveLocations.text = folderLocationTexts.joinToString(separator = ", ")
     }
 
     override fun updateDownloadScheduleInViews(optionText: String) {
@@ -206,12 +206,12 @@ class BlogTypeActivity : DataTypeActivity() {
         etDescription.isEnabled = isEditable
         etDescription.append(snapshot.description)
 
-        tvArchiveLocations.text = getArchiveLocationsText(snapshot.archiveFolderLocations)
+        updateFolderLocationSelectionInViews(IntentUtil.getFolderLocationNames(intent))
         bArchiveLocation.isEnabled = isEditable
-        bArchiveLocation.setOnClickListener { askAddArchiveLocation() }
+        bArchiveLocation.setOnClickListener { openFolderLocationList(selectMode = true) }
 
         bManageArchiveLocations.isEnabled = isEditable
-        bManageArchiveLocations.setOnClickListener { openArchiveLocationList() }
+        bManageArchiveLocations.setOnClickListener { openFolderLocationList(selectMode = false) }
 
         tvDownloadSchedule.text = getDownloadScheduleText(snapshot.downloadSchedule)
         bDownloadSchedule.isEnabled = isEditable

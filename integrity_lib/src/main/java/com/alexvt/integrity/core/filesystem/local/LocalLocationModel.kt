@@ -14,4 +14,10 @@ import com.alexvt.integrity.lib.FolderLocation
 data class LocalFolderLocation(
         override val title: String = "",
         val folderPath: String = ""
-) : FolderLocation()
+) : FolderLocation() {
+    override fun equals(other: Any?): Boolean {
+        return other is LocalFolderLocation
+                && other.title == title
+                && other.folderPath == folderPath
+    }
+}

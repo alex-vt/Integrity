@@ -10,6 +10,7 @@ import android.util.Log
 import com.alexvt.integrity.lib.DataTypeService
 import com.alexvt.integrity.lib.IntegrityEx
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
 class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
@@ -27,7 +28,7 @@ class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
         val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
 
         runBlocking(Dispatchers.Main) {
-            // todo
+            delay(3000) // todo implement
         }
 
         Log.d("GitHubTypeService", "downloadData end")

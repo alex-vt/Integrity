@@ -48,27 +48,26 @@ abstract class DataTypeActivity : AppCompatActivity() {
 
     protected fun artifactCreateMode() = !snapshotDataExists()
 
-    protected fun openArchiveLocationList() {
+    protected fun openFolderLocationList(selectMode: Boolean) {
         val intent = Intent()
         intent.component = ComponentName("com.alexvt.integrity",
-                "com.alexvt.integrity.base.activity.FolderLocationsActivity")
+                "com.alexvt.integrity.base.activity.FolderLocationsActivity") // todo resolve
+        IntentUtil.putSelectMode(intent, selectMode)
+        IntentUtil.putSnapshot(intent, IntegrityEx.fromTypeSpecificMetadata(this, snapshot))
         startActivityForResult(intent, 0)
     }
 
-    protected fun askAddArchiveLocation() {
-        // todo resolve from extension activities
-        MaterialDialog(this)
-                .listItems(items = ArrayList(IntegrityCore.getNamedFolderLocationMap().keys)) { _, _, text ->
-                    val folderLocation = IntegrityCore.getNamedFolderLocationMap()[text]!!
-                    snapshot = snapshot.copy(
-                            archiveFolderLocations = ArrayList(snapshot.archiveFolderLocations.plus(folderLocation))
-                    )
-                    updateFolderLocationSelectionInViews(getArchiveLocationsText(snapshot.archiveFolderLocations))
-                }
-                .show()
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (IntentUtil.getSnapshot(data) != null) {
+            snapshot = snapshot.copy(
+                    archiveFolderLocations = IntentUtil.getSnapshot(data)!!.archiveFolderLocations
+            )
+            updateFolderLocationSelectionInViews(IntentUtil.getFolderLocationNames(data))
+        }
     }
 
-    abstract fun updateFolderLocationSelectionInViews(folderLocationText: String)
+    abstract fun updateFolderLocationSelectionInViews(folderLocationTexts: Array<String>)
 
     protected fun getArchiveLocationsText(folderLocations: Collection<FolderLocation>)
             = IntegrityCore.getNamedFolderLocationMap(folderLocations).keys

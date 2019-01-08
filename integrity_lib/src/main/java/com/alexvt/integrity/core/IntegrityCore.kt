@@ -76,6 +76,7 @@ object IntegrityCore {
         val intent = Intent()
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot)
+        IntentUtil.putFolderLocationNames(intent, getFolderNames(snapshot))
         activity.startActivityForResult(intent, 0)
     }
 
@@ -85,8 +86,13 @@ object IntegrityCore {
         val intent = Intent()
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot.copy(status = SnapshotStatus.BLUEPRINT)) // as blueprint
+        IntentUtil.putFolderLocationNames(intent, getFolderNames(snapshot))
         activity.startActivityForResult(intent, 0)
     }
+
+    fun getFolderNames(snapshot: Snapshot) = snapshot.archiveFolderLocations
+            .map { IntegrityCore.getFolderLocationName(it) }
+            .toTypedArray()
 
     fun openCreateNewArtifact(activity: Activity, componentName: ComponentName) {
         val intent = Intent()
@@ -251,13 +257,6 @@ object IntegrityCore {
             Intent(context, it.value.getViewMainActivityClass())) }
             .toMap()
             .toSortedMap()
-
-    /**
-     * Gets alphabetically sorted map of names of archive locations saved by user
-     * to the archive locations themselves.
-     */
-    fun getNamedFolderLocationMap()
-            = getNamedFolderLocationMap(folderLocationRepository.getAllFolderLocations())
 
     /**
      * Gets alphabetically sorted map of given archive location names

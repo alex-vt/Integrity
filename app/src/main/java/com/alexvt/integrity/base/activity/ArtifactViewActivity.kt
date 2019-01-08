@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.adapter.SnapshotRecyclerAdapter
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.util.IntentUtil
 import kotlinx.android.synthetic.main.activity_artifact_view.*
 
 class ArtifactViewActivity : AppCompatActivity() {
@@ -23,9 +24,17 @@ class ArtifactViewActivity : AppCompatActivity() {
         setContentView(R.layout.activity_artifact_view)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view -> createNewSnapshot(getArtifactIdFromIntent(intent)) }
+        fab.setOnClickListener { IntegrityCore.openCreateNewSnapshot(this, getArtifactIdFromIntent(intent)) }
 
         rvSnapshotList.adapter = SnapshotRecyclerAdapter(ArrayList(), this)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        val snapshot = IntentUtil.getSnapshot(data)
+        if (snapshot != null) {
+            IntegrityCore.saveSnapshot(this, snapshot)
+        }
     }
 
     override fun onStart() {
@@ -47,7 +56,7 @@ class ArtifactViewActivity : AppCompatActivity() {
     private fun refreshSnapshotList() {
         (rvSnapshotList.adapter as SnapshotRecyclerAdapter).setItems(IntegrityCore
                 .metadataRepository.getArtifactMetadata(getArtifactIdFromIntent(intent))
-                .snapshotMetadataList)
+                .snapshots)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -64,13 +73,5 @@ class ArtifactViewActivity : AppCompatActivity() {
             R.id.action_delete_all -> true
             else -> super.onOptionsItemSelected(item)
         }
-    }
-
-    fun previewSnapshot(artifactId: Long, date: String) {
-        startActivity(IntegrityCore.getSnapshotViewIntent(this, artifactId, date))
-    }
-
-    fun createNewSnapshot(artifactId: Long) {
-        startActivity(IntegrityCore.getSnapshotCreateIntent(this, artifactId))
     }
 }

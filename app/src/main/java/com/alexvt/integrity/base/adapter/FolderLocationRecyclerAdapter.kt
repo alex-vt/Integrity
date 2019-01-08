@@ -12,7 +12,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.activity.FolderLocationsActivity
-import com.alexvt.integrity.core.FolderLocation
+import com.alexvt.integrity.lib.FolderLocation
 import com.alexvt.integrity.core.IntegrityCore
 import kotlinx.android.synthetic.main.artifact_list_item.view.*
 

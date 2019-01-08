@@ -6,20 +6,20 @@
 
 package com.alexvt.integrity.type.blog
 
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.WebArchiveFilesUtil.getArchivePath
-import com.alexvt.integrity.core.util.WebArchiveFilesUtil.getPageIndexLinks
-import com.alexvt.integrity.core.util.WebArchiveFilesUtil.saveLinkToIndex
-import com.alexvt.integrity.core.util.WebArchiveFilesUtil.savePageLinkToIndex
-import com.alexvt.integrity.core.util.WebArchiveFilesUtil.webArchiveAlreadyDownloaded
-import com.alexvt.integrity.core.util.WebViewUtil
-import kotlinx.coroutines.isActive
+import com.alexvt.integrity.lib.IntegrityEx
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getArchivePath
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexLinks
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.saveLinkToIndex
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.savePageLinkToIndex
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.webArchiveAlreadyDownloaded
+import com.alexvt.integrity.lib.util.WebViewUtil
 
 internal abstract class CommonPaginationHelper {
 
     abstract suspend fun downloadPages(dl: BlogMetadataDownload): Boolean
 
-    protected fun isRunning(dl: BlogMetadataDownload) = dl.jobContext.isActive
+    protected fun isRunning(dl: BlogMetadataDownload)
+            = IntegrityEx.isSnapshotDownloadRunning(dl.artifactId, dl.date)
 
     protected suspend fun saveArchives(currentPageLink: String, additionalLinksOnPage: Set<String>,
                                        dl: BlogMetadataDownload,
@@ -28,8 +28,8 @@ internal abstract class CommonPaginationHelper {
                 .plus(additionalLinksOnPage)
         linksToArchive.forEachIndexed { linkIndex, link -> run {
             if (!isRunning(dl)) return
-            if (!webArchiveAlreadyDownloaded(link, dl.snapshotPath)) {
-                IntegrityCore.postProgress(dl.artifactId, dl.date,
+            if (!webArchiveAlreadyDownloaded(dl.context, link, dl.snapshotPath)) {
+                IntegrityEx.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
                         "Saving web archive " + (linkIndex + 1) + " of "
                                 + linksToArchive.size + "\n"
                                 + getPaginationProgressText(currentPageLink, dl))
@@ -39,7 +39,7 @@ internal abstract class CommonPaginationHelper {
                         loadImages = dl.metadata.loadImages,
                         desktopSite = dl.metadata.desktopSite)
                 if (!isRunning(dl)) return
-                saveLinkToIndex(link, dl.snapshotPath, pageIndex, linkIndex)
+                saveLinkToIndex(dl.context, link, dl.snapshotPath, pageIndex, linkIndex)
             }
         } }
     }
@@ -49,9 +49,9 @@ internal abstract class CommonPaginationHelper {
      */
     protected fun persistPaginationProgress(pageLink: String, dl: BlogMetadataDownload) {
         if (!isRunning(dl)) return
-        val pageIndexLinks = getPageIndexLinks(dl.snapshotPath)
+        val pageIndexLinks = getPageIndexLinks(dl.context, dl.snapshotPath)
         if (!pageIndexLinks.contains(pageLink)) {
-            savePageLinkToIndex(pageLink, dl.snapshotPath, pageIndexLinks.size)
+            savePageLinkToIndex(dl.context, pageLink, dl.snapshotPath, pageIndexLinks.size)
         }
     }
 

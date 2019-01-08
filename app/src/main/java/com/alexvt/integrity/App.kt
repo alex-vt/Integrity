@@ -12,19 +12,17 @@ import com.alexvt.integrity.core.filesystem.local.LocalFolderLocation
 import com.alexvt.integrity.core.filesystem.local.LocalLocationUtil
 import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocation
 import com.alexvt.integrity.core.filesystem.samba.SambaLocationUtil
-import com.alexvt.integrity.type.blog.BlogTypeUtil
-import com.alexvt.integrity.type.blog.BlogTypeMetadata
 
 class App : android.app.Application() {
 
     override fun onCreate() {
         super.onCreate()
 
-        // Integrity core: initializing for file locations and data types
+        // Integrity core: initializing for file locations // todo locate dynamically as services
         IntegrityCore.init(this)
         IntegrityCore.registerFileLocationUtil(LocalFolderLocation::class.java, LocalLocationUtil())
         IntegrityCore.registerFileLocationUtil(SambaFolderLocation::class.java, SambaLocationUtil())
-        IntegrityCore.registerDataTypeUtil(BlogTypeMetadata::class.java, BlogTypeUtil())
+
         //IntegrityCore.metadataRepository.clear()
 
         /*

@@ -13,17 +13,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.activity.MainActivity
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.SnapshotMetadata
+import com.alexvt.integrity.lib.Snapshot
 import kotlinx.android.synthetic.main.job_list_item.view.*
 
-class JobRecyclerAdapter(val items: ArrayList<Pair<SnapshotMetadata, Boolean>>,
+class JobRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Boolean>>,
                          val mainActivity: MainActivity)
     : RecyclerView.Adapter<JobViewHolder>() {
 
     /**
      * Sets new running jobs or scheduled jobs. Running jobs are on top
      */
-    fun setItems(newItems: List<SnapshotMetadata>, isRunning: Boolean) {
+    fun setItems(newItems: List<Snapshot>, isRunning: Boolean) {
         items.removeIf { it.second == isRunning }
         items.addAll(getInsertionIndex(isRunning), newItems.associate { it to isRunning }.toList())
         items.sortByDescending { isRunning }
@@ -42,15 +42,15 @@ class JobRecyclerAdapter(val items: ArrayList<Pair<SnapshotMetadata, Boolean>>,
     }
 
     override fun onBindViewHolder(holder: JobViewHolder, position: Int) {
-        val snapshotMetadata = items[position].first
+        val snapshot = items[position].first
         val isRunning = items[position].second
 
-        holder.tvTitle?.text = snapshotMetadata.title
+        holder.tvTitle?.text = snapshot.title
 
         if (isRunning) {
             holder.tvStatus?.text = "Running"
         } else {
-            val timeRemainingMillis = IntegrityCore.getNextJobRunTimestamp(snapshotMetadata) -
+            val timeRemainingMillis = IntegrityCore.getNextJobRunTimestamp(snapshot) -
                     System.currentTimeMillis()
             holder.tvStatus?.text = if (timeRemainingMillis <= 0) {
                 "Should start now"
@@ -64,11 +64,10 @@ class JobRecyclerAdapter(val items: ArrayList<Pair<SnapshotMetadata, Boolean>>,
         holder.bShow.setOnClickListener {
             if (isRunning) {
                 IntegrityCore.showRunningJobProgressDialog(mainActivity,
-                        snapshotMetadata.artifactId, snapshotMetadata.date)
+                        snapshot.artifactId, snapshot.date)
             } else {
                 // snapshot creation screen allows changing schedule setting and saving as blueprint
-                mainActivity.startActivity(IntegrityCore.getSnapshotCreateIntent(mainActivity,
-                        snapshotMetadata.artifactId))
+                IntegrityCore.openCreateNewSnapshot(mainActivity, snapshot.artifactId)
             }
         }
     }

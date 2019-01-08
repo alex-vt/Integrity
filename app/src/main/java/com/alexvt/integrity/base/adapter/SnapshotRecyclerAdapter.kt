@@ -12,14 +12,15 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.activity.ArtifactViewActivity
-import com.alexvt.integrity.core.SnapshotMetadata
-import com.alexvt.integrity.core.SnapshotStatus
+import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.Snapshot
+import com.alexvt.integrity.lib.SnapshotStatus
 import kotlinx.android.synthetic.main.artifact_list_item.view.*
 
-class SnapshotRecyclerAdapter(val items: ArrayList<SnapshotMetadata>, val artifactViewActivity: ArtifactViewActivity)
+class SnapshotRecyclerAdapter(val items: ArrayList<Snapshot>, val artifactViewActivity: ArtifactViewActivity)
     : RecyclerView.Adapter<SnapshotViewHolder>() {
 
-    fun setItems(newItems: List<SnapshotMetadata>) {
+    fun setItems(newItems: List<Snapshot>) {
         items.clear()
         items.addAll(newItems)
         notifyDataSetChanged()
@@ -48,7 +49,9 @@ class SnapshotRecyclerAdapter(val items: ArrayList<SnapshotMetadata>, val artifa
                 } else {
                     " (incomplete)"
                 }
-        holder.tvTitle.setOnClickListener({view -> artifactViewActivity.previewSnapshot(artifactId, date)})
+        holder.tvTitle.setOnClickListener {
+            IntegrityCore.openViewSnapshotOrShowProgress(artifactViewActivity, artifactId, date)
+        }
     }
 }
 

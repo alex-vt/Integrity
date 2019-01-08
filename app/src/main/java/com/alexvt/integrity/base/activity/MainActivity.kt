@@ -17,6 +17,7 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.base.adapter.ArtifactRecyclerAdapter
 import com.alexvt.integrity.base.adapter.JobRecyclerAdapter
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.util.IntentUtil
 import com.leinardi.android.speeddial.SpeedDialActionItem
 
 import kotlinx.android.synthetic.main.activity_main.*
@@ -34,21 +35,29 @@ class MainActivity : AppCompatActivity() {
 
         // Float Action Button action items for each available data type
         // Data type map is sorted by key, so the value will be obtained by index of clicked action
-        IntegrityCore.getNamedArtifactCreateIntentMap(this).keys
-                .forEachIndexed { index, key ->
+        IntegrityCore.getTypeNames()
+                .forEachIndexed { index, component ->
             sdAdd.addActionItem(SpeedDialActionItem.Builder(index, android.R.drawable.ic_input_add)
-                    .setLabel(key)
+                    .setLabel(component.className.substringAfterLast(".")
+                            .removeSuffix("TypeActivity")) // todo names from resources
                     .create())
         }
         sdAdd.setOnActionSelectedListener { speedDialActionItem ->
-            val typeViewIntent = IntegrityCore.getNamedArtifactCreateIntentMap(this).values
-                    .toList()[speedDialActionItem.id]
-            startActivity(typeViewIntent)
+            val typeName = IntegrityCore.getTypeNames().toList()[speedDialActionItem.id]
+            IntegrityCore.openCreateNewArtifact(this, typeName)
             false
         }
 
         rvArtifactList.adapter = ArtifactRecyclerAdapter(ArrayList(), this)
         rvJobs.adapter = JobRecyclerAdapter(ArrayList(), this)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        val snapshot = IntentUtil.getSnapshot(data)
+        if (snapshot != null) {
+            IntegrityCore.saveSnapshot(this, snapshot)
+        }
     }
 
     fun setupDrawerToggle() {
@@ -110,7 +119,7 @@ class MainActivity : AppCompatActivity() {
     private fun refreshArtifactList() {
         (rvArtifactList.adapter as ArtifactRecyclerAdapter)
                 .setItems(IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(true)
-                        .snapshotMetadataList.toList())
+                        .snapshots.toList())
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

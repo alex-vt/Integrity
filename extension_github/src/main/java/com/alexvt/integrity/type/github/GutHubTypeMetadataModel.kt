@@ -6,7 +6,7 @@
 
 package com.alexvt.integrity.type.github
 
-import com.alexvt.integrity.core.TypeMetadata
+import com.alexvt.integrity.lib.TypeMetadata
 
 /**
  * Metadata of GitHub type: experimental, loading some data by user name from GitHub.

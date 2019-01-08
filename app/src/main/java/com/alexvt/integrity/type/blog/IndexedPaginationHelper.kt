@@ -6,12 +6,13 @@
 
 package com.alexvt.integrity.type.blog
 
+import android.content.Context
 import android.util.Log
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.LinkUtil
-import com.alexvt.integrity.core.util.WebArchiveFilesUtil.getPageIndexArchiveLinks
-import com.alexvt.integrity.core.util.WebArchiveFilesUtil.getPageIndexLinks
-import com.alexvt.integrity.core.util.WebViewUtil
+import com.alexvt.integrity.lib.IntegrityEx
+import com.alexvt.integrity.lib.util.LinkUtil
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexArchiveLinks
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexLinks
+import com.alexvt.integrity.lib.util.WebViewUtil
 import kotlinx.coroutines.delay
 
 internal class IndexedPaginationHelper : CommonPaginationHelper() {
@@ -46,11 +47,11 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
      * progress index equals pagination position.
      */
     override fun getPaginationProgress(dl: BlogMetadataDownload)
-            = getPageIndexArchiveLinks(dl.snapshotPath).size
+            = getPageIndexArchiveLinks(dl.context, dl.snapshotPath).size
 
     private suspend fun getAdditionalLinksOnPage(currentPageLink: String,
                                                  dl: BlogMetadataDownload): Set<String> {
-        IntegrityCore.postProgress(dl.artifactId, dl.date,
+        IntegrityEx.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
                 "Collecting links\n${getPaginationProgressText(currentPageLink, dl)}")
         return if (pageContentsNeeded(dl)) {
             val currentPageHtml = WebViewUtil.loadHtml(dl.webView, currentPageLink,
@@ -79,15 +80,15 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
     }
 
     private fun hasNextPageLink(dl: BlogMetadataDownload)
-            = getNextPageLinks(dl.metadata, dl.snapshotPath)
+            = getNextPageLinks(dl.context, dl.metadata, dl.snapshotPath)
             .isNotEmpty()
 
     private fun getNextPageLink(dl: BlogMetadataDownload)
-            = getNextPageLinks(dl.metadata, dl.snapshotPath)
+            = getNextPageLinks(dl.context, dl.metadata, dl.snapshotPath)
             .first()
 
-    private fun getNextPageLinks(blogMetadata: BlogTypeMetadata, snapshotPath: String)
+    private fun getNextPageLinks(context: Context, blogMetadata: BlogTypeMetadata, snapshotPath: String)
             = getAllPageLinks(blogMetadata)
-            .minus(getPageIndexLinks(snapshotPath))
+            .minus(getPageIndexLinks(context, snapshotPath))
 
 }

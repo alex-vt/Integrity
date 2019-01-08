@@ -6,7 +6,7 @@
 
 package com.alexvt.integrity.core.filesystem.local
 
-import com.alexvt.integrity.core.FolderLocation
+import com.alexvt.integrity.lib.FolderLocation
 
 /**
  * A path in local filesystem, defined simply by a single string.

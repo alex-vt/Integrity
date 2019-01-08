@@ -7,11 +7,11 @@
 package com.alexvt.integrity.type.blog
 
 import android.util.Log
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.LinkUtil
-import com.alexvt.integrity.core.util.WebArchiveFilesUtil.getPageIndexArchiveLinks
-import com.alexvt.integrity.core.util.WebArchiveFilesUtil.getPageIndexLinks
-import com.alexvt.integrity.core.util.WebViewUtil
+import com.alexvt.integrity.lib.IntegrityEx
+import com.alexvt.integrity.lib.util.LinkUtil
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexArchiveLinks
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexLinks
+import com.alexvt.integrity.lib.util.WebViewUtil
 import kotlinx.coroutines.delay
 
 internal class LinkedPaginationHelper : CommonPaginationHelper() {
@@ -28,7 +28,7 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
      * Otherwise the first page is the main page.
      */
     private fun getStartPage(dl: BlogMetadataDownload)
-            = getPageIndexLinks(dl.snapshotPath).lastOrNull() ?: dl.metadata.url
+            = getPageIndexLinks(dl.context, dl.snapshotPath).lastOrNull() ?: dl.metadata.url
 
     /**
      * Recursive linked pagination:
@@ -59,7 +59,7 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
     }
 
     private suspend fun getPageContents(currentPageLink: String, dl: BlogMetadataDownload): String {
-        IntegrityCore.postProgress(dl.artifactId, dl.date,
+        IntegrityEx.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
                 "Looking for links\n${getPaginationProgressText(currentPageLink, dl)}")
         val contents = WebViewUtil.loadHtml(dl.webView, currentPageLink, dl.metadata.loadImages,
                 dl.metadata.desktopSite)
@@ -89,7 +89,7 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
      * pagination progress is 1 less than pagination index size.
      */
     override fun getPaginationProgress(dl: BlogMetadataDownload): Int {
-        val pageIndexArchiveLinks = getPageIndexArchiveLinks(dl.snapshotPath)
+        val pageIndexArchiveLinks = getPageIndexArchiveLinks(dl.context, dl.snapshotPath)
         if (pageIndexArchiveLinks.isNotEmpty()) {
             return pageIndexArchiveLinks.size - 1
         } else {
@@ -105,7 +105,7 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
         val nextPageLinks = LinkUtil.getMatchedLinks(currentPageHtml,
                 (dl.metadata.pagination as LinkedPagination).nextPageLinkFilter)
         Log.d("LinkedPaginationHelper", "hasNextPageLink: $nextPageLinks")
-        return getPageIndexArchiveLinks(dl.snapshotPath).size < dl.metadata.pagination.limit
+        return getPageIndexArchiveLinks(dl.context, dl.snapshotPath).size < dl.metadata.pagination.limit
                 && nextPageLinks.isNotEmpty()
     }
 

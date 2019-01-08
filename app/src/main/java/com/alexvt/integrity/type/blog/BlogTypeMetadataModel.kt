@@ -6,7 +6,7 @@
 
 package com.alexvt.integrity.type.blog
 
-import com.alexvt.integrity.core.TypeMetadata
+import com.alexvt.integrity.lib.TypeMetadata
 
 /**
  * Metadata of blog type: a web page and (optionally) related pages it links to.

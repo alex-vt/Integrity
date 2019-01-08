@@ -6,8 +6,8 @@
 
 package com.alexvt.integrity.core.filesystem.samba
 
-import com.alexvt.integrity.core.FolderLocation
-import com.alexvt.integrity.core.FolderLocationCredentials
+import com.alexvt.integrity.lib.FolderLocation
+import com.alexvt.integrity.lib.FolderLocationCredentials
 
 /**
  * A location in Samba filesystem, defined by path, user name and password

@@ -6,19 +6,21 @@
 
 package com.alexvt.integrity.type.github
 
+import android.content.Context
 import android.util.Log
-import android.view.View
+import android.view.LayoutInflater
 import android.widget.Toast
+import androidx.databinding.DataBindingUtil
+import androidx.databinding.ViewDataBinding
+import com.alexvt.integrity.type.github.databinding.GitHubTypeContentBinding
+import com.alexvt.integrity.type.github.databinding.GitHubTypeControlsBinding
+import com.alexvt.integrity.type.github.databinding.GitHubTypeFilterBinding
 import com.alexvt.integrity.lib.DataTypeActivity
-import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
 import com.alexvt.integrity.lib.util.WebViewUtil
 import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.SnapshotMetadata
-import com.alexvt.integrity.lib.SnapshotStatus
-import kotlinx.android.synthetic.main.activity_github_type.*
-import kotlinx.android.synthetic.main.bottom_controls_common.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -28,129 +30,122 @@ class GitHubTypeActivity : DataTypeActivity() {
 
     private val TAG = GitHubTypeActivity::class.java.simpleName
 
-    override fun initData() {
-        if (isSnapshotViewMode()) {
-            snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
+    private lateinit var content : GitHubTypeContentBinding
+    private lateinit var controls : GitHubTypeControlsBinding
+    private lateinit var filter : GitHubTypeFilterBinding
 
-            // Incomplete snapshot can be completed, apart from creating a new blueprint from it
-            if (snapshot.status == SnapshotStatus.INCOMPLETE) {
-                toolbar.title = "Incomplete GitHub Type Snapshot"
-                bContinueSaving.visibility = View.VISIBLE
-            } else {
-                toolbar.title = "Viewing GitHub Type Snapshot"
-                bContinueSaving.visibility = View.GONE
-            }
 
-            fillInOptions(isEditable = false)
+    // Type implementation
 
-            GlobalScope.launch (Dispatchers.Main) {
-                val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
-                        snapshot.artifactId, snapshot.date)
-                val linkToArchivePathRedirectMap = WebArchiveFilesUtil
-                        .getPageIndexLinkToArchivePathMap(applicationContext, snapshotPath,
-                                "file://$snapshotPath/")
-                val firstArchivePath = linkToArchivePathRedirectMap.entries.firstOrNull()?.value
-                        ?: "file:blank" // todo replace
-                WebViewUtil.loadHtml(webView,
-                        firstArchivePath,
-                        linkToArchivePathRedirectMap,
-                        true,
-                        false) {
-                    Log.d(TAG, "Loaded HTML from file")
-                }
-            }
+    override fun getTypeName() = "GitHub"
 
-        } else if (isSnapshotCreateMode()) {
-            snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
-            toolbar.title = "Creating new GitHub Type Snapshot"
+    override fun getTypeMetadataNewInstance() = GitHubTypeMetadata()
 
-            fillInOptions(isEditable = true)
+    override fun inflateContentView(context: Context): ViewDataBinding {
+        content = DataBindingUtil.inflate(LayoutInflater.from(context),
+                R.layout.git_hub_type_content, null, false)
+        return content
+    }
 
-            goToGitHubUserPage(etUserName.text.toString())
+    override fun inflateControlsView(context: Context): ViewDataBinding {
+        controls = DataBindingUtil.inflate(LayoutInflater.from(context),
+                R.layout.git_hub_type_controls, null, false)
+        return controls
+    }
 
-        } else {
-            snapshot = SnapshotMetadata(
-                    artifactId = System.currentTimeMillis(),
-                    title = "GitHub Type Artifact",
-                    dataTypeSpecificMetadata = GitHubTypeMetadata()
-            )
+    override fun inflateFilterView(context: Context): ViewDataBinding {
+        filter = DataBindingUtil.inflate(LayoutInflater.from(context),
+                R.layout.git_hub_type_filter, null, false)
+        return filter
+    }
 
-            toolbar.title = "Creating new GitHub Type Artifact"
-
-            fillInOptions(isEditable = true)
+    override fun fillInTypeOptions(snapshot: SnapshotMetadata, isEditable: Boolean) {
+        controls.etUserName.isEnabled = isEditable
+        controls.etUserName.setText(LinkUtil.getShortFormUrl(getUserName(snapshot)))
+        controls.etUserName.setOnEditorActionListener {
+            _, _, _ -> goToGitHubUserPage(snapshot, controls.etUserName.text.toString())
+        }
+        controls.bGo.isEnabled = isEditable
+        controls.bGo.setOnClickListener {
+            _ -> goToGitHubUserPage(snapshot, controls.etUserName.text.toString())
         }
     }
 
-    override fun checkSnapshot(status: String): Boolean {
-        if (etUserName.text.trim().isEmpty()) {
-            Toast.makeText(this, "Please enter uer name first", Toast.LENGTH_SHORT).show()
-            return false
+    /**
+     * Performs existing snapshot data loading for viewing.
+     *
+     * Side effects: reads snapshot data, modifies bound views.
+     */
+    override fun snapshotViewModeAction(snapshot: SnapshotMetadata) {
+        GlobalScope.launch (Dispatchers.Main) {
+            val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
+                    snapshot.artifactId, snapshot.date)
+            val linkToArchivePathRedirectMap = WebArchiveFilesUtil
+                    .getPageIndexLinkToArchivePathMap(applicationContext, snapshotPath,
+                            "file://$snapshotPath/")
+            val firstArchivePath = linkToArchivePathRedirectMap.entries.firstOrNull()?.value
+                    ?: "file:blank" // todo replace
+            WebViewUtil.loadHtml(content.webView,
+                    firstArchivePath,
+                    linkToArchivePathRedirectMap,
+                    true,
+                    false) {
+                Log.d(TAG, "Loaded HTML from file")
+            }
         }
-        // todo either construct snapshot here completely or modify it on option change
-        snapshot = snapshot.copy(
-                title = etName.text.toString(),
-                description = etDescription.text.toString(),
-                downloadSchedule = snapshot.downloadSchedule.copy( // period is already set
-                        allowOnWifi = sDownloadOnWifi.isChecked,
-                        allowOnMobileData = sDownloadOnMobileData.isChecked
-                ),
-                // archive locations already set
+    }
+
+    /**
+     * Loads snapshot data preview from the remote source. Before that, changes options when needed.
+     *
+     * Side effects: shows toast, loads data from source, modifies bound views.
+     */
+    override fun snapshotCreateModeAction(snapshot: SnapshotMetadata): SnapshotMetadata {
+        goToGitHubUserPage(snapshot, controls.etUserName.text.toString())
+        return snapshot
+    }
+
+    override fun contentCanGoBack() = content.webView.canGoBack()
+
+    override fun contentGoBack() = content.webView.goBack()
+
+    override fun checkSnapshot(snapshot: SnapshotMetadata): Pair<SnapshotMetadata, Boolean> {
+        if (controls.etUserName.text.trim().isEmpty()) {
+            Toast.makeText(this, "Please enter user name first", Toast.LENGTH_SHORT).show()
+            return Pair(snapshot, false)
+        }
+        return Pair(snapshot.copy(
                 dataTypeSpecificMetadata = GitHubTypeMetadata(
                         userName = if (isSnapshotViewMode()) {
-                            getTypeMetadata().userName // for read only snapshot, same as it was
+                            getTypeMetadata(snapshot).userName // for read only snapshot, same as it was
                         } else {
-                            etUserName.text.toString().trim('/', ' ')
+                            controls.etUserName.text.toString().trim('/', ' ')
                         }
-                ),
-                status = status
-        )
-        return true
+                )
+        ), true)
     }
 
-    override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
-    }
 
-    override fun getDrawer() = dlAllContent
+    // Helpers
 
-
-    // type specific
-
-    fun fillInOptions(isEditable: Boolean) {
-        fillInCommonOptions(isEditable)
-
-        etUserName.isEnabled = isEditable
-        etUserName.setText(LinkUtil.getShortFormUrl(getUserName()))
-        etUserName.setOnEditorActionListener { v, actionId, event -> goToGitHubUserPage(etUserName.text.toString()) }
-        bGo.isEnabled = isEditable
-        bGo.setOnClickListener { view -> goToGitHubUserPage(etUserName.text.toString()) }
-    }
-
-    // map of related page links to their unique CSS selectors in HTML document
     private var loadedHtml = ""
 
-    fun getTypeMetadata(): GitHubTypeMetadata
+    private fun getTypeMetadata(snapshot: SnapshotMetadata): GitHubTypeMetadata
             = snapshot.dataTypeSpecificMetadata as GitHubTypeMetadata
 
-    // URL of first (main) web page of the latest snapshot of this artifact
-    fun getUserName(): String = getTypeMetadata().userName
+    private fun getUserName(snapshot: SnapshotMetadata) = getTypeMetadata(snapshot).userName
 
-    fun goToGitHubUserPage(userName: String): Boolean {
-        WebViewUtil.loadHtml(webView, LinkUtil.getFullFormUrl("https://github.com/" + userName),
+    private fun goToGitHubUserPage(snapshot: SnapshotMetadata, userName: String): Boolean {
+        WebViewUtil.loadHtml(content.webView, LinkUtil.getFullFormUrl("https://github.com/" + userName),
                 emptyMap(), true, false) {
-            Log.d(TAG, "Loaded page from: ${webView.url}")
+            Log.d(TAG, "Loaded page from: ${content.webView.url}")
             loadedHtml = it
             // Inputs are pre-filled only when creating new artifact
             if (isArtifactCreateMode()) {
-                etName.setText(userName)
-                supportActionBar!!.subtitle = webView.title
+                setTitleInControls(content.webView.title)
+                supportActionBar!!.subtitle = content.webView.title
             }
         }
         return false
     }
-
 }

@@ -8,6 +8,7 @@ package com.alexvt.integrity.type.blog
 
 import android.content.Context
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.*
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
@@ -242,7 +243,6 @@ class BlogTypeActivity : DataTypeActivity() {
             return Pair(snapshot, false)
         }
         return Pair(snapshot.copy(
-                // archive locations already set
                 dataTypeSpecificMetadata = BlogTypeMetadata(
                         url = if (isSnapshotViewMode()) {
                             getTypeMetadata(snapshot).url // for read only snapshot, same as it was
@@ -295,7 +295,7 @@ class BlogTypeActivity : DataTypeActivity() {
                     filter.etLinkPattern.text.toString(),
                     filter.etRelatedLinkFilter.text.toString(), content.webView.url)
             val unmatchedLinkMap = allLinkMap.minus(matchedLinkMap)
-            // marched shown first
+            // matched shown first
             (filter.rvRelatedLinkList.adapter as RelatedLinkRecyclerAdapter).setItems(
                     matchedLinkMap.map { it -> MatchableLink(it.key, it.value, true) }
                             .plus(unmatchedLinkMap.map { it -> MatchableLink(it.key as String, it.value, false) })
@@ -306,7 +306,6 @@ class BlogTypeActivity : DataTypeActivity() {
         }
     }
 
-    // map of related page links to their unique CSS selectors in HTML document
     private var loadedHtml = ""
 
     private fun getTypeMetadata(snapshot: SnapshotMetadata): BlogTypeMetadata

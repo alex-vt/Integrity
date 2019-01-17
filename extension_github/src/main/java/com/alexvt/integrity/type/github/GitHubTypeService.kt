@@ -23,7 +23,7 @@ class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
 
 
     override fun downloadData(artifactId: Long, date: String,
-                              blogMetadata: GitHubTypeMetadata): String {
+                              typeMetadata: GitHubTypeMetadata): String {
         Log.d("GitHubTypeService", "downloadData start")
         val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
 

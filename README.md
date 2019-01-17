@@ -141,7 +141,6 @@ Stage 1
 * Storage manager
 * Log
 * Error handling
-* Plugins support
 * Main screen
 
 Stage 2

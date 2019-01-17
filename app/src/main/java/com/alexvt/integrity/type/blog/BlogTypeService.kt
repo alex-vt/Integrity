@@ -24,7 +24,7 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
 
 
     override fun downloadData(artifactId: Long, date: String,
-                              blogMetadata: BlogTypeMetadata): String {
+                              typeMetadata: BlogTypeMetadata): String {
         Log.d("BlogTypeService", "downloadData start")
         val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
 
@@ -34,7 +34,7 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
                     artifactId = artifactId,
                     date = date,
                     webView = WebView(applicationContext),
-                    metadata = blogMetadata,
+                    metadata = typeMetadata,
                     snapshotPath = snapshotPath
             )
 

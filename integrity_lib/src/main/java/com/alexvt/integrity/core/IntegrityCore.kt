@@ -97,6 +97,7 @@ object IntegrityCore {
     fun openCreateNewArtifact(activity: Activity, componentName: ComponentName) {
         val intent = Intent()
         intent.component = componentName
+        IntentUtil.putFolderLocationNames(intent, emptyArray())
         activity.startActivityForResult(intent, 0)
     }
 

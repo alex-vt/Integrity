@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Content options"
+            android:textSize="16sp"
+            android:paddingBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/cbLoadImages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Load images" />
+
+        <CheckBox
+            android:id="@+id/cbDesktopSite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Desktop site" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Links options"
+            android:textSize="16sp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/cbUseRelatedLinks"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Include related links" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Filter page links by" />
+
+        <EditText
+            android:id="@+id/etRelatedLinkFilter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:inputType="text" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pattern to select related links" />
+
+        <EditText
+            android:id="@+id/etLinkPattern"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="CSS Selector Query"
+            android:inputType="text" />
+
+        <TextView
+            android:id="@+id/tvPageLinksPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Page links preview"
+            android:paddingTop="8dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRelatedLinkList"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <TextView
+            android:id="@+id/tvOfflineLinks"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Archived links"
+            android:paddingTop="8dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvOfflineLinkList"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pagination options"
+            android:textSize="16sp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/cbUsePagination"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Load multiple blog pages" />
+
+        <Switch
+            android:id="@+id/sLinkedPagination"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Follow links to next page" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pattern to load blog pages" />
+
+        <EditText
+            android:id="@+id/etIndexedPaginationPattern"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="/page/"
+            android:inputType="text" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="First page index" />
+
+        <EditText
+            android:id="@+id/etIndexedPaginationStartIndex"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1"
+            android:inputType="numberDecimal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Step" />
+
+        <EditText
+            android:id="@+id/etIndexedPaginationStep"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1"
+            android:inputType="numberDecimal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Last page index to reach" />
+
+        <EditText
+            android:id="@+id/etIndexedPaginationLimit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="5"
+            android:inputType="numberDecimal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Next page link filter" />
+
+        <EditText
+            android:id="@+id/etLinkedPaginationLinkFilter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="/after="
+            android:inputType="text" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Max pages to load" />
+
+        <EditText
+            android:id="@+id/etLinkedPaginationLimit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="5"
+            android:inputType="numberDecimal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Downloads options"
+            android:textSize="16sp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Interval between loading pages (seconds)" />
+
+        <EditText
+            android:id="@+id/etLoadInterval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:inputType="numberDecimal" />
+
+    </LinearLayout>
+</layout>
+

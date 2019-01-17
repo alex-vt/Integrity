@@ -6,11 +6,7 @@
 
 package com.alexvt.integrity.type.github
 
-import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import com.alexvt.integrity.lib.DataTypeActivity
@@ -22,6 +18,7 @@ import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.SnapshotMetadata
 import com.alexvt.integrity.lib.SnapshotStatus
 import kotlinx.android.synthetic.main.activity_github_type.*
+import kotlinx.android.synthetic.main.bottom_controls_common.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -31,14 +28,8 @@ class GitHubTypeActivity : DataTypeActivity() {
 
     private val TAG = GitHubTypeActivity::class.java.simpleName
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_github_type)
-        setSupportActionBar(toolbar)
-        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
-        supportActionBar!!.setDisplayShowHomeEnabled(true)
-
-        if (snapshotViewMode()) {
+    override fun initData() {
+        if (isSnapshotViewMode()) {
             snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
 
             // Incomplete snapshot can be completed, apart from creating a new blueprint from it
@@ -69,7 +60,7 @@ class GitHubTypeActivity : DataTypeActivity() {
                 }
             }
 
-        } else if (snapshotCreateMode()) {
+        } else if (isSnapshotCreateMode()) {
             snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
             toolbar.title = "Creating new GitHub Type Snapshot"
 
@@ -90,31 +81,10 @@ class GitHubTypeActivity : DataTypeActivity() {
         }
     }
 
-    override fun updateFolderLocationSelectionInViews(folderLocationTexts: Array<String>) {
-        tvArchiveLocations.text = folderLocationTexts.joinToString(separator = ", ")
-    }
-
-    override fun updateDownloadScheduleInViews(optionText: String) {
-        tvDownloadSchedule.text = optionText
-    }
-
     override fun checkSnapshot(status: String): Boolean {
         if (etUserName.text.trim().isEmpty()) {
             Toast.makeText(this, "Please enter uer name first", Toast.LENGTH_SHORT).show()
             return false
-        }
-        if (etName.text.trim().isEmpty()) {
-            Toast.makeText(this, "Please enter name", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (snapshot.archiveFolderLocations.isEmpty()) {
-            Toast.makeText(this, "Please add location where to save archive", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        val timestamp = System.currentTimeMillis()
-        // for new artifact, generating artifactId
-        if (snapshot.artifactId < 1) {
-            snapshot = snapshot.copy(artifactId = timestamp)
         }
         // todo either construct snapshot here completely or modify it on option change
         snapshot = snapshot.copy(
@@ -126,7 +96,7 @@ class GitHubTypeActivity : DataTypeActivity() {
                 ),
                 // archive locations already set
                 dataTypeSpecificMetadata = GitHubTypeMetadata(
-                        userName = if (snapshotViewMode()) {
+                        userName = if (isSnapshotViewMode()) {
                             getTypeMetadata().userName // for read only snapshot, same as it was
                         } else {
                             etUserName.text.toString().trim('/', ' ')
@@ -145,58 +115,19 @@ class GitHubTypeActivity : DataTypeActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_data_view, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_options -> {
-                dlAllContent.openDrawer(Gravity.RIGHT)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
+    override fun getDrawer() = dlAllContent
 
 
     // type specific
 
     fun fillInOptions(isEditable: Boolean) {
+        fillInCommonOptions(isEditable)
+
         etUserName.isEnabled = isEditable
         etUserName.setText(LinkUtil.getShortFormUrl(getUserName()))
         etUserName.setOnEditorActionListener { v, actionId, event -> goToGitHubUserPage(etUserName.text.toString()) }
         bGo.isEnabled = isEditable
         bGo.setOnClickListener { view -> goToGitHubUserPage(etUserName.text.toString()) }
-
-        etName.isEnabled = isEditable
-        etName.append(snapshot.title)
-        etDescription.isEnabled = isEditable
-        etDescription.append(snapshot.description)
-
-        updateFolderLocationSelectionInViews(IntentUtil.getFolderLocationNames(intent))
-        bArchiveLocation.isEnabled = isEditable
-        bArchiveLocation.setOnClickListener { openFolderLocationList(selectMode = true) }
-
-        bManageArchiveLocations.isEnabled = isEditable
-        bManageArchiveLocations.setOnClickListener { openFolderLocationList(selectMode = false) }
-
-        tvDownloadSchedule.text = getDownloadScheduleText(snapshot.downloadSchedule)
-        bDownloadSchedule.isEnabled = isEditable
-        bDownloadSchedule.setOnClickListener { askSetDownloadSchedule() }
-
-        sDownloadOnWifi.isEnabled = isEditable
-        sDownloadOnWifi.isChecked = snapshot.downloadSchedule.allowOnWifi
-        sDownloadOnMobileData.isEnabled = isEditable
-        sDownloadOnMobileData.isChecked = snapshot.downloadSchedule.allowOnMobileData
-
-        supportActionBar!!.subtitle = snapshot.title
-
-        bSaveBlueprint.setOnClickListener { checkAndReturnSnapshot(SnapshotStatus.BLUEPRINT) }
-        bSave.visibility = if (isEditable) View.VISIBLE else View.GONE
-        bSave.setOnClickListener { checkAndReturnSnapshot(SnapshotStatus.IN_PROGRESS) }
-        bContinueSaving.setOnClickListener { checkAndReturnSnapshot(SnapshotStatus.INCOMPLETE) }
     }
 
     // map of related page links to their unique CSS selectors in HTML document
@@ -214,7 +145,7 @@ class GitHubTypeActivity : DataTypeActivity() {
             Log.d(TAG, "Loaded page from: ${webView.url}")
             loadedHtml = it
             // Inputs are pre-filled only when creating new artifact
-            if (artifactCreateMode()) {
+            if (isArtifactCreateMode()) {
                 etName.setText(userName)
                 supportActionBar!!.subtitle = webView.title
             }

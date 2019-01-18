@@ -18,6 +18,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItems
+import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.lib.databinding.ActivityDataTypeBinding
 import kotlin.collections.ArrayList
@@ -61,7 +62,7 @@ abstract class DataTypeActivity : AppCompatActivity() {
 
     protected fun isSnapshotViewMode(): Boolean {
         if (snapshotDataExists()) {
-            val snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
+            val snapshot = IntegrityCore.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
             if (snapshot.status != SnapshotStatus.BLUEPRINT) {
                 return true
             }
@@ -71,7 +72,7 @@ abstract class DataTypeActivity : AppCompatActivity() {
 
     protected fun isSnapshotCreateMode(): Boolean {
         if (snapshotDataExists()) {
-            val snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
+            val snapshot = IntegrityCore.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
             if (snapshot.status == SnapshotStatus.BLUEPRINT) {
                 return true
             }
@@ -105,7 +106,7 @@ abstract class DataTypeActivity : AppCompatActivity() {
         binding.filter.addView(inflateFilterView(this).root)
 
         if (isSnapshotViewMode()) {
-            snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
+            snapshot = IntegrityCore.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
 
             // Incomplete snapshot can be completed, apart from creating a new blueprint from it
             if (snapshot.status == SnapshotStatus.INCOMPLETE) {
@@ -122,7 +123,7 @@ abstract class DataTypeActivity : AppCompatActivity() {
             snapshotViewModeAction(snapshot)
 
         } else if (isSnapshotCreateMode()) {
-            snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
+            snapshot = IntegrityCore.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
 
             supportActionBar!!.title = "Creating new ${getTypeName()} Type Snapshot"
 
@@ -227,7 +228,7 @@ abstract class DataTypeActivity : AppCompatActivity() {
         intent.component = ComponentName("com.alexvt.integrity",
                 "com.alexvt.integrity.base.activity.FolderLocationsActivity") // todo resolve
         IntentUtil.putSelectMode(intent, selectMode)
-        IntentUtil.putSnapshot(intent, IntegrityEx.fromTypeSpecificMetadata(this, snapshot))
+        IntentUtil.putSnapshot(intent, IntegrityCore.fromTypeSpecificMetadata(this, snapshot))
         startActivityForResult(intent, 0)
     }
 
@@ -303,7 +304,7 @@ abstract class DataTypeActivity : AppCompatActivity() {
 
     private fun returnSnapshot(snapshot: SnapshotMetadata) {
         val intent = Intent()
-        IntentUtil.putSnapshot(intent, IntegrityEx.fromTypeSpecificMetadata(this, snapshot))
+        IntentUtil.putSnapshot(intent, IntegrityCore.fromTypeSpecificMetadata(this, snapshot))
         setResult(Activity.RESULT_OK, intent)
         finish()
     }

@@ -24,10 +24,7 @@ import android.content.pm.ActivityInfo
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.type.SnapshotDownloadStartRequest
 import com.alexvt.integrity.core.util.*
-import com.alexvt.integrity.lib.FolderLocation
-import com.alexvt.integrity.lib.MetadataCollection
-import com.alexvt.integrity.lib.Snapshot
-import com.alexvt.integrity.lib.SnapshotStatus
+import com.alexvt.integrity.lib.*
 import com.alexvt.integrity.lib.util.IntentUtil
 
 
@@ -297,4 +294,35 @@ object IntegrityCore {
                     .filter { it?.activityInfo != null }
                     .map { it.activityInfo }
 
+
+    /**
+     * TypeSpecificConverters
+     */
+
+    fun toTypeSpecificMetadata(snapshot: Snapshot) = SnapshotMetadata(
+            artifactId = snapshot.artifactId,
+            title = snapshot.title,
+            date = snapshot.date,
+            description = snapshot.description,
+            downloadSchedule = snapshot.downloadSchedule,
+            archiveFolderLocations = snapshot.archiveFolderLocations,
+            dataTypeSpecificMetadata = JsonSerializerUtil.fromJson(
+                    snapshot.dataTypeSpecificMetadataJson,
+                    Class.forName(snapshot.dataTypeClassName) as Class<TypeMetadata>)!!,
+            status = snapshot.status
+    )
+
+    fun fromTypeSpecificMetadata(context: Context, snapshotMetadata: SnapshotMetadata) = Snapshot(
+            artifactId = snapshotMetadata.artifactId,
+            title = snapshotMetadata.title,
+            date = snapshotMetadata.date,
+            description = snapshotMetadata.description,
+            downloadSchedule = snapshotMetadata.downloadSchedule,
+            archiveFolderLocations = snapshotMetadata.archiveFolderLocations,
+            dataTypeClassName = snapshotMetadata.dataTypeSpecificMetadata.javaClass.name,
+            dataTypePackageName = context.packageName,
+            dataTypeSpecificMetadataJson = JsonSerializerUtil.toJson(
+                    snapshotMetadata.dataTypeSpecificMetadata)!!,
+            status = snapshotMetadata.status
+    )
 }

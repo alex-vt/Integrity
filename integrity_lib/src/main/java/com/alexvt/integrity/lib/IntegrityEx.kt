@@ -50,37 +50,4 @@ object IntegrityEx {
             IntentUtil.putDate(this, date)
         })
     }
-
-
-    /**
-     * TypeSpecificConverters
-     */
-
-    fun toTypeSpecificMetadata(snapshot: Snapshot) = SnapshotMetadata(
-            artifactId = snapshot.artifactId,
-            title = snapshot.title,
-            date = snapshot.date,
-            description = snapshot.description,
-            downloadSchedule = snapshot.downloadSchedule,
-            archiveFolderLocations = snapshot.archiveFolderLocations,
-            dataTypeSpecificMetadata = JsonSerializerUtil.fromJson(
-                    snapshot.dataTypeSpecificMetadataJson,
-                    Class.forName(snapshot.dataTypeClassName) as Class<TypeMetadata>)!!,
-            status = snapshot.status
-    )
-
-    fun fromTypeSpecificMetadata(context: Context, snapshotMetadata: SnapshotMetadata) = Snapshot(
-            artifactId = snapshotMetadata.artifactId,
-            title = snapshotMetadata.title,
-            date = snapshotMetadata.date,
-            description = snapshotMetadata.description,
-            downloadSchedule = snapshotMetadata.downloadSchedule,
-            archiveFolderLocations = snapshotMetadata.archiveFolderLocations,
-            dataTypeClassName = snapshotMetadata.dataTypeSpecificMetadata.javaClass.name,
-            dataTypePackageName = context.packageName,
-            dataTypeSpecificMetadataJson = JsonSerializerUtil.toJson(
-                    snapshotMetadata.dataTypeSpecificMetadata)!!,
-            status = snapshotMetadata.status
-    )
-
 }

@@ -7,6 +7,7 @@
 package com.alexvt.integrity.lib.util
 
 import android.content.Intent
+import com.alexvt.integrity.core.log.LogEntry
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 
@@ -22,6 +23,7 @@ object IntentUtil {
     private const val snapshot = "snapshot"
     private const val selectMode = "selectMode"
     private const val folderLocationNames = "folderLocationNames"
+    private const val logEntry = "logEntry"
 
     fun putArtifactId(intent: Intent?, artifactId: Long): Intent {
         intent!!.putExtra(IntentUtil.artifactId, artifactId)
@@ -78,5 +80,13 @@ object IntentUtil {
     }
 
     fun getFolderLocationNames(intent: Intent?) = intent!!.getStringArrayExtra(folderLocationNames)!!
+
+    fun withLogEntry(logEntry: LogEntry): Intent {
+        val intent = Intent()
+        intent.putExtra(IntentUtil.logEntry, logEntry)
+        return intent
+    }
+
+    fun getLogEntry(intent: Intent?) = intent!!.getSerializableExtra(logEntry) as LogEntry
 
 }

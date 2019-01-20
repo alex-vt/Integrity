@@ -24,6 +24,16 @@ object PreferencesUtil {
     }
 
 
+    private val LOG = "LOG"
+
+    fun getLogJson(context: Context)
+            = getSharedPreferences(context).getString(LOG, null)
+
+    fun setLogJson(context: Context, value: String) {
+        getPreferencesEditor(context).putString(LOG, value).commit()
+    }
+
+
     private val PRESETS = "PRESETS"
 
     fun getPresetsJson(context: Context): String {

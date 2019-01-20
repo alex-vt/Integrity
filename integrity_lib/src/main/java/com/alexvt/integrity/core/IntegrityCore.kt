@@ -21,6 +21,8 @@ import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.job.ScheduledJobManager
 import android.content.ComponentName
 import android.content.pm.ActivityInfo
+import com.alexvt.integrity.core.log.LogRepository
+import com.alexvt.integrity.core.log.SimplePersistableLogRepository
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.type.SnapshotDownloadStartRequest
 import com.alexvt.integrity.core.util.*
@@ -34,9 +36,9 @@ import com.alexvt.integrity.lib.util.IntentUtil
  */
 object IntegrityCore {
 
-    // todo use content providers
     lateinit var metadataRepository: MetadataRepository
     lateinit var folderLocationRepository: FolderLocationRepository
+    lateinit var logRepository: LogRepository
 
     lateinit var context: Context
 
@@ -45,6 +47,8 @@ object IntegrityCore {
      */
     fun init(context: Context) {
         IntegrityCore.context = context
+        logRepository = SimplePersistableLogRepository // todo replace with database
+        logRepository.init(context)
         metadataRepository = SimplePersistableMetadataRepository // todo replace with database
         metadataRepository.init(context)
         folderLocationRepository = SimplePersistableFolderLocationRepository // todo replace with database

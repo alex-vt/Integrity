@@ -7,7 +7,6 @@
 package com.alexvt.integrity.type.github
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
@@ -20,6 +19,7 @@ import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
 import com.alexvt.integrity.lib.util.WebViewUtil
 import com.alexvt.integrity.lib.IntegrityEx
+import com.alexvt.integrity.lib.Log
 import com.alexvt.integrity.lib.SnapshotMetadata
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -90,7 +90,8 @@ class GitHubTypeActivity : DataTypeActivity() {
                     linkToArchivePathRedirectMap,
                     true,
                     false) {
-                Log.d(TAG, "Loaded HTML from file")
+                Log(this@GitHubTypeActivity).what("Loaded HTML from file")
+                        .where("snapshotViewModeAction").log()
             }
         }
     }
@@ -138,7 +139,8 @@ class GitHubTypeActivity : DataTypeActivity() {
     private fun goToGitHubUserPage(snapshot: SnapshotMetadata, userName: String): Boolean {
         WebViewUtil.loadHtml(content.webView, LinkUtil.getFullFormUrl("https://github.com/" + userName),
                 emptyMap(), true, false) {
-            Log.d(TAG, "Loaded page from: ${content.webView.url}")
+            Log(this).what("Loaded page from: ${content.webView.url}")
+                    .where("goToGitHubUserPage").log()
             loadedHtml = it
             // Inputs are pre-filled only when creating new artifact
             if (isArtifactCreateMode()) {

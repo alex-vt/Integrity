@@ -6,12 +6,12 @@
 
 package com.alexvt.integrity
 
-import android.util.Log
 import com.alexvt.integrity.core.*
 import com.alexvt.integrity.core.filesystem.local.LocalFolderLocation
 import com.alexvt.integrity.core.filesystem.local.LocalLocationUtil
 import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocation
 import com.alexvt.integrity.core.filesystem.samba.SambaLocationUtil
+import com.alexvt.integrity.lib.Log
 
 class App : android.app.Application() {
 
@@ -24,6 +24,7 @@ class App : android.app.Application() {
         IntegrityCore.registerFileLocationUtil(SambaFolderLocation::class.java, SambaLocationUtil())
 
         //IntegrityCore.metadataRepository.clear()
+        //IntegrityCore.logRepository.clear()
 
         /*
         IntegrityCore.folderLocationRepository.clear()
@@ -31,6 +32,7 @@ class App : android.app.Application() {
                 LocalFolderLocation("Device storage", "/storage/emulated/0/Integrity"))
         */
 
-        Log.d("initialized", "Initialized")
+        Log(this).what("IntegrityCore initialized")
+                .where("onCreate").log()
     }
 }

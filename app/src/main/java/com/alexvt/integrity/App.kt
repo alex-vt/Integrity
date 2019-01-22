@@ -6,17 +6,20 @@
 
 package com.alexvt.integrity
 
+import android.app.Application
 import com.alexvt.integrity.core.*
 import com.alexvt.integrity.core.filesystem.local.LocalFolderLocation
 import com.alexvt.integrity.core.filesystem.local.LocalLocationUtil
 import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocation
 import com.alexvt.integrity.core.filesystem.samba.SambaLocationUtil
+import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.Log
 
-class App : android.app.Application() {
+class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        IntegrityEx.handleUncaughtExceptions(this)
 
         // Integrity core: initializing for file locations // todo locate dynamically as services
         IntegrityCore.init(this)

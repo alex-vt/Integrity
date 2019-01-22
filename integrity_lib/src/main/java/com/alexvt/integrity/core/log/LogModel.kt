@@ -25,6 +25,7 @@ object LogKey {
     const val CLASS = "class"
     const val PACKAGE = "package"
     const val METHOD = "method"
+    const val THREAD = "thread"
     const val DESCRIPTION = "description"
     const val DATA_TYPE = "data_type"
     const val STACK_TRACE = "stack_trace"

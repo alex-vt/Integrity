@@ -7,9 +7,13 @@
 package com.alexvt.integrity.lib
 
 import android.content.Context
+import com.alexvt.integrity.core.log.LogEntry
 import com.alexvt.integrity.core.log.LogEntryType
 import com.alexvt.integrity.core.log.LogKey
 import com.alexvt.integrity.core.log.LoggingUtil
+import java.io.PrintWriter
+import java.io.StringWriter
+import java.text.SimpleDateFormat
 
 /**
  * Logger (builder-like).
@@ -33,6 +37,10 @@ class Log(val context: Context) {
         return this
     }
 
+    fun thread(thread: Thread): Log {
+        data[LogKey.THREAD] = thread.toString()
+        return this
+    }
 
     fun logDebug() {
         log(LogEntryType.DEBUG)
@@ -54,7 +62,30 @@ class Log(val context: Context) {
         log(type, null)
     }
 
-    private fun log(type: String, throwable: Throwable?) {
-        LoggingUtil.registerLogEvent(context, type, throwable, data)
+    private fun log(logEntryType: String, throwable: Throwable?) {
+        val fullData = addMoreLogData(context, data, throwable)
+        val logEntryTime = getCurrentTimeText()
+        LoggingUtil.registerLogEvent(context, LogEntry(logEntryTime, fullData, logEntryType))
+    }
+
+    private fun getCurrentTimeText() = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")
+            .format(System.currentTimeMillis())
+
+    private fun addMoreLogData(context: Context, data: LinkedHashMap<String, String>,
+                               throwable: Throwable?): LinkedHashMap<String, String> {
+        if (throwable != null) {
+            data[LogKey.STACK_TRACE] = getStackTrace(throwable)
+        }
+        data[LogKey.PACKAGE] = context.packageName
+        if (!data.containsKey(LogKey.THREAD)) {
+            data[LogKey.THREAD] = Thread.currentThread().toString()
+        }
+        return data
+    }
+
+    private fun getStackTrace(throwable: Throwable): String {
+        val writer = StringWriter()
+        throwable.printStackTrace(PrintWriter(writer))
+        return writer.toString()
     }
 }

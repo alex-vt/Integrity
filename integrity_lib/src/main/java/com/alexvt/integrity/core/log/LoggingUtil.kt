@@ -12,9 +12,6 @@ import android.content.Intent
 import android.util.Log
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.IntentUtil
-import java.io.PrintWriter
-import java.io.StringWriter
-import java.text.SimpleDateFormat
 
 object LoggingUtil {
 
@@ -23,23 +20,9 @@ object LoggingUtil {
      *
      * As the log repository can be in a different app, log entry is passed through a broadcast.
      */
-    fun registerLogEvent(context: Context, logEntryType: String, throwable: Throwable?,
-                    data: LinkedHashMap<String, String>) {
-        val time = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(System.currentTimeMillis())
-        // Adding some general log data
-        data[LogKey.PACKAGE] = context.packageName
-        if (throwable != null) {
-            data[LogKey.STACK_TRACE] = getStackTrace(throwable)
-        }
-        val logEntry = LogEntry(time, data, logEntryType)
+    fun registerLogEvent(context: Context, logEntry: LogEntry) {
         showLogEntryInLogcat(logEntry)
         sendLogEntryBroadcast(context, logEntry)
-    }
-
-    private fun getStackTrace(throwable: Throwable): String {
-        val writer = StringWriter()
-        throwable.printStackTrace(PrintWriter(writer))
-        return writer.toString()
     }
 
     private fun showLogEntryInLogcat(logEntry: LogEntry) {

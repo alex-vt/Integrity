@@ -14,6 +14,9 @@ import com.alexvt.integrity.core.log.LoggingUtil
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.text.SimpleDateFormat
+import android.app.ActivityManager
+
+
 
 /**
  * Logger (builder-like).
@@ -80,6 +83,7 @@ class Log(val context: Context) {
         if (!data.containsKey(LogKey.THREAD)) {
             data[LogKey.THREAD] = Thread.currentThread().toString()
         }
+        data[LogKey.PROCESS] = getCurrentProcessInfo(context)
         return data
     }
 
@@ -87,5 +91,17 @@ class Log(val context: Context) {
         val writer = StringWriter()
         throwable.printStackTrace(PrintWriter(writer))
         return writer.toString()
+    }
+
+    private fun getCurrentProcessInfo(context: Context): String {
+        val pid = android.os.Process.myPid()
+        val processIdInfoSuffix = " (process ID: $pid)"
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (processInfo in manager.runningAppProcesses) {
+            if (processInfo.pid == pid) {
+                return processInfo.processName + processIdInfoSuffix
+            }
+        }
+        return "(no name)$processIdInfoSuffix"
     }
 }

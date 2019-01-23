@@ -24,7 +24,6 @@ import android.content.pm.ActivityInfo
 import com.alexvt.integrity.core.log.LogRepository
 import com.alexvt.integrity.core.log.SimplePersistableLogRepository
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
-import com.alexvt.integrity.core.type.SnapshotDownloadStartRequest
 import com.alexvt.integrity.core.util.*
 import com.alexvt.integrity.lib.*
 import com.alexvt.integrity.lib.util.IntentUtil

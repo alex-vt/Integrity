@@ -82,6 +82,14 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name="com.alexvt.integrity.core.log.LoggingUtil$CrashRecoveryReceiver"
+            android:process=":recovery"
+            >
+            <intent-filter>
+                <action android:name="com.alexvt.integrity.CRASH_RECOVERY" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name="com.alexvt.integrity.type.blog.BlogTypeService"
             android:permission="android.permission.BIND_JOB_SERVICE"

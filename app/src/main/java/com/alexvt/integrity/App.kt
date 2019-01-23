@@ -14,11 +14,20 @@ import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocation
 import com.alexvt.integrity.core.filesystem.samba.SambaLocationUtil
 import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.Log
+import android.app.ActivityManager
+import android.content.Context
+
+
 
 class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        if (isRecoveryProcess(this)) {
+            return // recovery process is only used to restart the main one, doesn't init anything
+        }
+
         IntegrityEx.handleUncaughtExceptions(this)
 
         // Integrity core: initializing for file locations // todo locate dynamically as services
@@ -37,5 +46,19 @@ class App : Application() {
 
         Log(this).what("IntegrityCore initialized")
                 .where("onCreate").log()
+    }
+
+    private fun isRecoveryProcess(context: Context): Boolean {
+        val currentPid = android.os.Process.myPid()
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val runningProcesses = manager.runningAppProcesses
+        if (runningProcesses != null) {
+            for (processInfo in runningProcesses) {
+                if (processInfo.pid == currentPid && processInfo.processName.endsWith(":recovery")) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 }

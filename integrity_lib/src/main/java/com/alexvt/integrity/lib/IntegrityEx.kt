@@ -23,7 +23,7 @@ object IntegrityEx {
                 .what(throwable.message ?: "Uncaught exception (null message)")
                 .thread(thread)
                 .logCrash(throwable)
-            System.exit(0) // todo recover
+            Runtime.getRuntime().exit(0) // the faulty process terminates; will be recovered
         }
     }
 

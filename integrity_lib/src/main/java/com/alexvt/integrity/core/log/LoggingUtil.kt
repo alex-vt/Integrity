@@ -22,7 +22,7 @@ object LoggingUtil {
      */
     fun registerLogEvent(context: Context, logEntry: LogEntry) {
         showLogEntryInLogcat(logEntry)
-        sendLogEntryBroadcast(context, logEntry)
+        sendLogEntryBroadcast(context, logEntry, logEntry.type == LogEntryType.CRASH)
     }
 
     private fun showLogEntryInLogcat(logEntry: LogEntry) {
@@ -38,9 +38,14 @@ object LoggingUtil {
         }
     }
 
-    private fun sendLogEntryBroadcast(context: Context, logEntry: LogEntry) {
+    private fun sendLogEntryBroadcast(context: Context, logEntry: LogEntry,
+                                      useRecoveryProcess: Boolean) {
         context.applicationContext.sendBroadcast(IntentUtil.withLogEntry(logEntry).apply {
-            action = "com.alexvt.integrity.LOG_ENTRY_ADDED"
+            action = if (useRecoveryProcess) {
+                "com.alexvt.integrity.CRASH_RECOVERY"
+            } else {
+                "com.alexvt.integrity.LOG_ENTRY_ADDED"
+            }
         })
     }
 
@@ -48,6 +53,19 @@ object LoggingUtil {
     class LogEntryReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             IntegrityCore.logRepository.addEntry(IntentUtil.getLogEntry(intent))
+        }
+    }
+
+    // Using a broadcast receiver in a temporary separate recovery process
+    // to receive crash log entry from the faulty process (which then is terminated)
+    // and sending it to the main process (starts again if it was terminated or not running).
+    class CrashRecoveryReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            Log.e(LoggingUtil::class.java.simpleName,
+                    "CrashRecoveryReceiver in the recovery process is re-broadcasting " +
+                            "crash log entry to the (newly created if needed) main app process...")
+            sendLogEntryBroadcast(context, IntentUtil.getLogEntry(intent), false)
+            Runtime.getRuntime().exit(0) // recovery process not needed anymore
         }
     }
 }

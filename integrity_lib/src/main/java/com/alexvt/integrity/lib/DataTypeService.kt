@@ -26,10 +26,6 @@ import com.alexvt.integrity.core.util.JsonSerializerUtil
  */
 abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return super.onStartCommand(intent, flags, startId)
-    }
-
     /**
      * Gets data type name visible for user
      */

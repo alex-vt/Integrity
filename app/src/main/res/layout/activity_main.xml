@@ -103,6 +103,13 @@
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     />
 
+                <Button
+                    android:id="@+id/bLog"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Log"
+                    />
+
             </LinearLayout>
 
         </ScrollView>

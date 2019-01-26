@@ -27,7 +27,6 @@
 
         <activity
             android:name="com.alexvt.integrity.base.activity.MainActivity"
-            android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,13 +37,16 @@
 
         <activity
             android:name="com.alexvt.integrity.base.activity.ArtifactViewActivity"
-            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+
+        <activity
+            android:name="com.alexvt.integrity.base.activity.LogViewActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
             android:name="com.alexvt.integrity.type.blog.BlogTypeActivity"
-            android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="com.alexvt.integrity.core.ACTION_VIEW" />
@@ -54,19 +56,16 @@
         <activity
             android:exported="true"
             android:name="com.alexvt.integrity.base.activity.FolderLocationsActivity"
-            android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
             android:name="com.alexvt.integrity.core.filesystem.local.LocalLocationActivity"
-            android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
             android:name="com.alexvt.integrity.core.filesystem.samba.SambaLocationActivity"
-            android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 

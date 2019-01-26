@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
 
         rvArtifactList.adapter = ArtifactRecyclerAdapter(ArrayList(), this)
         rvJobs.adapter = JobRecyclerAdapter(ArrayList(), this)
+        bLog.setOnClickListener { viewLog() }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -143,6 +144,10 @@ class MainActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    fun viewLog() {
+        startActivity(Intent(this, LogViewActivity::class.java))
     }
 
     fun viewFolderLocations() {

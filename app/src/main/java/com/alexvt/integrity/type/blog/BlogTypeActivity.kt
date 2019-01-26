@@ -7,7 +7,6 @@
 package com.alexvt.integrity.type.blog
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.*
 import android.widget.Toast
@@ -22,6 +21,7 @@ import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
 import com.alexvt.integrity.lib.util.WebViewUtil
 import com.alexvt.integrity.lib.IntegrityEx
+import com.alexvt.integrity.lib.Log
 import com.alexvt.integrity.lib.SnapshotMetadata
 import com.jakewharton.rxbinding3.widget.checkedChanges
 import com.jakewharton.rxbinding3.widget.textChanges
@@ -188,7 +188,8 @@ class BlogTypeActivity : DataTypeActivity() {
                     linkToArchivePathRedirectMap,
                     getTypeMetadata(snapshot).loadImages,
                     getTypeMetadata(snapshot).desktopSite) {
-                Log.d(TAG, "Loaded HTML from file")
+                Log(this@BlogTypeActivity).what("Loaded HTML from file $firstArchivePath")
+                        .where("snapshotViewModeAction").log()
             }
         }
     }
@@ -300,9 +301,9 @@ class BlogTypeActivity : DataTypeActivity() {
                     matchedLinkMap.map { it -> MatchableLink(it.key, it.value, true) }
                             .plus(unmatchedLinkMap.map { it -> MatchableLink(it.key as String, it.value, false) })
             )
-            Log.d(TAG, "Matched links: ${matchedLinkMap.size} of ${allLinkMap.size}")
         } catch (t: Throwable) {
-            Log.e(TAG, "updateMatchedRelatedLinkList exception", t)
+            Log(this).what("Marched related links extraction failed")
+                    .where("updateMatchedRelatedLinkList").logError(t)
         }
     }
 
@@ -317,7 +318,8 @@ class BlogTypeActivity : DataTypeActivity() {
     private fun goToWebPage(snapshot: SnapshotMetadata, urlToView: String): Boolean {
         WebViewUtil.loadHtml(content.webView, LinkUtil.getFullFormUrl(urlToView), emptyMap(),
                 getTypeMetadata(snapshot).loadImages, getTypeMetadata(snapshot).desktopSite) {
-            Log.d(TAG, "Loaded page from: ${content.webView.url}")
+            Log(this).what("Loaded page from: ${content.webView.url}")
+                    .where("goToWebPage").log()
             loadedHtml = it
             // Inputs are pre-filled only when creating new artifact
             if (isArtifactCreateMode()) {

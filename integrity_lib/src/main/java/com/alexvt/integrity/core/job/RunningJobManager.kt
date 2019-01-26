@@ -6,7 +6,6 @@
 
 package com.alexvt.integrity.core.job
 
-import android.util.Log
 import com.alexvt.integrity.lib.Snapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -31,7 +30,7 @@ object RunningJobManager {
         jobStatusMap = jobStatusMap.minus(getId(snapshot)) // replacing
         jobStatusMap = jobStatusMap.plus(Pair(getId(snapshot), true))
         invokeJobListListeners()
-        Log.d(tag, "Job ${getJobDescriptionText(snapshot)} added")
+        android.util.Log.v(tag, "Job ${getJobDescriptionText(snapshot)} added")
     }
 
     fun isRunning(snapshot: Snapshot) = isRunning(snapshot.artifactId, snapshot.date)
@@ -39,7 +38,7 @@ object RunningJobManager {
     fun isRunning(artifactId: Long, date: String): Boolean {
         val isRunning = jobStatusMap.containsKey(getId(artifactId, date))
                 && jobStatusMap[getId(artifactId, date)] == true
-        Log.d(tag, "Job ${getJobDescriptionText(artifactId, date)} running: $isRunning")
+        android.util.Log.v(tag, "Job ${getJobDescriptionText(artifactId, date)} running: $isRunning")
         return isRunning
     }
 
@@ -60,7 +59,7 @@ object RunningJobManager {
     fun markJobCanceled(artifactId: Long, date: String) {
         jobStatusMap = jobStatusMap.minus(getId(artifactId, date))
         invokeJobListListeners()
-        Log.d(tag, "Job ${getJobDescriptionText(artifactId, date)} marked canceled")
+        android.util.Log.v(tag, "Job ${getJobDescriptionText(artifactId, date)} marked canceled")
     }
 
     fun markJobCanceled(snapshot: Snapshot) = markJobCanceled(snapshot.artifactId, snapshot.date)
@@ -70,7 +69,7 @@ object RunningJobManager {
         invokeJobListListeners()
         jobProgressListenerMap = jobProgressListenerMap.minus(getId(snapshot))
         recentJobProgressMap = recentJobProgressMap.minus(getId(snapshot))
-        Log.d(tag, "Job ${getJobDescriptionText(snapshot)} removed")
+        android.util.Log.v(tag, "Job ${getJobDescriptionText(snapshot)} removed")
     }
 
 

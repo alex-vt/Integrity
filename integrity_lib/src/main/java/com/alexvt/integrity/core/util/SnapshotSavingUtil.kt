@@ -10,7 +10,6 @@ import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.SnapshotStatus
@@ -19,6 +18,7 @@ import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.job.ScheduledJobManager
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.type.SnapshotDownloadStartRequest
+import com.alexvt.integrity.lib.Log
 import com.alexvt.integrity.lib.util.IntentUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -36,7 +36,7 @@ object SnapshotSavingUtil {
     fun saveSnapshot(context: Context, snapshot: Snapshot) {
         if (snapshot.status == SnapshotStatus.BLUEPRINT
                 || snapshot.status == SnapshotStatus.IN_PROGRESS) {
-            saveSnapshotBlueprint(snapshot)
+            saveSnapshotBlueprint(context, snapshot)
         }
         if (snapshot.status == SnapshotStatus.IN_PROGRESS
                 || snapshot.status == SnapshotStatus.INCOMPLETE ) {
@@ -51,14 +51,14 @@ object SnapshotSavingUtil {
     /**
      * Saves preliminary (intended) snapshot metadata to database. No data is processed here.
      */
-    private fun saveSnapshotBlueprint(snapshot: Snapshot): String {
+    private fun saveSnapshotBlueprint(context: Context, snapshot: Snapshot): String {
         val date = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(System.currentTimeMillis())
         IntegrityCore.metadataRepository.cleanupArtifactBlueprints(snapshot.artifactId) // no old ones
         IntegrityCore.metadataRepository.addSnapshotMetadata(snapshot.copy(
                 date = date,
                 status = SnapshotStatus.BLUEPRINT
         ))
-        ScheduledJobManager.updateSchedule()
+        ScheduledJobManager.updateSchedule(context)
         return date
     }
 
@@ -83,7 +83,7 @@ object SnapshotSavingUtil {
 
         // starting download
         RunningJobManager.putJob(snapshotInProgress)
-        postSnapshotDownloadProgress(snapshotInProgress, "Downloading data")
+        postSnapshotDownloadProgress(context, snapshotInProgress, "Downloading data")
 
         DataCacheFolderUtil.ensureSnapshotFolder(context, snapshotInProgress.artifactId,
                 snapshotInProgress.date)
@@ -101,7 +101,7 @@ object SnapshotSavingUtil {
                 archiveSnapshot(context, snapshot)
                 // Final. Archiving will continue in the main app process.
             } else {
-                postSnapshotDownloadProgress(snapshot, IntentUtil.getMessage(intent))
+                postSnapshotDownloadProgress(context, snapshot, IntentUtil.getMessage(intent))
             }
         }
     }
@@ -118,7 +118,7 @@ object SnapshotSavingUtil {
         // Packing downloaded snapshot
         val dataFolderPath = DataCacheFolderUtil.ensureSnapshotFolder(context, snapshotInProgress.artifactId,
                 snapshotInProgress.date)
-        postSnapshotDownloadProgress(snapshotInProgress, "Compressing data")
+        postSnapshotDownloadProgress(context, snapshotInProgress, "Compressing data")
         val archivePath = ArchiveUtil.packSnapshot(dataFolderPath)
         val archiveHashPath = "$archivePath.sha1"
         DataCacheFolderUtil.writeTextToFile(context, HashUtil.getFileHash(archivePath), archiveHashPath)
@@ -132,9 +132,11 @@ object SnapshotSavingUtil {
             if (!RunningJobManager.isRunning(completeSnapshot)) {
                 return
             }
-            postSnapshotDownloadProgress(completeSnapshot, "Saving archive to " + dataArchiveLocation + " "
+            postSnapshotDownloadProgress(context, completeSnapshot,
+                    "Saving archive to " + dataArchiveLocation + " "
                     + (index + 1) + " of " + completeSnapshot.archiveFolderLocations.size)
             IntegrityCore.getFileLocationUtil(dataArchiveLocation).writeArchive(
+                    context = context,
                     sourceArchivePath = archivePath,
                     sourceHashPath = archiveHashPath,
                     artifactId = completeSnapshot.artifactId,
@@ -147,7 +149,7 @@ object SnapshotSavingUtil {
             return
         }
 
-        postSnapshotDownloadProgress(completeSnapshot, "Saving metadata to database")
+        postSnapshotDownloadProgress(context, completeSnapshot, "Saving metadata to database")
         // finally replacing incomplete metadata with complete one in database
         IntegrityCore.metadataRepository.removeSnapshotMetadata(snapshotInProgress.artifactId,
                 snapshotInProgress.date)
@@ -155,17 +157,18 @@ object SnapshotSavingUtil {
         DataCacheFolderUtil.clearFiles(context) // folders remain
 
         if (RunningJobManager.isRunning(completeSnapshot)) {
-            postSnapshotDownloadProgress(completeSnapshot, "Done")
-            postSnapshotDownloadResult(completeSnapshot)
+            postSnapshotDownloadProgress(context, completeSnapshot, "Done")
+            postSnapshotDownloadResult(context, completeSnapshot)
         }
-        ScheduledJobManager.updateSchedule()
+        ScheduledJobManager.updateSchedule(context)
     }
 
 
     // utility methods
 
-    private fun postSnapshotDownloadProgress(snapshot: Snapshot, message: String) {
-        Log.d("IntegrityCore", "Job progress: " + message)
+    private fun postSnapshotDownloadProgress(context: Context, snapshot: Snapshot, message: String) {
+        Log(context).what(message).where(this, "postSnapshotDownloadProgress")
+                .snapshot(snapshot).log()
         GlobalScope.launch(Dispatchers.Main) {
             RunningJobManager.invokeJobProgressListener(snapshot, JobProgress(
                     progressMessage = message
@@ -173,8 +176,10 @@ object SnapshotSavingUtil {
         }
     }
 
-    private fun postSnapshotDownloadResult(result: Snapshot) {
-        Log.d("IntegrityCore", "Job result: " + result)
+    private fun postSnapshotDownloadResult(context: Context, result: Snapshot) {
+        Log(context).what("Snapshot download complete")
+                .where(this, "postSnapshotDownloadResult")
+                .snapshot(result).log()
         GlobalScope.launch(Dispatchers.Main) {
             RunningJobManager.invokeJobProgressListener(result, JobProgress(
                     result = result

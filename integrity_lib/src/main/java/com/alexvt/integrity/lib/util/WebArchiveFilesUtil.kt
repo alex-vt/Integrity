@@ -7,24 +7,23 @@
 package com.alexvt.integrity.lib.util
 
 import android.content.Context
-import android.util.Log
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 
 object WebArchiveFilesUtil {
 
     fun savePageLinkToIndex(context: Context, pageLink: String, snapshotPath: String, pageIndex: Int) {
-        Log.d("WebArchiveFilesUtil", "savePageLinkToIndex: $pageLink")
+        android.util.Log.v("WebArchiveFilesUtil", "savePageLinkToIndex: $pageLink")
         DataCacheFolderUtil.addTextToFile(context, getLocalHtmlLink(pageLink, pageIndex, 0),
                 getPaginationPath(snapshotPath))
     }
 
     fun saveLinkToIndex(context: Context, link: String, snapshotPath: String, pageIndex: Int, linkIndex: Int) {
-        Log.d("WebArchiveFilesUtil", "saveLinkToIndex: $link")
+        android.util.Log.v("WebArchiveFilesUtil", "saveLinkToIndex: $link")
         DataCacheFolderUtil.addTextToFile(context, getLocalHtmlLink(link, pageIndex, linkIndex),
                 getLinksPath(snapshotPath))
     }
 
-    fun getLocalHtmlLink(link: String, pageIndex: Int, linkIndex: Int)
+    private fun getLocalHtmlLink(link: String, pageIndex: Int, linkIndex: Int)
             = "<h1><a href=\"${getArchivePath(pageIndex, linkIndex)}\">\n$link\n</a></h1>\n<br/>"
 
     /**
@@ -59,9 +58,9 @@ object WebArchiveFilesUtil {
     fun getPageIndexLinks(context: Context, snapshotPath: String)
             = LinkUtil.getLinkTexts(DataCacheFolderUtil.readTextFromFile(context, getPaginationPath(snapshotPath)))
 
-    fun getPaginationPath(snapshotPath: String) = "$snapshotPath/index-pages.html"
+    private fun getPaginationPath(snapshotPath: String) = "$snapshotPath/index-pages.html"
 
-    fun getLinksPath(snapshotPath: String) = "$snapshotPath/index.html"
+    private fun getLinksPath(snapshotPath: String) = "$snapshotPath/index.html"
 
 
 }

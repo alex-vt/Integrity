@@ -34,14 +34,13 @@ object PreferencesUtil {
     }
 
 
-    private val PRESETS = "PRESETS"
+    private val FOLDER_LOCATIONS = "FOLDER_LOCATIONS"
 
-    fun getPresetsJson(context: Context): String {
-        return getSharedPreferences(context).getString(PRESETS, "")!!
-    }
+    fun getFolderLocationsJson(context: Context)
+            = getSharedPreferences(context).getString(FOLDER_LOCATIONS, null)
 
-    fun setPresetsJson(context: Context, value: String) {
-        getPreferencesEditor(context).putString(PRESETS, value).commit()
+    fun setFolderLocationsJson(context: Context, value: String) {
+        getPreferencesEditor(context).putString(FOLDER_LOCATIONS, value).commit()
     }
 
 

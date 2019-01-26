@@ -7,7 +7,6 @@
 package com.alexvt.integrity.type.blog
 
 import android.content.Context
-import android.util.Log
 import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexArchiveLinks
@@ -29,7 +28,7 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
     override suspend fun downloadPages(dl: BlogMetadataDownload): Boolean {
         while (isRunning(dl) && hasNextPageLink(dl)) {
             val currentPageLink = getNextPageLink(dl)
-            Log.d("IndexedPaginationHelper", "downloadPages: $currentPageLink")
+            android.util.Log.v("IndexedPaginationHelper", "downloadPages: $currentPageLink")
             val additionalLinksOnPage = getAdditionalLinksOnPage(currentPageLink, dl)
             saveArchives(currentPageLink, additionalLinksOnPage, dl)
             persistPaginationProgress(currentPageLink, dl)

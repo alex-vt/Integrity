@@ -4,19 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
 package com.alexvt.integrity.core.type
 
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.util.Log
 import androidx.core.app.JobIntentService
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.util.IntentUtil
@@ -46,7 +39,7 @@ object DataTypeServiceResolver {
         val serviceInfoList = context.packageManager.queryIntentServices(
                 intent, 0)
                 .map { it.serviceInfo }
-        Log.d("DataTypeServiceResolver", "getDataTypeServiceInfoList: $serviceInfoList")
+        android.util.Log.v("DataTypeServiceResolver", "getDataTypeServiceInfoList: $serviceInfoList")
         return serviceInfoList
     }
 

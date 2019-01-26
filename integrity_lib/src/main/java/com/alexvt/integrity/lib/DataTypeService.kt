@@ -8,7 +8,6 @@ package com.alexvt.integrity.lib
 
 import android.app.Activity
 import android.content.Intent
-import android.util.Log
 import androidx.core.app.JobIntentService
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.job.RunningJobManager
@@ -56,9 +55,7 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
      * Starts service job execution according to intent extras.
      */
     final override fun onHandleWork(intent: Intent) {
-        Log.d("DataTypeService", "onHandleWork: Job Service job started")
         createSnapshotFiles(IntentUtil.getSnapshot(intent)!!)
-        Log.d("DataTypeService", "onHandleWork: Job Service job ended")
     }
 
     /**
@@ -81,12 +78,12 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
     // utility methods
 
     private fun getTypeMetadata(snapshot: Snapshot) = JsonSerializerUtil.fromJson(
-            snapshot.dataTypeSpecificMetadataJson, getTypeMetadataClass())!!
+            snapshot.dataTypeSpecificMetadataJson, getTypeMetadataClass())
 
     private fun writeMetadataFile(dataFolderPath: String, snapshot: Snapshot) {
         val metadataFilePath = "$dataFolderPath/_metadata.json.txt"
         val snapshotMetadata = IntegrityCore.toTypeSpecificMetadata(snapshot)
         DataCacheFolderUtil.writeTextToFile(applicationContext,
-                JsonSerializerUtil.toJson(snapshotMetadata)!!, metadataFilePath)
+                JsonSerializerUtil.toJson(snapshotMetadata), metadataFilePath)
     }
 }

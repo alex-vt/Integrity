@@ -37,9 +37,13 @@ object SimplePersistableFolderLocationRepository : FolderLocationRepository {
      * Prepares database for use
      */
     override fun init(context: Context) {
-        val folderLocations = PreferencesUtil.getPresetsJson(IntegrityCore.context)
-        SimplePersistableFolderLocationRepository.folderLocations = JsonSerializerUtil
-                .fromJson(folderLocations, FolderLocations::class.java) ?: FolderLocations()
+        val folderLocationsJson = PreferencesUtil.getFolderLocationsJson(context)
+        if (folderLocationsJson != null) {
+            folderLocations = JsonSerializerUtil.fromJson(folderLocationsJson, FolderLocations::class.java)
+        }
+        if (!::folderLocations.isInitialized) {
+            folderLocations = FolderLocations()
+        }
     }
 
     override fun addFolderLocation(folderLocation: FolderLocation): String {
@@ -80,7 +84,7 @@ object SimplePersistableFolderLocationRepository : FolderLocationRepository {
      * Should be called after every presets modification.
      */
     @Synchronized private fun persistAll() {
-        val presetsJson = JsonSerializerUtil.toJson(folderLocations)!!
-        PreferencesUtil.setPresetsJson(IntegrityCore.context, presetsJson)
+        val presetsJson = JsonSerializerUtil.toJson(folderLocations)
+        PreferencesUtil.setFolderLocationsJson(IntegrityCore.context, presetsJson)
     }
 }

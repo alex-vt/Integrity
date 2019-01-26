@@ -4,19 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
 package com.alexvt.integrity.core.type
 
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
-import android.util.Log
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.util.IntentUtil
 
@@ -44,7 +37,7 @@ object BroadcastUtil {
 
     private fun getBroadcastReceiverInfoList(context: Context, action: String): List<ResolveInfo> {
         val infoList = context.packageManager.queryBroadcastReceivers(Intent(action), 0)
-        Log.d("BroadcastUtil", "getBroadcastReceiverInfoList: $infoList")
+        android.util.Log.v("BroadcastUtil", "getBroadcastReceiverInfoList: $infoList")
         return infoList
     }
 

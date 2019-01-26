@@ -7,6 +7,7 @@
 package com.alexvt.integrity.core.filesystem
 
 import android.app.Activity
+import android.content.Context
 import com.alexvt.integrity.lib.FolderLocation
 
 /**
@@ -31,7 +32,7 @@ interface ArchiveLocationUtil<F: FolderLocation> {
      * in a folder and optionally a subfolder
      * defined by dataArchiveLocation, artifactAlias and artifactId.
      */
-    fun writeArchive(sourceArchivePath: String, sourceHashPath: String,
+    fun writeArchive(context: Context, sourceArchivePath: String, sourceHashPath: String,
                      artifactId: Long, artifactAlias: String, date: String,
                      archiveFolderLocation: F)
 

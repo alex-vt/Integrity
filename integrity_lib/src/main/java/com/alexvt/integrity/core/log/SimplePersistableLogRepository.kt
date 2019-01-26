@@ -29,14 +29,10 @@ object SimplePersistableLogRepository : LogRepository {
     override fun init(context: Context) {
         val logJson = PreferencesUtil.getLogJson(context)
         if (logJson != null) {
-            val logEntriesFromJson = JsonSerializerUtil.fromJson(logJson, Log::class.java)
-            if (logEntriesFromJson != null) {
-                log = logEntriesFromJson
-            }
+            log = JsonSerializerUtil.fromJson(logJson, Log::class.java)
         }
         if (!::log.isInitialized) {
-            val logEntryList = arrayListOf<LogEntry>()
-            log = Log(logEntryList)
+            log = Log()
         }
     }
 
@@ -74,22 +70,22 @@ object SimplePersistableLogRepository : LogRepository {
     }
 
     /**
-     * Gets log entries ordered by time descending.
+     * Gets log entries ordered by addition time descending.
      */
     override fun getRecentEntries(limit: Int): List<LogEntry> {
         return log.entries
-                .sortedByDescending { it.time }
+                .sortedByDescending { it.orderId }
                 .take(limit)
     }
 
     /**
-     * Gets unread error and crash type log entries ordered by time descending.
+     * Gets unread error and crash type log entries ordered by addition time descending.
      */
     override fun getUnreadErrors(): List<LogEntry> {
         return log.entries
                 .filter { !it.read }
                 .filter { it.type == LogEntryType.ERROR || it.type == LogEntryType.CRASH }
-                .sortedByDescending { it.time }
+                .sortedByDescending { it.orderId }
     }
 
     /**
@@ -117,7 +113,7 @@ object SimplePersistableLogRepository : LogRepository {
      */
     @Synchronized private fun saveChanges() {
         invokeChangesListeners()
-        val logJson = JsonSerializerUtil.toJson(log)!!
+        val logJson = JsonSerializerUtil.toJson(log)
         PreferencesUtil.setLogJson(IntegrityCore.context, logJson)
     }
 }

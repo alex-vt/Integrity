@@ -6,9 +6,10 @@
 
 package com.alexvt.integrity.core.filesystem.samba
 
-import android.util.Log
+import android.content.Context
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
+import com.alexvt.integrity.lib.Log
 import com.snatik.storage.Storage
 import java.io.File
 import jcifs.smb.SmbFile
@@ -25,10 +26,9 @@ open class SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
 
     override fun getViewMainActivityClass() = SambaLocationActivity::class.java
 
-    override fun writeArchive(sourceArchivePath: String, sourceHashPath: String,
+    override fun writeArchive(context: Context, sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,
                               archiveFolderLocation: SambaFolderLocation) {
-        Log.d("SambaFolderLocationUtil", "writeArchive")
         val sambaFolderLocationCredentials = IntegrityCore.folderLocationRepository
                 .getCredentials(archiveFolderLocation) as SambaFolderLocationCredentials
         val sambaAuth = NtlmPasswordAuthentication(
@@ -41,10 +41,10 @@ open class SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
 
         val destinationArchivePath = destinationArtifactFolderPath + File.separator +
                 "artifact_" + artifactId + "_snapshot_" + date + ".zip"
-        copyFileToSamba(sourceArchivePath, sambaAuth, destinationArchivePath)
+        copyFileToSamba(context, sourceArchivePath, sambaAuth, destinationArchivePath)
 
         val destinationHashPath = "$destinationArchivePath.sha1"
-        copyFileToSamba(sourceHashPath, sambaAuth, destinationHashPath)
+        copyFileToSamba(context, sourceHashPath, sambaAuth, destinationHashPath)
     }
 
     private fun createFolders(folderPath: String, sambaAuth: NtlmPasswordAuthentication) {
@@ -54,9 +54,9 @@ open class SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
         }
     }
 
-    private fun copyFileToSamba(sourcePath: String, sambaAuth: NtlmPasswordAuthentication,
-                                sambaDestination: String) {
-        val storage = Storage(IntegrityCore.context)
+    private fun copyFileToSamba(context: Context, sourcePath: String,
+                                sambaAuth: NtlmPasswordAuthentication, sambaDestination: String) {
+        val storage = Storage(context)
         val sourceFileBytes = storage.readFile(sourcePath)
 
         val smbFile = SmbFile(sambaDestination, sambaAuth)
@@ -66,7 +66,9 @@ open class SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
             out.write(sourceFileBytes) // todo buffering
             out.close()
         } catch (e: Exception) {
-            Log.e("SambaFolderLocationUtil", "Failed to write Samba file", e)
+            Log(context)
+                    .what("Failed to write Samba file from $sourcePath to $sambaDestination")
+                    .where(this, "copyFileToSamba").logError(e)
         }
     }
 

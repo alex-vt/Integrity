@@ -55,7 +55,7 @@ object IntegrityCore {
         folderLocationRepository.init(context)
 
         resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
-        ScheduledJobManager.updateSchedule()
+        ScheduledJobManager.updateSchedule(context)
 
         notifyAboutUnreadErrors(context)
     }
@@ -185,7 +185,7 @@ object IntegrityCore {
         metadataRepository.removeSnapshotMetadata(incompleteMetadata.artifactId,
                 incompleteMetadata.date)
         metadataRepository.addSnapshotMetadata(incompleteMetadata)
-        ScheduledJobManager.updateSchedule()
+        ScheduledJobManager.updateSchedule(context)
     }
 
     /**
@@ -329,7 +329,7 @@ object IntegrityCore {
             archiveFolderLocations = snapshot.archiveFolderLocations,
             dataTypeSpecificMetadata = JsonSerializerUtil.fromJson(
                     snapshot.dataTypeSpecificMetadataJson,
-                    Class.forName(snapshot.dataTypeClassName) as Class<TypeMetadata>)!!,
+                    Class.forName(snapshot.dataTypeClassName) as Class<TypeMetadata>),
             status = snapshot.status
     )
 
@@ -343,7 +343,7 @@ object IntegrityCore {
             dataTypeClassName = snapshotMetadata.dataTypeSpecificMetadata.javaClass.name,
             dataTypePackageName = context.packageName,
             dataTypeSpecificMetadataJson = JsonSerializerUtil.toJson(
-                    snapshotMetadata.dataTypeSpecificMetadata)!!,
+                    snapshotMetadata.dataTypeSpecificMetadata),
             status = snapshotMetadata.status
     )
 }

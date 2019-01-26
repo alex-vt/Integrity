@@ -6,7 +6,6 @@
 
 package com.alexvt.integrity.core.util
 
-import android.util.Log
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.MapperFeature
@@ -39,28 +38,17 @@ object JsonSerializerUtil {
         return objectMapper
     }
 
-    fun toJson(`object`: Any): String? {
-        try {
-            val timestamp = System.currentTimeMillis()
-            val returnValue = getMapper().writeValueAsString(`object`)
-            Log.d(TAG, "Serialization took " + (System.currentTimeMillis() - timestamp) + " millis")
-            return returnValue
-        } catch (e: Throwable) {
-            Log.e(TAG, "Failed to serialize to JSON", e)
-            return null
-        }
+    fun toJson(`object`: Any): String {
+        val timestamp = System.currentTimeMillis()
+        val returnValue = getMapper().writeValueAsString(`object`)
+        android.util.Log.v(TAG, "Serialization took " + (System.currentTimeMillis() - timestamp) + " millis")
+        return returnValue
     }
 
-    fun <T> fromJson(jsonString: String?, type: Class<T>): T? {
-        try {
-            val timestamp = System.currentTimeMillis()
-            val returnValue = getMapper().readValue(jsonString, type)
-            Log.d(TAG, "Deserialization took " + (System.currentTimeMillis() - timestamp) + " millis")
-            return returnValue
-        } catch (e: Throwable) {
-            Log.e(TAG, "Failed to deserialize to " + type.simpleName, e)
-            return null
-        }
-
+    fun <T> fromJson(jsonString: String, type: Class<T>): T {
+        val timestamp = System.currentTimeMillis()
+        val returnValue = getMapper().readValue(jsonString, type)
+        android.util.Log.v(TAG, "Deserialization took " + (System.currentTimeMillis() - timestamp) + " millis")
+        return returnValue
     }
 }

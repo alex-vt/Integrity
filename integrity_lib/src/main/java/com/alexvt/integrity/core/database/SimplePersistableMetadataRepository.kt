@@ -33,10 +33,7 @@ object SimplePersistableMetadataRepository: MetadataRepository {
     override fun init(context: Context) {
         val fullMetadataJson = PreferencesUtil.getFullMetadataJson(IntegrityCore.context)
         if (fullMetadataJson != null) {
-            val metadataFromJson = JsonSerializerUtil.fromJson(fullMetadataJson, MetadataCollection::class.java)
-            if (metadataFromJson != null) {
-                allMetadata = metadataFromJson
-            }
+            allMetadata = JsonSerializerUtil.fromJson(fullMetadataJson, MetadataCollection::class.java)
         }
         if (!::allMetadata.isInitialized) {
             val snapshotMetadataList = arrayListOf<Snapshot>()
@@ -148,7 +145,7 @@ object SimplePersistableMetadataRepository: MetadataRepository {
      */
     @Synchronized private fun saveChanges() {
         invokeChangesListeners()
-        val fullMetadataJson = JsonSerializerUtil.toJson(allMetadata)!!
+        val fullMetadataJson = JsonSerializerUtil.toJson(allMetadata)
         PreferencesUtil.setFullMetadataJson(IntegrityCore.context, fullMetadataJson)
     }
 

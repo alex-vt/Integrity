@@ -19,7 +19,7 @@ object AutoStartUtil {
     class AutoStartReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             Log(context).what("Auto start")
-                    .where(this, "onReceive").logDebug()
+                    .where(this, "onReceive").log()
             // IntegrityCore initialized in App onStart
         }
     }

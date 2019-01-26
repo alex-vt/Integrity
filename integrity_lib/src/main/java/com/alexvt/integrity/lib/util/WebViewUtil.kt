@@ -6,7 +6,6 @@
 
 package com.alexvt.integrity.lib.util
 
-import android.util.Log
 import android.webkit.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -14,6 +13,7 @@ import android.webkit.ConsoleMessage
 import kotlinx.coroutines.*
 import android.webkit.WebSettings
 import android.widget.Toast
+import com.alexvt.integrity.lib.Log
 import java.util.*
 import kotlin.concurrent.schedule
 
@@ -27,7 +27,7 @@ object WebViewUtil {
 
     @JavascriptInterface
     fun onWebPageHtmlLoaded(html: String) {
-        Log.d("WebViewUtil", "onWebPageHtmlLoaded: HTML length ${html.length}")
+        android.util.Log.v("WebViewUtil", "onWebPageHtmlLoaded: HTML length ${html.length}")
         // listener shouldn't be invoked in JavaScript execution thread
         GlobalScope.launch (Dispatchers.Main) {
             pageLoadListener.invoke(html)
@@ -40,7 +40,9 @@ object WebViewUtil {
             try {
                 continuation.resume(it)
             } catch (t: Throwable) {
-                Log.e("WebViewUtil", "loadHtml continuation failed") // todo support job cancellation
+                // todo support job cancellation
+                Log(webView.context).what("Html loading error")
+                        .where(this@WebViewUtil, "loadHtml").logError(t)
             }
         }
     }
@@ -60,7 +62,7 @@ object WebViewUtil {
                     webView.loadUrl(getRedirectUrl(urlRedirectMap, url))
                 } else {
                     if (isOfflineLoading(startUrl)) {
-                        Log.w("WebViewUtil", "Page $url isn't archived.")
+                        android.util.Log.v("WebViewUtil", "Page $url isn't archived.")
                         Toast.makeText(webView.context, "Page $url isn't archived.",
                                 Toast.LENGTH_SHORT).show()
                         return true
@@ -76,9 +78,9 @@ object WebViewUtil {
             var previousProgress = 0 // for dealing with possible multiple progress == 100
 
             override fun onProgressChanged(view: WebView, progress: Int) {
-                Log.v("WebViewUtil", "Loading " + progress + "%: " + view.url)
+                android.util.Log.v("WebViewUtil", "Loading " + progress + "%: " + view.url)
                 if (progress == 100 && previousProgress != 100) {
-                    Log.d("WebViewUtil", "Loading complete: ${view.url}")
+                    android.util.Log.v("WebViewUtil", "Loading complete: ${view.url}")
                     if (view.url.startsWith("http")) {
                         webView.loadUrl("javascript:window.jsi.onWebPageHtmlLoaded('<head>'" +
                                 "+document.getElementsByTagName('html')[0].innerHTML+'</head>');")
@@ -95,7 +97,7 @@ object WebViewUtil {
 
             override fun onConsoleMessage(cm: ConsoleMessage): Boolean {
                 // this is verbose
-                Log.v("TAG", cm.message() + " at " + cm.sourceId() + ":" + cm.lineNumber())
+                android.util.Log.v("TAG", cm.message() + " at " + cm.sourceId() + ":" + cm.lineNumber())
                 return true
             }
         }
@@ -162,7 +164,7 @@ object WebViewUtil {
             var previousProgress = 0 // for dealing with possible multiple progress == 100
 
             override fun onProgressChanged(view: WebView, progress: Int) {
-                Log.v("WebViewUtil", "Loading " + progress + "%: " + view.url)
+                android.util.Log.v("WebViewUtil", "Loading " + progress + "%: " + view.url)
                 resetLoadingTimeoutTimer(webView)
                 if (progress == 100 && previousProgress != 100) {
                     webView.stopLoading()
@@ -171,15 +173,15 @@ object WebViewUtil {
                         // always have some delay to prevent saveWebArchive from being stuck, todo investigate
                         maintainProcessPriority()
                         webView.saveWebArchive(webArchivePath, false) {
-                            Log.d("WebViewUtil", "saveWebArchive ended")
+                            android.util.Log.v("WebViewUtil", "saveWebArchive ended")
                             cancelLoadingTimeoutTimer()
                             try {
                                 continuation.resume(webArchivePath)
                             } catch (t: Throwable) {
-                                Log.e("WebViewUtil", "saveWebArchive: already resumed")
+                                android.util.Log.v("WebViewUtil", "saveWebArchive: already resumed")
                             }
                         }
-                        Log.d("WebViewUtil", "saveWebArchive started")
+                        android.util.Log.v("WebViewUtil", "saveWebArchive started")
                     }
                 }
                 previousProgress = progress
@@ -187,12 +189,12 @@ object WebViewUtil {
 
             override fun onConsoleMessage(cm: ConsoleMessage): Boolean {
                 // this is verbose
-                Log.v("TAG", cm.message() + " at " + cm.sourceId() + ":" + cm.lineNumber())
+                android.util.Log.v("TAG", cm.message() + " at " + cm.sourceId() + ":" + cm.lineNumber())
                 return true
             }
         }
         webView.loadUrl(url)
-        Log.d("WebViewUtil", "saveArchive: loading $url")
+        android.util.Log.v("WebViewUtil", "saveArchive: loading $url")
     }
 
 
@@ -202,10 +204,10 @@ object WebViewUtil {
         val originalPriority = android.os.Process.getThreadPriority(processId)
         if (originalPriority > worstTargetProcessPriority) {
             android.os.Process.setThreadPriority(worstTargetProcessPriority)
-            Log.d("WebViewUtil", "maintaining thread priority: " +
+            android.util.Log.v("WebViewUtil", "maintaining thread priority: " +
                     "$originalPriority -> ${android.os.Process.getThreadPriority(processId)}")
         } else {
-            Log.d("WebViewUtil", "maintaining thread priority: " +
+            android.util.Log.v("WebViewUtil", "maintaining thread priority: " +
                     "$originalPriority")
         }
     }
@@ -217,7 +219,10 @@ object WebViewUtil {
         val loadingTimeoutMillis = 15000L
         loadingTimeoutTimer = Timer().schedule(loadingTimeoutMillis) {
                     GlobalScope.launch(Dispatchers.Main) {
-                        Log.e("WebViewUtil", "saveWebArchive Reloading on timeout: ${webView.url}")
+                        Log(webView.context)
+                                .what("Reloading on timeout $loadingTimeoutMillis ms: ${webView.url}")
+                                .where(this@WebViewUtil, "resetLoadingTimeoutTimer")
+                                .logError()
                         webView.reload()
                     }
                 }

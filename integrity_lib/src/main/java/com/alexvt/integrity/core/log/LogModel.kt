@@ -10,8 +10,11 @@ import java.io.Serializable
 
 /**
  * Log entry with logged data attached as a text key value list.
+ *
+ * Order ID is ascending by addition order.
  */
-data class LogEntry(val time: String = "",
+data class LogEntry(val orderId: String = "",
+                    val time: String = "",
                     val data: LinkedHashMap<String, String> = linkedMapOf(),
                     val type: String = LogEntryType.NORMAL,
                     val read: Boolean = false
@@ -23,6 +26,7 @@ data class LogEntry(val time: String = "",
 object LogKey {
     const val ARTIFACT_ID = "artifact_id"
     const val SNAPSHOT_DATE = "snapshot_date"
+    const val SNAPSHOT_METADATA = "snapshot_metadata"
     const val CLASS = "class"
     const val PACKAGE = "package"
     const val METHOD = "method"

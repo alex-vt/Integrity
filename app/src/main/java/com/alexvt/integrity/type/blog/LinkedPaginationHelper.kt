@@ -6,7 +6,6 @@
 
 package com.alexvt.integrity.type.blog
 
-import android.util.Log
 import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexArchiveLinks
@@ -48,7 +47,7 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
             return true // interrupted - no more pages
         }
         persistPaginationProgress(currentPageLink, dl)
-        Log.d("LinkedPaginationHelper", "downloadPages: $currentPageLink")
+        android.util.Log.v("LinkedPaginationHelper", "downloadPages: $currentPageLink")
         val pageContents = getPageContents(currentPageLink, dl) // always needed to look for next page link
         val additionalLinksOnPage = getAdditionalLinksOnPage(currentPageLink, pageContents, dl)
         saveArchives(currentPageLink, additionalLinksOnPage, dl)
@@ -104,7 +103,7 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
     private fun hasNextPageLink(currentPageHtml: String, dl: BlogMetadataDownload): Boolean {
         val nextPageLinks = LinkUtil.getMatchedLinks(currentPageHtml,
                 (dl.metadata.pagination as LinkedPagination).nextPageLinkFilter)
-        Log.d("LinkedPaginationHelper", "hasNextPageLink: $nextPageLinks")
+        android.util.Log.v("LinkedPaginationHelper", "hasNextPageLink: $nextPageLinks")
         return getPageIndexArchiveLinks(dl.context, dl.snapshotPath).size < dl.metadata.pagination.limit
                 && nextPageLinks.isNotEmpty()
     }

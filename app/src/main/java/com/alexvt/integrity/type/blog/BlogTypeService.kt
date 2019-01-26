@@ -7,7 +7,6 @@
 package com.alexvt.integrity.type.blog
 
 import android.content.Context
-import android.util.Log
 import android.webkit.WebView
 import com.alexvt.integrity.lib.DataTypeService
 import com.alexvt.integrity.lib.IntegrityEx
@@ -25,7 +24,6 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
 
     override fun downloadData(artifactId: Long, date: String,
                               typeMetadata: BlogTypeMetadata): String {
-        Log.d("BlogTypeService", "downloadData start")
         val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
 
         runBlocking(Dispatchers.Main) {
@@ -43,7 +41,6 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
             }
         }
 
-        Log.d("BlogTypeService", "downloadData end")
         return snapshotPath
     }
 }

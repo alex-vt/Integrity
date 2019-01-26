@@ -17,7 +17,6 @@ import java.text.SimpleDateFormat
 import android.app.ActivityManager
 
 
-
 /**
  * Logger (builder-like).
  */
@@ -40,6 +39,14 @@ class Log(val context: Context) {
         return this
     }
 
+    fun snapshot(snapshot: Snapshot) = snapshot(snapshot.artifactId, snapshot.date)
+
+    fun snapshot(artifactId: Long, date: String): Log {
+        data[LogKey.ARTIFACT_ID] = "" + artifactId
+        data[LogKey.SNAPSHOT_DATE] = date
+        return this
+    }
+
     fun thread(thread: Thread): Log {
         data[LogKey.THREAD] = thread.toString()
         return this
@@ -53,7 +60,7 @@ class Log(val context: Context) {
         log(LogEntryType.NORMAL)
     }
 
-    fun logError(throwable: Throwable) {
+    fun logError(throwable: Throwable? = null) {
         log(LogEntryType.ERROR, throwable)
     }
 
@@ -68,8 +75,15 @@ class Log(val context: Context) {
     private fun log(logEntryType: String, throwable: Throwable?) {
         val fullData = addMoreLogData(context, data, throwable)
         val logEntryTime = getCurrentTimeText()
-        LoggingUtil.registerLogEvent(context, LogEntry(logEntryTime, fullData, logEntryType))
+        LoggingUtil.registerLogEvent(context, LogEntry(logEntryTime + getOrderIdSuffix(),
+                logEntryTime, fullData, logEntryType))
     }
+
+    private companion object {
+        var counter = 0 // for maintaining addition order of log entries of the same timestamp.
+    }
+
+    private fun getOrderIdSuffix() = "-${counter++}"
 
     private fun getCurrentTimeText() = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")
             .format(System.currentTimeMillis())

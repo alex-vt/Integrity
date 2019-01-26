@@ -7,10 +7,10 @@
 package com.alexvt.integrity.core.job
 
 import android.content.Context
-import android.util.Log
 import androidx.work.*
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.IntegrityCore.context
+import com.alexvt.integrity.lib.Log
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.SnapshotStatus
 import kotlinx.coroutines.Dispatchers
@@ -95,13 +95,12 @@ object ScheduledJobManager {
      * Schedules jobs eligible for scheduling at the moment of calling
      * todo edit only changed jobs
      */
-    fun updateSchedule() {
-        Log.d(ScheduledJobManager::class.java.simpleName, "Updating schedule...")
+    fun updateSchedule(context: Context) {
         val workManagerJobTag = "downloading"
         WorkManager.getInstance().pruneWork()
         WorkManager.getInstance().cancelAllWorkByTag(workManagerJobTag)
         val workList = getScheduledJobs().map {
-            Log.d(ScheduledJobManager::class.java.simpleName, "Scheduling download job " +
+            android.util.Log.v(ScheduledJobManager::class.java.simpleName, "Scheduling download job " +
                     "in ${getNextJobDelay(it)} ms for ${it.title} (artifactID ${it.artifactId})")
             OneTimeWorkRequest.Builder(SnapshotDownloadWorker::class.java)
                     .setInitialDelay(getNextJobDelay(it), TimeUnit.MILLISECONDS)
@@ -116,8 +115,8 @@ object ScheduledJobManager {
             WorkManager.getInstance().enqueue(workList)
         }
         invokeListenersWithCurrentData()
-        Log.d(ScheduledJobManager::class.java.simpleName, "Updated schedule: " +
-                "${workList.size} jobs added")
+        Log(context).what("Updated future jobs schedule: ${workList.size} jobs scheduled")
+                .where(this, "updateSchedule").log()
     }
 
 }
@@ -127,7 +126,10 @@ class SnapshotDownloadWorker(context: Context, params: WorkerParameters): Worker
     override fun doWork(): Result {
         val artifactId = inputData.getLong("artifactId", -1)
         val date = inputData.getString("date")!!
-        Log.d(ScheduledJobManager::class.java.simpleName, "Beginning scheduled job")
+        Log(context).what("Beginning scheduled job")
+                .where(this, "doWork")
+                .snapshot(artifactId, date).log()
+
         // Starting creating snapshot async. Use RunningJobManager to get status
 
         val latestSnapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId, date)

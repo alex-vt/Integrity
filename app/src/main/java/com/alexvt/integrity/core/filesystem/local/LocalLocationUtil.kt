@@ -6,8 +6,7 @@
 
 package com.alexvt.integrity.core.filesystem.local
 
-import android.util.Log
-import com.alexvt.integrity.core.IntegrityCore
+import android.content.Context
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
 import com.snatik.storage.Storage
 import java.io.File
@@ -21,11 +20,10 @@ open class LocalLocationUtil : ArchiveLocationUtil<LocalFolderLocation> {
 
     override fun getViewMainActivityClass() = LocalLocationActivity::class.java
 
-    override fun writeArchive(sourceArchivePath: String, sourceHashPath: String,
+    override fun writeArchive(context: Context, sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,
                               archiveFolderLocation: LocalFolderLocation) {
-        Log.d("LocalFolderLocationUtil", "writeArchive")
-        val storage = Storage(IntegrityCore.context)
+        val storage = Storage(context)
         storage.createDirectory(archiveFolderLocation.folderPath)
         val destinationArtifactFolderPath = archiveFolderLocation.folderPath + File.separator +
                 artifactAlias + "_" + artifactId

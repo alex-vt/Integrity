@@ -9,7 +9,6 @@ package com.alexvt.integrity.core.type
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.util.IntentUtil
@@ -24,7 +23,7 @@ class SnapshotDownloadStartRequest : InterPackageOperation {
 
     class PackageWideReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            Log.d("SnapshotDownloadStartReceiver", "onReceive")
+            android.util.Log.v("SnapshotDownloadStartReceiver", "onReceive")
             // todo check presence of service before sending broadcast
             DataTypeServiceResolver.startDownloadService(context, IntentUtil.getSnapshot(intent)!!)
         }

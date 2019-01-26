@@ -9,7 +9,6 @@ package com.alexvt.integrity.core.log
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.IntentUtil
 
@@ -32,9 +31,9 @@ object LoggingUtil {
         val text = logEntry.data.toString() // todo format better
 
         if (logEntry.type == LogEntryType.ERROR || logEntry.type == LogEntryType.CRASH) {
-            Log.e(tag, text)
+            android.util.Log.e(tag, text)
         } else {
-            Log.d(tag, text)
+            android.util.Log.d(tag, text)
         }
     }
 
@@ -62,7 +61,7 @@ object LoggingUtil {
     // and sending it to the main process (starts again if it was terminated or not running).
     class CrashRecoveryReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            Log.e(LoggingUtil::class.java.simpleName,
+            android.util.Log.v(LoggingUtil::class.java.simpleName,
                     "CrashRecoveryReceiver in the recovery process is re-broadcasting " +
                             "crash log entry to the (newly created if needed) main app process...")
             sendLogEntryBroadcast(context, IntentUtil.getLogEntry(intent), false)

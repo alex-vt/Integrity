@@ -66,9 +66,8 @@ open class SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
             out.write(sourceFileBytes) // todo buffering
             out.close()
         } catch (e: Exception) {
-            Log(context)
-                    .what("Failed to write Samba file from $sourcePath to $sambaDestination")
-                    .where(this, "copyFileToSamba").logError(e)
+            Log(context, "Failed to write Samba file from $sourcePath to $sambaDestination")
+                    .logError(e)
         }
     }
 

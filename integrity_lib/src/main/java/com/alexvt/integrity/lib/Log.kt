@@ -20,24 +20,9 @@ import android.app.ActivityManager
 /**
  * Logger (builder-like).
  */
-class Log(val context: Context) {
+class Log(val context: Context, val text: String) {
 
     private val data: LinkedHashMap<String, String> = linkedMapOf()
-
-    fun what(what: String): Log {
-        data[LogKey.DESCRIPTION] = what
-        return this
-    }
-
-    fun where(method: String) = where(context.javaClass.name, method)
-
-    fun where(inObject: Any, method: String) = where(inObject.javaClass.name, method)
-
-    private fun where(className: String, methodName: String): Log {
-        data[LogKey.CLASS] = className
-        data[LogKey.METHOD] = methodName
-        return this
-    }
 
     fun snapshot(snapshot: Snapshot) = snapshot(snapshot.artifactId, snapshot.date)
 
@@ -73,10 +58,12 @@ class Log(val context: Context) {
     }
 
     private fun log(logEntryType: String, throwable: Throwable?) {
-        val fullData = addMoreLogData(context, data, throwable)
+        val currentThread = Thread.currentThread()
+        val fullData = addMoreLogData(context, data, currentThread)
         val logEntryTime = getCurrentTimeText()
         LoggingUtil.registerLogEvent(context, LogEntry(logEntryTime + getOrderIdSuffix(),
-                logEntryTime, fullData, logEntryType))
+                logEntryTime, getTag(throwable, currentThread), text, fullData,
+                getStackTraceText(throwable, currentThread), logEntryType))
     }
 
     private companion object {
@@ -89,22 +76,38 @@ class Log(val context: Context) {
             .format(System.currentTimeMillis())
 
     private fun addMoreLogData(context: Context, data: LinkedHashMap<String, String>,
-                               throwable: Throwable?): LinkedHashMap<String, String> {
-        if (throwable != null) {
-            data[LogKey.STACK_TRACE] = getStackTrace(throwable)
-        }
+                               currentThread: Thread): LinkedHashMap<String, String> {
         data[LogKey.PACKAGE] = context.packageName
         if (!data.containsKey(LogKey.THREAD)) {
-            data[LogKey.THREAD] = Thread.currentThread().toString()
+            data[LogKey.THREAD] = currentThread.toString()
         }
         data[LogKey.PROCESS] = getCurrentProcessInfo(context)
         return data
     }
 
-    private fun getStackTrace(throwable: Throwable): String {
+    private val threadStackTraceSkip: Int = 6 // skipping the top of the stack here in Log
+
+    private fun getStackTraceText(throwable: Throwable?, currentThread: Thread): String {
         val writer = StringWriter()
-        throwable.printStackTrace(PrintWriter(writer))
-        return writer.toString()
+        if (throwable != null) {
+            throwable.printStackTrace(PrintWriter(writer))
+        } else {
+            val stackTraces = currentThread.stackTrace
+            for (i in threadStackTraceSkip until stackTraces.size) {
+                PrintWriter(writer).println("\tat " + stackTraces[i])
+            }
+        }
+        return writer.toString().trimEnd()
+    }
+
+    private fun getTag(throwable: Throwable?, currentThread: Thread): String {
+        var className = "LogEntry-default"
+        if (throwable != null) {
+            className = throwable.stackTrace[0].className
+        } else if (currentThread.stackTrace.size >= threadStackTraceSkip) {
+            className = currentThread.stackTrace[threadStackTraceSkip - 1].className
+        }
+        return className.substringAfterLast(".").substringBefore("$")
     }
 
     private fun getCurrentProcessInfo(context: Context): String {

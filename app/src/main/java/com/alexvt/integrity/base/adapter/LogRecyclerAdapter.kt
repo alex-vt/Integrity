@@ -42,7 +42,9 @@ class LogRecyclerAdapter(val items: ArrayList<LogEntry>, val activity: Activity)
         holder.view.tvType.setBackgroundColor(activity
                 .getColor(if (isError) R.color.colorError else R.color.colorPrimary))
 
-        holder.view.tvContent.text = logEntry.data.asSequence().joinToString(separator = "\n")
+        holder.view.tvText.text = logEntry.text
+        holder.view.tvStackTrace.text = logEntry.stackTraceText
+        holder.view.tvData.text = logEntry.data.asSequence().joinToString(separator = "\n")
     }
 }
 

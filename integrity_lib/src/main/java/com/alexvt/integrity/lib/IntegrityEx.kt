@@ -19,8 +19,7 @@ object IntegrityEx {
 
     fun handleUncaughtExceptions(context: Context) {
         Thread.setDefaultUncaughtExceptionHandler {
-            thread, throwable -> Log(context)
-                .what(throwable.message ?: "Uncaught exception (null message)")
+            thread, throwable -> Log(context, throwable.message ?: "Uncaught exception (null message)")
                 .thread(thread)
                 .logCrash(throwable)
             Runtime.getRuntime().exit(0) // the faulty process terminates; will be recovered

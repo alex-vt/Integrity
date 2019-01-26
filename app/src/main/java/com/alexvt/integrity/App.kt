@@ -44,8 +44,7 @@ class App : Application() {
                 LocalFolderLocation("Device storage", "/storage/emulated/0/Integrity"))
         */
 
-        Log(this).what("IntegrityCore initialized")
-                .where("onCreate").log()
+        Log(this, "IntegrityCore initialized").log()
     }
 
     private fun isRecoveryProcess(context: Context): Boolean {

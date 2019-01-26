@@ -25,15 +25,11 @@ object LoggingUtil {
     }
 
     private fun showLogEntryInLogcat(logEntry: LogEntry) {
-        val entryClassName = logEntry.data[LogKey.CLASS]
-        val defaultClassName = LoggingUtil::class.java.name
-        val tag = (entryClassName ?: "$defaultClassName-default").substringAfterLast(".")
-        val text = logEntry.data.toString() // todo format better
-
         if (logEntry.type == LogEntryType.ERROR || logEntry.type == LogEntryType.CRASH) {
-            android.util.Log.e(tag, text)
+            android.util.Log.e(logEntry.tag, logEntry.text
+                    + "\n" + logEntry.stackTraceText + "\n" + logEntry.data.toString())
         } else {
-            android.util.Log.d(tag, text)
+            android.util.Log.d(logEntry.tag, logEntry.text + "\n" + logEntry.data.toString())
         }
     }
 

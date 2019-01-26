@@ -188,8 +188,8 @@ class BlogTypeActivity : DataTypeActivity() {
                     linkToArchivePathRedirectMap,
                     getTypeMetadata(snapshot).loadImages,
                     getTypeMetadata(snapshot).desktopSite) {
-                Log(this@BlogTypeActivity).what("Loaded HTML from file $firstArchivePath")
-                        .where("snapshotViewModeAction").log()
+                Log(this@BlogTypeActivity, "Loaded HTML from file $firstArchivePath")
+                        .log()
             }
         }
     }
@@ -302,8 +302,7 @@ class BlogTypeActivity : DataTypeActivity() {
                             .plus(unmatchedLinkMap.map { it -> MatchableLink(it.key as String, it.value, false) })
             )
         } catch (t: Throwable) {
-            Log(this).what("Marched related links extraction failed")
-                    .where("updateMatchedRelatedLinkList").logError(t)
+            Log(this, "Marched related links extraction failed").logError(t)
         }
     }
 
@@ -318,8 +317,7 @@ class BlogTypeActivity : DataTypeActivity() {
     private fun goToWebPage(snapshot: SnapshotMetadata, urlToView: String): Boolean {
         WebViewUtil.loadHtml(content.webView, LinkUtil.getFullFormUrl(urlToView), emptyMap(),
                 getTypeMetadata(snapshot).loadImages, getTypeMetadata(snapshot).desktopSite) {
-            Log(this).what("Loaded page from: ${content.webView.url}")
-                    .where("goToWebPage").log()
+            Log(this, "Loaded page from: ${content.webView.url}").log()
             loadedHtml = it
             // Inputs are pre-filled only when creating new artifact
             if (isArtifactCreateMode()) {

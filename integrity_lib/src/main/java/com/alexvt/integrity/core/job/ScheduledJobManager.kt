@@ -115,8 +115,7 @@ object ScheduledJobManager {
             WorkManager.getInstance().enqueue(workList)
         }
         invokeListenersWithCurrentData()
-        Log(context).what("Updated future jobs schedule: ${workList.size} jobs scheduled")
-                .where(this, "updateSchedule").log()
+        Log(context, "Updated future jobs schedule: ${workList.size} jobs scheduled").log()
     }
 
 }
@@ -126,9 +125,7 @@ class SnapshotDownloadWorker(context: Context, params: WorkerParameters): Worker
     override fun doWork(): Result {
         val artifactId = inputData.getLong("artifactId", -1)
         val date = inputData.getString("date")!!
-        Log(context).what("Beginning scheduled job")
-                .where(this, "doWork")
-                .snapshot(artifactId, date).log()
+        Log(context, "Beginning scheduled job").snapshot(artifactId, date).log()
 
         // Starting creating snapshot async. Use RunningJobManager to get status
 

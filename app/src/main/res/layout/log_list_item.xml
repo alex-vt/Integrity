@@ -37,12 +37,34 @@
             />
 
         <TextView
-            android:id="@+id/tvContent"
+            android:id="@+id/tvText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvType"
             android:padding="3dp"
             tools:text="Content"
+            android:textSize="15sp"
+            android:textColor="@color/colorBlack"
+            />
+
+        <TextView
+            android:id="@+id/tvStackTrace"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvText"
+            android:padding="3dp"
+            android:textSize="12sp"
+            android:typeface="monospace"
+            tools:text="stack trace"
+            />
+
+        <TextView
+            android:id="@+id/tvData"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvStackTrace"
+            android:padding="3dp"
+            tools:text="data"
             />
 
     </RelativeLayout>

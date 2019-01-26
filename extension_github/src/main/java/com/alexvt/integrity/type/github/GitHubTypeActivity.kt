@@ -90,8 +90,7 @@ class GitHubTypeActivity : DataTypeActivity() {
                     linkToArchivePathRedirectMap,
                     true,
                     false) {
-                Log(this@GitHubTypeActivity).what("Loaded HTML from file")
-                        .where("snapshotViewModeAction").log()
+                Log(this@GitHubTypeActivity, "Loaded HTML from file").log()
             }
         }
     }
@@ -139,8 +138,7 @@ class GitHubTypeActivity : DataTypeActivity() {
     private fun goToGitHubUserPage(snapshot: SnapshotMetadata, userName: String): Boolean {
         WebViewUtil.loadHtml(content.webView, LinkUtil.getFullFormUrl("https://github.com/" + userName),
                 emptyMap(), true, false) {
-            Log(this).what("Loaded page from: ${content.webView.url}")
-                    .where("goToGitHubUserPage").log()
+            Log(this, "Loaded page from: ${content.webView.url}").log()
             loadedHtml = it
             // Inputs are pre-filled only when creating new artifact
             if (isArtifactCreateMode()) {

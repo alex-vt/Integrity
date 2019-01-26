@@ -15,7 +15,10 @@ import java.io.Serializable
  */
 data class LogEntry(val orderId: String = "",
                     val time: String = "",
+                    val tag: String = "",
+                    val text: String = "",
                     val data: LinkedHashMap<String, String> = linkedMapOf(),
+                    val stackTraceText: String = "",
                     val type: String = LogEntryType.NORMAL,
                     val read: Boolean = false
 ) : Serializable
@@ -27,14 +30,10 @@ object LogKey {
     const val ARTIFACT_ID = "artifact_id"
     const val SNAPSHOT_DATE = "snapshot_date"
     const val SNAPSHOT_METADATA = "snapshot_metadata"
-    const val CLASS = "class"
     const val PACKAGE = "package"
-    const val METHOD = "method"
     const val THREAD = "thread"
     const val PROCESS = "process"
-    const val DESCRIPTION = "description"
     const val DATA_TYPE = "data_type"
-    const val STACK_TRACE = "stack_trace"
 }
 
 object LogEntryType {

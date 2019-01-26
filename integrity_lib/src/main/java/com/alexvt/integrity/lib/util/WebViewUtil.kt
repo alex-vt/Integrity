@@ -41,8 +41,7 @@ object WebViewUtil {
                 continuation.resume(it)
             } catch (t: Throwable) {
                 // todo support job cancellation
-                Log(webView.context).what("Html loading error")
-                        .where(this@WebViewUtil, "loadHtml").logError(t)
+                Log(webView.context, "Html loading error").logError(t)
             }
         }
     }
@@ -219,9 +218,7 @@ object WebViewUtil {
         val loadingTimeoutMillis = 15000L
         loadingTimeoutTimer = Timer().schedule(loadingTimeoutMillis) {
                     GlobalScope.launch(Dispatchers.Main) {
-                        Log(webView.context)
-                                .what("Reloading on timeout $loadingTimeoutMillis ms: ${webView.url}")
-                                .where(this@WebViewUtil, "resetLoadingTimeoutTimer")
+                        Log(webView.context,"Reloading on timeout $loadingTimeoutMillis ms: ${webView.url}")
                                 .logError()
                         webView.reload()
                     }

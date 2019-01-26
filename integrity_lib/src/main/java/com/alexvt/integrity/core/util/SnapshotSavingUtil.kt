@@ -167,8 +167,7 @@ object SnapshotSavingUtil {
     // utility methods
 
     private fun postSnapshotDownloadProgress(context: Context, snapshot: Snapshot, message: String) {
-        Log(context).what(message).where(this, "postSnapshotDownloadProgress")
-                .snapshot(snapshot).log()
+        Log(context, message).snapshot(snapshot).log()
         GlobalScope.launch(Dispatchers.Main) {
             RunningJobManager.invokeJobProgressListener(snapshot, JobProgress(
                     progressMessage = message
@@ -177,9 +176,7 @@ object SnapshotSavingUtil {
     }
 
     private fun postSnapshotDownloadResult(context: Context, result: Snapshot) {
-        Log(context).what("Snapshot download complete")
-                .where(this, "postSnapshotDownloadResult")
-                .snapshot(result).log()
+        Log(context, "Snapshot download complete").snapshot(result).log()
         GlobalScope.launch(Dispatchers.Main) {
             RunningJobManager.invokeJobProgressListener(result, JobProgress(
                     result = result

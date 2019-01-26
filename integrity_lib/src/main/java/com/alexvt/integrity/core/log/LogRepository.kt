@@ -40,6 +40,16 @@ interface LogRepository {
     fun getRecentEntries(limit: Int): List<LogEntry>
 
     /**
+     * Gets unread error and crash type log entries ordered by time descending.
+     */
+    fun getUnreadErrors(): List<LogEntry>
+
+    /**
+     * Sets all log entries read.
+     */
+    fun markAllRead()
+
+    /**
      * Deletes all log entries from database
      */
     fun clear()

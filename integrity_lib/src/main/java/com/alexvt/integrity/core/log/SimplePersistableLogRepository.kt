@@ -83,6 +83,26 @@ object SimplePersistableLogRepository : LogRepository {
     }
 
     /**
+     * Gets unread error and crash type log entries ordered by time descending.
+     */
+    override fun getUnreadErrors(): List<LogEntry> {
+        return log.entries
+                .filter { !it.read }
+                .filter { it.type == LogEntryType.ERROR || it.type == LogEntryType.CRASH }
+                .sortedByDescending { it.time }
+    }
+
+    /**
+     * Sets all log entries read.
+     */
+    override fun markAllRead() {
+        val unreadEntries = log.entries.filter { !it.read }
+        log.entries.removeAll(unreadEntries)
+        log.entries.addAll(unreadEntries.map { it.copy(read = true) })
+        saveChanges()
+    }
+
+    /**
      * Deletes all log entries from database
      */
     override fun clear() {

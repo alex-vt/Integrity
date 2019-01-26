@@ -24,6 +24,7 @@ class LogViewActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         rvLogList.adapter = LogRecyclerAdapter(ArrayList(), this)
+        IntegrityCore.markErrorsRead(this)
     }
 
     override fun onStart() {

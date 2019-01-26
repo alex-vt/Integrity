@@ -53,6 +53,7 @@ object LoggingUtil {
     class LogEntryReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             IntegrityCore.logRepository.addEntry(IntentUtil.getLogEntry(intent))
+            IntegrityCore.notifyAboutUnreadErrors(context)
         }
     }
 

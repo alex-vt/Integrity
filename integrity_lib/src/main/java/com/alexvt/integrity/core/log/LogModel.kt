@@ -13,7 +13,8 @@ import java.io.Serializable
  */
 data class LogEntry(val time: String = "",
                     val data: LinkedHashMap<String, String> = linkedMapOf(),
-                    val type: String = LogEntryType.NORMAL
+                    val type: String = LogEntryType.NORMAL,
+                    val read: Boolean = false
 ) : Serializable
 
 /**

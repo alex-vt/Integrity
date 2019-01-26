@@ -23,6 +23,7 @@ import android.content.ComponentName
 import android.content.pm.ActivityInfo
 import com.alexvt.integrity.core.log.LogRepository
 import com.alexvt.integrity.core.log.SimplePersistableLogRepository
+import com.alexvt.integrity.core.notification.ErrorNotifier
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.util.*
 import com.alexvt.integrity.lib.*
@@ -52,8 +53,11 @@ object IntegrityCore {
         metadataRepository.init(context)
         folderLocationRepository = SimplePersistableFolderLocationRepository // todo replace with database
         folderLocationRepository.init(context)
+
         resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
         ScheduledJobManager.updateSchedule()
+
+        notifyAboutUnreadErrors(context)
     }
 
     private fun resetInProgressSnapshotStatuses() {
@@ -63,6 +67,20 @@ object IntegrityCore {
                     metadataRepository.removeSnapshotMetadata(it.artifactId, it.date)
                     metadataRepository.addSnapshotMetadata(it.copy(status = SnapshotStatus.INCOMPLETE))
                 }
+    }
+
+    fun notifyAboutUnreadErrors(context: Context) {
+        val unreadErrors = logRepository.getUnreadErrors()
+        if (unreadErrors.isNotEmpty()) {
+            ErrorNotifier.notifyAboutErrors(context, unreadErrors)
+        } else {
+            ErrorNotifier.removeNotification(context)
+        }
+    }
+
+    fun markErrorsRead(context: Context) {
+        IntegrityCore.logRepository.markAllRead()
+        ErrorNotifier.removeNotification(context)
     }
 
     fun openViewSnapshotOrShowProgress(activity: Activity, artifactId: Long, date: String) {

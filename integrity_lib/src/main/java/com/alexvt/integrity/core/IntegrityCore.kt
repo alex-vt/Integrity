@@ -44,8 +44,9 @@ object IntegrityCore {
     /**
      * Should be called before using any other functions.
      *
-     * Initialization exceptions are caught and, if possible, logged.
-     * After successful initialization uncaught exceptions will be intercepted and logged.
+     * Initialization exceptions are caught and, if possible (log exists), logged.
+     * After successful initialization uncaught exceptions will be logged (and app recovered).
+     * This setup prevents "boot loops": as early as initialization fails, the app isn't recovered.
      */
     fun init(context: Context) {
         try {
@@ -66,7 +67,7 @@ object IntegrityCore {
             Log(context, "IntegrityCore initialized").log()
         } catch (t: Throwable) {
             try {
-                Log(context, "Failed to start Integrity app").logError(t)
+                Log(context, "Failed to start Integrity app").logError(t) // using logger
             } catch (t: Throwable) {
                 val errorText = "Failed to start Integrity app (and its logs)"
                 LoggingUtil.logErrorInLogcat(errorText, t)

@@ -6,6 +6,7 @@
 
 package com.alexvt.integrity.core.log
 
+import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -17,11 +18,35 @@ object LoggingUtil {
     /**
      * Shows event in logcat and sends it to the main app log repository.
      *
-     * As the log repository can be in a different app, log entry is passed through a broadcast.
+     * When the log entry cannot be written (crash, or not the main app),
+     * it's passed through a broadcast.
      */
     fun registerLogEvent(context: Context, logEntry: LogEntry) {
         showLogEntryInLogcat(logEntry)
-        sendLogEntryBroadcast(context, logEntry, logEntry.type == LogEntryType.CRASH)
+        if (canLogDirectly(context, logEntry)) {
+            receiveLogEntry(context, logEntry)
+        } else {
+            sendLogEntryBroadcast(context, logEntry, isProcessFailed(logEntry))
+        }
+    }
+
+    private fun canLogDirectly(context: Context, logEntry: LogEntry)
+            = !isProcessFailed(logEntry) && isMainApp(context)
+
+    private fun isProcessFailed(logEntry: LogEntry) = logEntry.type == LogEntryType.CRASH
+
+    private fun isMainApp(context: Context): Boolean {
+        val currentPid = android.os.Process.myPid()
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val runningProcesses = manager.runningAppProcesses
+        if (runningProcesses != null) {
+            for (processInfo in runningProcesses) {
+                if (processInfo.pid == currentPid && processInfo.processName == "com.alexvt.integrity") {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     private fun showLogEntryInLogcat(logEntry: LogEntry) {
@@ -31,6 +56,10 @@ object LoggingUtil {
         } else {
             android.util.Log.d(logEntry.tag, logEntry.text + "\n" + logEntry.data.toString())
         }
+    }
+
+    fun logErrorInLogcat(text: String, t: Throwable) {
+        android.util.Log.e("Log-Failure", text, t)
     }
 
     private fun sendLogEntryBroadcast(context: Context, logEntry: LogEntry,
@@ -44,11 +73,15 @@ object LoggingUtil {
         })
     }
 
+    private fun receiveLogEntry(context: Context, logEntry: LogEntry) {
+        IntegrityCore.logRepository.addEntry(logEntry)
+        IntegrityCore.notifyAboutUnreadErrors(context)
+    }
+
     // Broadcast receiver for receiving status updates from the IntentService.
     class LogEntryReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            IntegrityCore.logRepository.addEntry(IntentUtil.getLogEntry(intent))
-            IntegrityCore.notifyAboutUnreadErrors(context)
+            receiveLogEntry(context, IntentUtil.getLogEntry(intent))
         }
     }
 

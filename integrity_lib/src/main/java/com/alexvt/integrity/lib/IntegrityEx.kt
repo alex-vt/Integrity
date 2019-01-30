@@ -22,7 +22,7 @@ object IntegrityEx {
             thread, throwable -> Log(context, throwable.message ?: "Uncaught exception (null message)")
                 .thread(thread)
                 .logCrash(throwable)
-            Runtime.getRuntime().exit(0) // the faulty process terminates; will be recovered
+            Runtime.getRuntime().exit(0) // the faulty process terminates
         }
     }
 

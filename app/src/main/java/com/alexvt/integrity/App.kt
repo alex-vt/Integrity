@@ -28,23 +28,11 @@ class App : Application() {
             return // recovery process is only used to restart the main one, doesn't init anything
         }
 
-        IntegrityEx.handleUncaughtExceptions(this)
+        IntegrityCore.init(this)
 
         // Integrity core: initializing for file locations // todo locate dynamically as services
-        IntegrityCore.init(this)
         IntegrityCore.registerFileLocationUtil(LocalFolderLocation::class.java, LocalLocationUtil())
         IntegrityCore.registerFileLocationUtil(SambaFolderLocation::class.java, SambaLocationUtil())
-
-        //IntegrityCore.metadataRepository.clear()
-        //IntegrityCore.logRepository.clear()
-
-        /*
-        IntegrityCore.folderLocationRepository.clear()
-        IntegrityCore.folderLocationRepository.addFolderLocation(
-                LocalFolderLocation("Device storage", "/storage/emulated/0/Integrity"))
-        */
-
-        Log(this, "IntegrityCore initialized").log()
     }
 
     private fun isRecoveryProcess(context: Context): Boolean {

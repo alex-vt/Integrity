@@ -21,8 +21,7 @@ import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.job.ScheduledJobManager
 import android.content.ComponentName
 import android.content.pm.ActivityInfo
-import com.alexvt.integrity.core.log.LogRepository
-import com.alexvt.integrity.core.log.SimplePersistableLogRepository
+import com.alexvt.integrity.core.log.*
 import com.alexvt.integrity.core.notification.ErrorNotifier
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.util.*
@@ -44,20 +43,36 @@ object IntegrityCore {
 
     /**
      * Should be called before using any other functions.
+     *
+     * Initialization exceptions are caught and, if possible, logged.
+     * After successful initialization uncaught exceptions will be intercepted and logged.
      */
     fun init(context: Context) {
-        IntegrityCore.context = context
-        logRepository = SimplePersistableLogRepository // todo replace with database
-        logRepository.init(context)
-        metadataRepository = SimplePersistableMetadataRepository // todo replace with database
-        metadataRepository.init(context)
-        folderLocationRepository = SimplePersistableFolderLocationRepository // todo replace with database
-        folderLocationRepository.init(context)
+        try {
+            IntegrityCore.context = context
+            logRepository = SimplePersistableLogRepository // todo replace with database
+            logRepository.init(context)
+            metadataRepository = SimplePersistableMetadataRepository // todo replace with database
+            metadataRepository.init(context)
+            folderLocationRepository = SimplePersistableFolderLocationRepository // todo replace with database
+            folderLocationRepository.init(context)
 
-        resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
-        ScheduledJobManager.updateSchedule(context)
+            resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
+            ScheduledJobManager.updateSchedule(context)
 
-        notifyAboutUnreadErrors(context)
+            notifyAboutUnreadErrors(context)
+            IntegrityEx.handleUncaughtExceptions(context)
+
+            Log(context, "IntegrityCore initialized").log()
+        } catch (t: Throwable) {
+            try {
+                Log(context, "Failed to start Integrity app").logError(t)
+            } catch (t: Throwable) {
+                val errorText = "Failed to start Integrity app (and its logs)"
+                LoggingUtil.logErrorInLogcat(errorText, t)
+                ErrorNotifier.notifyAboutFailure(context, errorText)
+            }
+        }
     }
 
     private fun resetInProgressSnapshotStatuses() {

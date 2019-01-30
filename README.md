@@ -139,8 +139,6 @@ Storage destinations:
 Stage 1
 
 * Storage manager
-* Log
-* Error handling
 * Main screen
 
 Stage 2

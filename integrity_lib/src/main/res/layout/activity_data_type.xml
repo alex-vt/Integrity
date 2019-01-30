@@ -146,17 +146,17 @@
                     <!-- Download schedule options -->
 
                     <Switch
-                        android:id="@+id/sDownloadOnWifi"
+                        android:id="@+id/sDownloadOnWifiOnly"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Allow downloading on WiFi"
+                        android:text="Allow downloading on WiFi only"
                         />
 
                     <Switch
-                        android:id="@+id/sDownloadOnMobileData"
+                        android:id="@+id/sDownloadOnLowBattery"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Allow downloading on mobile data"
+                        android:text="Allow downloading on battery below 20%"
                         />
 
                     <RelativeLayout

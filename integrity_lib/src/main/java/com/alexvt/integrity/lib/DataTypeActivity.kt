@@ -210,10 +210,10 @@ abstract class DataTypeActivity : AppCompatActivity() {
         binding.bDownloadSchedule.isEnabled = isEditable
         binding.bDownloadSchedule.setOnClickListener { askSetDownloadSchedule() }
 
-        binding.sDownloadOnWifi.isEnabled = isEditable
-        binding.sDownloadOnWifi.isChecked = snapshot.downloadSchedule.allowOnWifi
-        binding.sDownloadOnMobileData.isEnabled = isEditable
-        binding.sDownloadOnMobileData.isChecked = snapshot.downloadSchedule.allowOnMobileData
+        binding.sDownloadOnWifiOnly.isEnabled = isEditable
+        binding.sDownloadOnWifiOnly.isChecked = snapshot.downloadSchedule.allowOnWifiOnly
+        binding.sDownloadOnLowBattery.isEnabled = isEditable
+        binding.sDownloadOnLowBattery.isChecked = snapshot.downloadSchedule.allowOnLowBattery
 
         supportActionBar!!.subtitle = snapshot.title
 
@@ -256,13 +256,9 @@ abstract class DataTypeActivity : AppCompatActivity() {
                             downloadSchedule = snapshot.downloadSchedule
                                     .copy(periodSeconds = downloadScheduleOptionMap[text]!!)
                     )
-                    updateDownloadScheduleInViews(text)
+                    binding.tvDownloadSchedule.text = text
                 }
                 .show()
-    }
-
-    private fun updateDownloadScheduleInViews(optionText: String) {
-        binding.tvDownloadSchedule.text = optionText
     }
 
     private fun checkAndReturnSnapshot(status: String) {
@@ -294,8 +290,8 @@ abstract class DataTypeActivity : AppCompatActivity() {
                 title = binding.etName.text.toString(),
                 description = binding.etDescription.text.toString(),
                 downloadSchedule = snapshot.downloadSchedule.copy( // period is already set
-                        allowOnWifi = binding.sDownloadOnWifi.isChecked,
-                        allowOnMobileData = binding.sDownloadOnMobileData.isChecked
+                        allowOnWifiOnly = binding.sDownloadOnWifiOnly.isChecked,
+                        allowOnLowBattery = binding.sDownloadOnLowBattery.isChecked
                 ),
                 status = status
         )

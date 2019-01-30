@@ -47,8 +47,8 @@ data class Snapshot(val artifactId: Long = 0,
  * Snapshot downloading schedule: period and conditions.
  */
 data class DownloadSchedule(val periodSeconds: Long = 0, // <= 0 for single time download
-                            val allowOnWifi: Boolean = true,
-                            val allowOnMobileData: Boolean = false
+                            val allowOnWifiOnly: Boolean = false,
+                            val allowOnLowBattery: Boolean = false
 )
 
 /**

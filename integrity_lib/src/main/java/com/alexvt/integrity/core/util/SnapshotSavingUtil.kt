@@ -16,7 +16,6 @@ import com.alexvt.integrity.lib.SnapshotStatus
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.job.ScheduledJobManager
-import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.type.SnapshotDownloadStartRequest
 import com.alexvt.integrity.lib.Log
 import com.alexvt.integrity.lib.util.IntentUtil
@@ -39,13 +38,35 @@ object SnapshotSavingUtil {
             saveSnapshotBlueprint(context, snapshot)
         }
         if (snapshot.status == SnapshotStatus.IN_PROGRESS
-                || snapshot.status == SnapshotStatus.INCOMPLETE ) {
-            val snapshotBlueprint = IntegrityCore.metadataRepository.getLatestSnapshotMetadata(snapshot.artifactId)
-            downloadFromBlueprint(context, snapshotBlueprint)
-            if (context is Activity) {
-                IntegrityCore.showRunningJobProgressDialog(context, snapshotBlueprint.artifactId, snapshotBlueprint.date)
+                || snapshot.status == SnapshotStatus.INCOMPLETE) {
+            val snapshotBlueprint = IntegrityCore.metadataRepository
+                    .getLatestSnapshotMetadata(snapshot.artifactId)
+            if (deviceStateAllowsDownload(context, snapshot)) {
+                downloadFromBlueprint(context, snapshotBlueprint)
+                if (context is Activity) {
+                    IntegrityCore.showRunningJobProgressDialog(context,
+                            snapshotBlueprint.artifactId, snapshotBlueprint.date)
+                }
             }
         }
+    }
+
+    private fun deviceStateAllowsDownload(context: Context, snapshot: Snapshot): Boolean {
+        val batteryStateForbidsDownload = !snapshot.downloadSchedule.allowOnLowBattery
+                && !DeviceStateUtil.isBatteryChargeMoreThan(context, 20) // todo setting
+        if (batteryStateForbidsDownload) {
+            Log(context, "Battery charge is too low to download snapshot ${snapshot.title}")
+                    .logError()
+            return false
+        }
+        val wifiStateForbidsDownload = snapshot.downloadSchedule.allowOnWifiOnly
+                && !DeviceStateUtil.isOnWifi(context)
+        if (wifiStateForbidsDownload) {
+            Log(context, "WiFi connection is needed to download snapshot ${snapshot.title}")
+                    .logError()
+            return false
+        }
+        return true
     }
 
     /**

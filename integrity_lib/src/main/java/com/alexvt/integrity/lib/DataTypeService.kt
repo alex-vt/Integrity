@@ -8,6 +8,7 @@ package com.alexvt.integrity.lib
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
 import androidx.core.app.JobIntentService
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.job.RunningJobManager
@@ -52,6 +53,11 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
     abstract fun downloadData(artifactId: Long, date: String, typeMetadata: T): String
 
     /**
+     * Generates snapshot preview image using downloaded snapshot data.
+     */
+    abstract fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: T): Bitmap
+
+    /**
      * Starts service job execution according to intent extras.
      */
     final override fun onHandleWork(intent: Intent) {
@@ -70,6 +76,12 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
                 getTypeMetadata(snapshot))
         writeMetadataFile(dataFolderPath, snapshot)
 
+        IntegrityEx.reportSnapshotDownloadProgress(applicationContext, snapshot.artifactId,
+                snapshot.date, "Saving preview")
+        val previewScreenshot = generateOfflinePreview(snapshot.artifactId, snapshot.date,
+                getTypeMetadata(snapshot))
+        writePreviewScreenshotFile(dataFolderPath, previewScreenshot)
+
         // RunningJobManager job shouldn't be removed because job may continue in same process.
         IntegrityEx.reportSnapshotDownloaded(applicationContext, snapshot.artifactId, snapshot.date)
     }
@@ -85,5 +97,11 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
         val snapshotMetadata = IntegrityCore.toTypeSpecificMetadata(snapshot)
         DataCacheFolderUtil.writeTextToFile(applicationContext,
                 JsonSerializerUtil.toJson(snapshotMetadata), metadataFilePath)
+    }
+
+    private fun writePreviewScreenshotFile(dataFolderPath: String, previewScreenshot: Bitmap) {
+        val screenshotFilePath = "$dataFolderPath/_preview.png"
+        DataCacheFolderUtil.writeImageToFile(applicationContext,
+                previewScreenshot, screenshotFilePath)
     }
 }

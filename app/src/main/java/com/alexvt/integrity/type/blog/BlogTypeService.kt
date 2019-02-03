@@ -7,9 +7,12 @@
 package com.alexvt.integrity.type.blog
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.webkit.WebView
 import com.alexvt.integrity.lib.DataTypeService
 import com.alexvt.integrity.lib.IntegrityEx
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
+import com.alexvt.integrity.lib.util.WebViewUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
@@ -42,6 +45,18 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
         }
 
         return snapshotPath
+    }
+
+    /**
+     * Gets first saved page screenshot.
+     */
+    override fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: BlogTypeMetadata): Bitmap {
+        val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
+        val firstPageArchiveLink = WebArchiveFilesUtil.getPageIndexArchiveLinks(applicationContext,
+                snapshotPath).first()
+        return WebViewUtil.getScreenshot(applicationContext,
+                "file://$snapshotPath/$firstPageArchiveLink",
+                typeMetadata.loadIntervalMillis, typeMetadata.loadImages, typeMetadata.desktopSite)
     }
 }
 

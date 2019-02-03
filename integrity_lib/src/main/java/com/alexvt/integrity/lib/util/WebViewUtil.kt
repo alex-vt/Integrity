@@ -6,6 +6,8 @@
 
 package com.alexvt.integrity.lib.util
 
+import android.content.Context
+import android.content.res.Resources
 import android.webkit.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -16,6 +18,10 @@ import android.widget.Toast
 import com.alexvt.integrity.lib.Log
 import java.util.*
 import kotlin.concurrent.schedule
+import android.graphics.Bitmap
+import android.graphics.Canvas
+
+
 
 
 /**
@@ -142,6 +148,82 @@ object WebViewUtil {
         webView.settings.loadWithOverviewMode = enabled
         webView.settings.setSupportZoom(enabled)
         webView.settings.builtInZoomControls = enabled
+    }
+
+    // Loads the web page and gets its screenshot.
+    fun getScreenshot(context: Context, url: String, loadIntervalMillis: Long,
+                      loadImages: Boolean, desktopSite: Boolean): Bitmap {
+        lateinit var screenshotBitmap: Bitmap
+        runBlocking(Dispatchers.Main) {
+            screenshotBitmap = getScreenshotInternal(WebView(context), url, loadIntervalMillis,
+                    loadImages, desktopSite)
+        }
+        return screenshotBitmap
+    }
+
+    // Loads the web page and gets its screenshot,
+    // as "sync" method using suspend coroutine of Kotlin
+    private suspend fun getScreenshotInternal(webView: WebView, url: String,
+                                              loadIntervalMillis: Long,
+                                              loadImages: Boolean, desktopSite: Boolean)
+            = suspendCoroutine<Bitmap> { continuation ->
+        setupWebView(webView = webView, loadingOffline = isOfflineLoading(url),
+                loadImages = loadImages, desktopSite = desktopSite)
+
+        val screenshotSize = getScreenshotSize()
+        webView.measure(screenshotSize, screenshotSize)
+        webView.layout(0, 0, screenshotSize, screenshotSize)
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView, urlNewString: String): Boolean {
+                webView.loadUrl(urlNewString)
+                return false
+            }
+        }
+
+        webView.webChromeClient = object : WebChromeClient() {
+            var previousProgress = 0 // for dealing with possible multiple progress == 100
+
+            override fun onProgressChanged(view: WebView, progress: Int) {
+                android.util.Log.v("WebViewUtil", "Loading " + progress + "%: " + view.url)
+                resetLoadingTimeoutTimer(webView)
+                if (progress == 100 && previousProgress != 100) {
+                    webView.stopLoading()
+                    GlobalScope.launch(Dispatchers.Main) {
+                        delay(loadIntervalMillis)
+                        cancelLoadingTimeoutTimer()
+                        try {
+                            continuation.resume(getScreenshot(webView, screenshotSize))
+                            android.util.Log.v("WebViewUtil", "getScreenshot captured screenshot")
+                        } catch (t: Throwable) {
+                            android.util.Log.v("WebViewUtil", "getScreenshot: already resumed")
+                        }
+                    }
+                }
+                previousProgress = progress
+            }
+
+            override fun onConsoleMessage(cm: ConsoleMessage): Boolean {
+                // this is verbose
+                android.util.Log.v("TAG", cm.message() + " at " + cm.sourceId() + ":" + cm.lineNumber())
+                return true
+            }
+        }
+        webView.loadUrl(url)
+        android.util.Log.v("WebViewUtil", "getScreenshot: loading $url")
+    }
+
+    private const val screenshotDefaultSize = 1280
+
+    private fun getScreenshotSize() = Math.max(screenshotDefaultSize,
+            Math.min(Resources.getSystem().displayMetrics.widthPixels,
+                    Resources.getSystem().displayMetrics.heightPixels))
+
+    private fun getScreenshot(webView: WebView, screenshotSize: Int): Bitmap {
+        val bitmap = Bitmap.createBitmap(screenshotSize, screenshotSize, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        webView.draw(canvas)
+        return bitmap
     }
 
     // Async "nature" of saveWebArchive propagated to caller methods as "sync" method

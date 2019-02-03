@@ -8,6 +8,7 @@ package com.alexvt.integrity.core.util
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import com.snatik.storage.Storage
 import java.io.File
 
@@ -58,6 +59,10 @@ object DataCacheFolderUtil {
 
     fun writeTextToFile(context: Context, text: String, path: String) {
         getStorage(context).createFile(path, text)
+    }
+
+    fun writeImageToFile(context: Context, image: Bitmap, path: String) {
+        getStorage(context).createFile(path, image)
     }
 
     fun addTextToFile(context: Context, text: String, path: String) {

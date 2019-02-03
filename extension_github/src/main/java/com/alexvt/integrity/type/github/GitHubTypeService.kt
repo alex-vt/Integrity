@@ -6,6 +6,7 @@
 
 package com.alexvt.integrity.type.github
 
+import android.graphics.Bitmap
 import com.alexvt.integrity.lib.DataTypeService
 import com.alexvt.integrity.lib.IntegrityEx
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,14 @@ class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
             delay(3000) // todo implement
         }
         return snapshotPath
+    }
+
+    /**
+     * Gets saved user page screenshot.
+     */
+    override fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: GitHubTypeMetadata): Bitmap {
+        // todo implement
+        return Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
     }
 
 }

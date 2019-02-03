@@ -44,6 +44,16 @@ object PreferencesUtil {
     }
 
 
+    private val TAGS = "TAGS"
+
+    fun getTagsJson(context: Context)
+            = getSharedPreferences(context).getString(TAGS, null)
+
+    fun setTagsJson(context: Context, value: String) {
+        getPreferencesEditor(context).putString(TAGS, value).commit()
+    }
+
+
     private val PREFERENCES_NAME = "SHARED_PREFERENCES"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {

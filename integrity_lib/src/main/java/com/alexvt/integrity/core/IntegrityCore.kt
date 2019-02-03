@@ -23,6 +23,8 @@ import android.content.ComponentName
 import android.content.pm.ActivityInfo
 import com.alexvt.integrity.core.log.*
 import com.alexvt.integrity.core.notification.ErrorNotifier
+import com.alexvt.integrity.core.tags.SimplePersistableTagRepository
+import com.alexvt.integrity.core.tags.TagRepository
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.util.*
 import com.alexvt.integrity.lib.*
@@ -37,6 +39,7 @@ object IntegrityCore {
 
     lateinit var metadataRepository: MetadataRepository
     lateinit var folderLocationRepository: FolderLocationRepository
+    lateinit var tagRepository: TagRepository
     lateinit var logRepository: LogRepository
 
     lateinit var context: Context
@@ -57,6 +60,8 @@ object IntegrityCore {
             metadataRepository.init(context)
             folderLocationRepository = SimplePersistableFolderLocationRepository // todo replace with database
             folderLocationRepository.init(context)
+            tagRepository = SimplePersistableTagRepository // todo replace with database
+            tagRepository.init(context)
 
             resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
             ScheduledJobManager.updateSchedule(context)
@@ -111,6 +116,7 @@ object IntegrityCore {
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot)
         IntentUtil.putFolderLocationNames(intent, getFolderNames(snapshot))
+        IntentUtil.putTagNames(intent, getTagNames(snapshot))
         activity.startActivityForResult(intent, 0)
     }
 
@@ -121,6 +127,7 @@ object IntegrityCore {
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot.copy(status = SnapshotStatus.BLUEPRINT)) // as blueprint
         IntentUtil.putFolderLocationNames(intent, getFolderNames(snapshot))
+        IntentUtil.putTagNames(intent, getTagNames(snapshot))
         activity.startActivityForResult(intent, 0)
     }
 
@@ -128,10 +135,15 @@ object IntegrityCore {
             .map { IntegrityCore.getFolderLocationName(it) }
             .toTypedArray()
 
+    fun getTagNames(snapshot: Snapshot) = snapshot.tags
+            .map { it.text }
+            .toTypedArray()
+
     fun openCreateNewArtifact(activity: Activity, componentName: ComponentName) {
         val intent = Intent()
         intent.component = componentName
         IntentUtil.putFolderLocationNames(intent, emptyArray())
+        IntentUtil.putTagNames(intent, emptyArray())
         activity.startActivityForResult(intent, 0)
     }
 
@@ -293,16 +305,6 @@ object IntegrityCore {
             .toMap()
             .toSortedMap()
 
-    /**
-     * Gets alphabetically sorted map of given archive location names
-     * to the archive locations themselves.
-     */
-    fun getNamedFolderLocationMap(folderLocations: Collection<FolderLocation>)
-            = folderLocations
-            .map { it -> Pair(getFolderLocationName(it), it) }
-            .toMap()
-            .toSortedMap()
-
     fun getFolderLocationName(folderLocation: FolderLocation) = folderLocation.title +
             " (" + getFileLocationUtil(folderLocation).getFolderLocationLabel() + "): " +
             getFileLocationUtil(folderLocation).getFolderLocationDescription(folderLocation)
@@ -343,6 +345,8 @@ object IntegrityCore {
             description = snapshot.description,
             downloadSchedule = snapshot.downloadSchedule,
             archiveFolderLocations = snapshot.archiveFolderLocations,
+            tags = snapshot.tags,
+            themeColor = snapshot.themeColor,
             dataTypeSpecificMetadata = JsonSerializerUtil.fromJson(
                     snapshot.dataTypeSpecificMetadataJson,
                     Class.forName(snapshot.dataTypeClassName) as Class<TypeMetadata>),
@@ -356,6 +360,8 @@ object IntegrityCore {
             description = snapshotMetadata.description,
             downloadSchedule = snapshotMetadata.downloadSchedule,
             archiveFolderLocations = snapshotMetadata.archiveFolderLocations,
+            tags = snapshotMetadata.tags,
+            themeColor = snapshotMetadata.themeColor,
             dataTypeClassName = snapshotMetadata.dataTypeSpecificMetadata.javaClass.name,
             dataTypePackageName = context.packageName,
             dataTypeSpecificMetadataJson = JsonSerializerUtil.toJson(

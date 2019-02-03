@@ -62,6 +62,12 @@
         </activity>
 
         <activity
+            android:exported="true"
+            android:name="com.alexvt.integrity.base.activity.TagsActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+
+        <activity
             android:name="com.alexvt.integrity.core.filesystem.local.LocalLocationActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>

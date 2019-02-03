@@ -178,9 +178,11 @@ abstract class DataTypeActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (IntentUtil.getSnapshot(data) != null) {
             snapshot = snapshot.copy(
-                    archiveFolderLocations = IntentUtil.getSnapshot(data)!!.archiveFolderLocations
+                    archiveFolderLocations = IntentUtil.getSnapshot(data)!!.archiveFolderLocations,
+                    tags = IntentUtil.getSnapshot(data)!!.tags
             )
             updateFolderLocationSelectionInViews(IntentUtil.getFolderLocationNames(data))
+            updateTagSelectionInViews(IntentUtil.getTagNames(data))
         }
     }
 
@@ -202,9 +204,14 @@ abstract class DataTypeActivity : AppCompatActivity() {
         updateFolderLocationSelectionInViews(IntentUtil.getFolderLocationNames(intent))
         binding.bArchiveLocation.isEnabled = isEditable
         binding.bArchiveLocation.setOnClickListener { openFolderLocationList(selectMode = true) }
-
         binding.bManageArchiveLocations.isEnabled = isEditable
         binding.bManageArchiveLocations.setOnClickListener { openFolderLocationList(selectMode = false) }
+
+        updateTagSelectionInViews(IntentUtil.getTagNames(intent))
+        binding.bTags.isEnabled = isEditable
+        binding.bTags.setOnClickListener { openTagList(selectMode = true) }
+        binding.bManageTags.isEnabled = isEditable
+        binding.bManageTags.setOnClickListener { openTagList(selectMode = false) }
 
         binding.tvDownloadSchedule.text = getDownloadScheduleText(snapshot.downloadSchedule)
         binding.bDownloadSchedule.isEnabled = isEditable
@@ -232,8 +239,25 @@ abstract class DataTypeActivity : AppCompatActivity() {
         startActivityForResult(intent, 0)
     }
 
-    private fun updateFolderLocationSelectionInViews(folderLocationTexts: Array<String>) {
+    private fun updateFolderLocationSelectionInViews(folderLocationTexts: Array<String>?) {
+        if (folderLocationTexts == null) return
         binding.tvArchiveLocations.text = folderLocationTexts.joinToString(separator = ", ")
+    }
+
+    // todo theme color selection UI
+
+    private fun openTagList(selectMode: Boolean) {
+        val intent = Intent()
+        intent.component = ComponentName("com.alexvt.integrity",
+                "com.alexvt.integrity.base.activity.TagsActivity") // todo resolve
+        IntentUtil.putSelectMode(intent, selectMode)
+        IntentUtil.putSnapshot(intent, IntegrityCore.fromTypeSpecificMetadata(this, snapshot))
+        startActivityForResult(intent, 0)
+    }
+
+    private fun updateTagSelectionInViews(tagTexts: Array<String>?) {
+        if (tagTexts == null) return
+        binding.tvTags.text = tagTexts.joinToString(separator = ", ")
     }
 
     // todo improve this option

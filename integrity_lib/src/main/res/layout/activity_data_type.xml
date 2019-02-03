@@ -56,7 +56,7 @@
             <LinearLayout
                 android:id="@+id/llBottomSheet"
                 android:layout_width="match_parent"
-                android:layout_height="360dp"
+                android:layout_height="400dp"
                 android:background="@android:color/background_light"
                 android:orientation="vertical"
                 app:behavior_hideable="false"
@@ -135,6 +135,39 @@
 
                         <Button
                             android:id="@+id/bManageArchiveLocations"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Manage"
+                            android:layout_alignParentRight="true"
+                            />
+
+                    </RelativeLayout>
+
+                    <!-- Tags -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        >
+
+                        <Button
+                            android:id="@+id/bTags"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tags"
+                            />
+
+                        <!-- todo show tag colors -->
+                        <TextView
+                            android:id="@+id/tvTags"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="(none)"
+                            android:layout_toRightOf="@+id/bTags"
+                            android:layout_toLeftOf="@+id/bManageTags"
+                            />
+
+                        <Button
+                            android:id="@+id/bManageTags"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Manage"

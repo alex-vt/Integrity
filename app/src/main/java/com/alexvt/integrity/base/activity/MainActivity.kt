@@ -138,6 +138,10 @@ class MainActivity : AppCompatActivity() {
                 viewFolderLocations()
                 true
             }
+            R.id.action_tags -> {
+                viewTags()
+                true
+            }
             R.id.action_delete_all -> {
                 askRemoveAll()
                 true
@@ -152,6 +156,10 @@ class MainActivity : AppCompatActivity() {
 
     fun viewFolderLocations() {
         startActivity(Intent(this, FolderLocationsActivity::class.java))
+    }
+
+    fun viewTags() {
+        startActivity(Intent(this, TagsActivity::class.java))
     }
 
     fun viewArtifact(artifactId: Long) {

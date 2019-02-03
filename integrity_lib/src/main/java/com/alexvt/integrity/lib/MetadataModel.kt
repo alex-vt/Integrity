@@ -21,6 +21,8 @@ data class SnapshotMetadata(val artifactId: Long = 0,
                             val description: String = "",
                             val downloadSchedule: DownloadSchedule = DownloadSchedule(),
                             val archiveFolderLocations: ArrayList<FolderLocation> = arrayListOf(),
+                            val tags: ArrayList<Tag> = arrayListOf(),
+                            val themeColor: String = "#FFFFFF",
                             val dataTypeSpecificMetadata: TypeMetadata = EmptyTypeMetadata(),
                             val status: String = SnapshotStatus.BLUEPRINT
 )
@@ -37,6 +39,8 @@ data class Snapshot(val artifactId: Long = 0,
                     val description: String = "",
                     val downloadSchedule: DownloadSchedule = DownloadSchedule(),
                     val archiveFolderLocations: ArrayList<FolderLocation> = arrayListOf(),
+                    val tags: ArrayList<Tag> = arrayListOf(),
+                    val themeColor: String = "#FFFFFF",
                     val dataTypePackageName: String = "",
                     val dataTypeClassName: String = "",
                     val dataTypeSpecificMetadataJson: String = "",
@@ -50,6 +54,17 @@ data class DownloadSchedule(val periodSeconds: Long = 0, // <= 0 for single time
                             val allowOnWifiOnly: Boolean = false,
                             val allowOnLowBattery: Boolean = false
 )
+
+/**
+ * Snapshot tag, colored.
+ */
+data class Tag(val text: String = "",
+               val color: String = "#FFFFFF"
+) {
+    override fun equals(other: Any?): Boolean {
+        return other is Tag && other.text == text && other.color == color
+    }
+}
 
 /**
  * Snapshot downloading status.

@@ -6,7 +6,9 @@
   -->
 
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:picker="http://schemas.android.com/tools"
+    >
 
     <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/dlAllContent"
@@ -56,7 +58,7 @@
             <LinearLayout
                 android:id="@+id/llBottomSheet"
                 android:layout_width="match_parent"
-                android:layout_height="400dp"
+                android:layout_height="450dp"
                 android:background="@android:color/background_light"
                 android:orientation="vertical"
                 app:behavior_hideable="false"
@@ -213,6 +215,17 @@
                             />
 
                     </RelativeLayout>
+
+                    <!-- Snapshot date picker. Make visible when dates provided -->
+                    <com.wefika.horizontalpicker.HorizontalPicker
+                        android:id="@+id/hpDates"
+                        android:visibility="gone"
+                        android:textSize="15sp"
+                        app:dividerSize="40dp"
+                        app:sideItems="0"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        />
 
                     <!-- Save actions -->
                     <FrameLayout

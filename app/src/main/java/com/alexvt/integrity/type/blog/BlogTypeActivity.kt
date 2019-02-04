@@ -173,6 +173,7 @@ class BlogTypeActivity : DataTypeActivity() {
      */
     override fun snapshotViewModeAction(snapshot: SnapshotMetadata) {
         GlobalScope.launch (Dispatchers.Main) {
+            content.webView.stopLoading()
             val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
                     snapshot.artifactId, snapshot.date)
             val linkToArchivePathRedirectMap = WebArchiveFilesUtil
@@ -188,8 +189,7 @@ class BlogTypeActivity : DataTypeActivity() {
                     linkToArchivePathRedirectMap,
                     getTypeMetadata(snapshot).loadImages,
                     getTypeMetadata(snapshot).desktopSite) {
-                Log(this@BlogTypeActivity, "Loaded HTML from file $firstArchivePath")
-                        .log()
+                android.util.Log.v(this@BlogTypeActivity.TAG, "Loaded HTML from file $firstArchivePath")
             }
         }
     }
@@ -317,7 +317,7 @@ class BlogTypeActivity : DataTypeActivity() {
     private fun goToWebPage(snapshot: SnapshotMetadata, urlToView: String): Boolean {
         WebViewUtil.loadHtml(content.webView, LinkUtil.getFullFormUrl(urlToView), emptyMap(),
                 getTypeMetadata(snapshot).loadImages, getTypeMetadata(snapshot).desktopSite) {
-            Log(this, "Loaded page from: ${content.webView.url}").log()
+            android.util.Log.v(this.TAG, "Loaded page from: ${content.webView.url}")
             loadedHtml = it
             // Inputs are pre-filled only when creating new artifact
             if (isArtifactCreateMode()) {

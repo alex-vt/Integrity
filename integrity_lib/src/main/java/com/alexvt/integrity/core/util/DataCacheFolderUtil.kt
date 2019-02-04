@@ -57,6 +57,9 @@ object DataCacheFolderUtil {
         deleteFiles(context, getStorage(context).getFiles(getDataCacheDirectory(context)))
     }
 
+    fun getTextFromFile(context: Context, path: String)
+            = getStorage(context).readTextFile(path)!!
+
     fun writeTextToFile(context: Context, text: String, path: String) {
         getStorage(context).createFile(path, text)
     }

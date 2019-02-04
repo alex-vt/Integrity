@@ -19,6 +19,8 @@ import androidx.databinding.ViewDataBinding
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItems
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.util.DataCacheFolderUtil
+import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.lib.databinding.ActivityDataTypeBinding
 import kotlin.collections.ArrayList
@@ -108,19 +110,8 @@ abstract class DataTypeActivity : AppCompatActivity() {
         if (isSnapshotViewMode()) {
             snapshot = IntegrityCore.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
 
-            // Incomplete snapshot can be completed, apart from creating a new blueprint from it
-            if (snapshot.status == SnapshotStatus.INCOMPLETE) {
-                supportActionBar!!.title = "Incomplete ${getTypeName()} Type Snapshot"
-                setContinueSavingButtonVisible(true)
-            } else {
-                supportActionBar!!.title = "Viewing ${getTypeName()} Type Snapshot"
-                setContinueSavingButtonVisible(false)
-            }
-
-            fillInCommonOptions(snapshot, isEditable = false)
-            fillInTypeOptions(snapshot, isEditable = false)
-
-            snapshotViewModeAction(snapshot)
+            viewSnapshot(snapshot)
+            showDateSelector(IntentUtil.getDates(intent))
 
         } else if (isSnapshotCreateMode()) {
             snapshot = IntegrityCore.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
@@ -188,6 +179,36 @@ abstract class DataTypeActivity : AppCompatActivity() {
 
 
     // private helper methods
+
+    private fun viewSnapshot(snapshot: SnapshotMetadata) {
+        // Incomplete snapshot can be completed, apart from creating a new blueprint from it
+        if (snapshot.status == SnapshotStatus.INCOMPLETE) {
+            supportActionBar!!.title = "Incomplete ${getTypeName()} Type Snapshot"
+            setContinueSavingButtonVisible(true)
+        } else {
+            supportActionBar!!.title = "Viewing ${getTypeName()} Type Snapshot"
+            setContinueSavingButtonVisible(false)
+        }
+
+        fillInCommonOptions(snapshot, isEditable = false)
+        fillInTypeOptions(snapshot, isEditable = false)
+
+        snapshotViewModeAction(snapshot)
+    }
+
+    private fun showDateSelector(dates: Array<String>) {
+        binding.hpDates.visibility = View.VISIBLE
+        binding.hpDates.values = dates
+        binding.hpDates.selectedItem = dates.indexOf(snapshot.date)
+        binding.hpDates.setOnItemSelectedListener {
+            val snapshotFolderName = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
+                    snapshot.artifactId, dates[it])
+            val snapshotJson = DataCacheFolderUtil.getTextFromFile(this,
+                    "$snapshotFolderName/_metadata.json.txt")
+            snapshot = JsonSerializerUtil.fromJson(snapshotJson, SnapshotMetadata::class.java)
+            viewSnapshot(snapshot)
+        }
+    }
 
     private fun snapshotDataExists() = IntentUtil.getSnapshot(intent) != null
 

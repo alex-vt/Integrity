@@ -78,6 +78,7 @@ class GitHubTypeActivity : DataTypeActivity() {
      */
     override fun snapshotViewModeAction(snapshot: SnapshotMetadata) {
         GlobalScope.launch (Dispatchers.Main) {
+            content.webView.stopLoading()
             val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
                     snapshot.artifactId, snapshot.date)
             val linkToArchivePathRedirectMap = WebArchiveFilesUtil
@@ -90,7 +91,7 @@ class GitHubTypeActivity : DataTypeActivity() {
                     linkToArchivePathRedirectMap,
                     true,
                     false) {
-                Log(this@GitHubTypeActivity, "Loaded HTML from file").log()
+                android.util.Log.v(this@GitHubTypeActivity.TAG, "Loaded HTML from file")
             }
         }
     }
@@ -138,7 +139,7 @@ class GitHubTypeActivity : DataTypeActivity() {
     private fun goToGitHubUserPage(snapshot: SnapshotMetadata, userName: String): Boolean {
         WebViewUtil.loadHtml(content.webView, LinkUtil.getFullFormUrl("https://github.com/" + userName),
                 emptyMap(), true, false) {
-            Log(this, "Loaded page from: ${content.webView.url}").log()
+            android.util.Log.v(this.TAG, "Loaded page from: ${content.webView.url}")
             loadedHtml = it
             // Inputs are pre-filled only when creating new artifact
             if (isArtifactCreateMode()) {

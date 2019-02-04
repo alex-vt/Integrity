@@ -117,6 +117,7 @@ object IntegrityCore {
         val intent = Intent()
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot)
+        IntentUtil.putDates(intent, getSnapshotDates(artifactId))
         activity.startActivityForResult(intent, 0)
     }
 
@@ -128,6 +129,9 @@ object IntegrityCore {
         IntentUtil.putSnapshot(intent, snapshot.copy(status = SnapshotStatus.BLUEPRINT)) // as blueprint
         activity.startActivityForResult(intent, 0)
     }
+
+    private fun getSnapshotDates(artifactId: Long) = metadataRepository
+            .getArtifactMetadata(artifactId).snapshots.map { it.date }.reversed() // in ascending order
 
     fun getFolderLocationNames(archiveFolderLocations: List<FolderLocation>) = archiveFolderLocations
             .map { IntegrityCore.getFolderLocationName(it) }

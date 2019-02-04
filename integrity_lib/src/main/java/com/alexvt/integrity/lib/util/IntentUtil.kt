@@ -18,6 +18,7 @@ object IntentUtil {
 
     private const val artifactId = "artifactId"
     private const val date = "date"
+    private const val dates = "dates"
     private const val message = "message"
     private const val downloaded = "downloaded"
     private const val snapshot = "snapshot"
@@ -37,6 +38,14 @@ object IntentUtil {
     }
 
     fun getDate(intent: Intent?) = intent!!.getStringExtra(date)!!
+
+    fun putDates(intent: Intent?, dates: List<String>): Intent {
+        intent!!.putExtra(IntentUtil.dates, dates.toTypedArray())
+        return intent
+    }
+
+    fun getDates(intent: Intent?) = intent!!.getStringArrayExtra(dates)!!
+
 
     fun withMessage(message: String): Intent {
         val intent = Intent()

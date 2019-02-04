@@ -151,7 +151,6 @@ class TagsActivity : AppCompatActivity() {
                     tags = ArrayList(selectedTags)
             )
             IntentUtil.putSnapshot(returnIntent, snapshot)
-            IntentUtil.putTagNames(returnIntent, IntegrityCore.getTagNames(snapshot))
         }
         setResult(Activity.RESULT_OK, returnIntent)
         finish()

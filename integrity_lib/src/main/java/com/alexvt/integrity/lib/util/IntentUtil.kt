@@ -22,8 +22,6 @@ object IntentUtil {
     private const val downloaded = "downloaded"
     private const val snapshot = "snapshot"
     private const val selectMode = "selectMode"
-    private const val folderLocationNames = "folderLocationNames"
-    private const val tagNames = "tagNames"
     private const val logEntry = "logEntry"
 
     fun putArtifactId(intent: Intent?, artifactId: Long): Intent {
@@ -73,21 +71,6 @@ object IntentUtil {
     }
 
     fun isSelectMode(intent: Intent?) = intent!!.getBooleanExtra(selectMode, false)
-
-
-    fun putFolderLocationNames(intent: Intent?, folderLocationNames: Array<String>): Intent {
-        intent!!.putExtra(IntentUtil.folderLocationNames, folderLocationNames)
-        return intent
-    }
-
-    fun getFolderLocationNames(intent: Intent?): Array<String>? = intent!!.getStringArrayExtra(folderLocationNames)
-
-    fun putTagNames(intent: Intent?, tagNames: Array<String>): Intent {
-        intent!!.putExtra(IntentUtil.tagNames, tagNames)
-        return intent
-    }
-
-    fun getTagNames(intent: Intent?): Array<String>? = intent!!.getStringArrayExtra(tagNames)
 
 
     fun withLogEntry(logEntry: LogEntry): Intent {

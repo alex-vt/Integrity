@@ -6,19 +6,21 @@
 
 package com.alexvt.integrity.core.filesystem.local
 
+import android.content.ComponentName
 import android.content.Context
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
 import com.snatik.storage.Storage
 import java.io.File
 
-open class LocalLocationUtil : ArchiveLocationUtil<LocalFolderLocation> {
+object LocalLocationUtil : ArchiveLocationUtil<LocalFolderLocation> {
 
     override fun getFolderLocationLabel() = "Local"
 
     override fun getFolderLocationDescription(folderLocation: LocalFolderLocation)
             = folderLocation.folderPath
 
-    override fun getViewMainActivityClass() = LocalLocationActivity::class.java
+    override fun getViewMainActivityComponent() = ComponentName("com.alexvt.integrity",
+            "com.alexvt.integrity.core.filesystem.local.LocalLocationActivity")
 
     override fun writeArchive(context: Context, sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,

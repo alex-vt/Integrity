@@ -156,7 +156,7 @@ object SnapshotSavingUtil {
             postSnapshotDownloadProgress(context, completeSnapshot,
                     "Saving archive to " + dataArchiveLocation + " "
                     + (index + 1) + " of " + completeSnapshot.archiveFolderLocations.size)
-            IntegrityCore.getFileLocationUtil(dataArchiveLocation).writeArchive(
+            IntegrityCore.getFileLocationUtil(dataArchiveLocation.javaClass).writeArchive(
                     context = context,
                     sourceArchivePath = archivePath,
                     sourceHashPath = archiveHashPath,

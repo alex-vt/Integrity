@@ -6,6 +6,7 @@
 
 package com.alexvt.integrity.core.filesystem.samba
 
+import android.content.ComponentName
 import android.content.Context
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
@@ -17,14 +18,15 @@ import jcifs.smb.NtlmPasswordAuthentication
 import jcifs.smb.SmbFileOutputStream
 
 
-open class SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
+object SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
 
     override fun getFolderLocationLabel() = "Samba"
 
     override fun getFolderLocationDescription(folderLocation: SambaFolderLocation)
             = folderLocation.fullPath
 
-    override fun getViewMainActivityClass() = SambaLocationActivity::class.java
+    override fun getViewMainActivityComponent() = ComponentName("com.alexvt.integrity",
+            "com.alexvt.integrity.core.filesystem.samba.SambaLocationActivity")
 
     override fun writeArchive(context: Context, sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,

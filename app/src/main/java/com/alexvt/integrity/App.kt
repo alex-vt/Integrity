@@ -8,12 +8,6 @@ package com.alexvt.integrity
 
 import android.app.Application
 import com.alexvt.integrity.core.*
-import com.alexvt.integrity.core.filesystem.local.LocalFolderLocation
-import com.alexvt.integrity.core.filesystem.local.LocalLocationUtil
-import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocation
-import com.alexvt.integrity.core.filesystem.samba.SambaLocationUtil
-import com.alexvt.integrity.lib.IntegrityEx
-import com.alexvt.integrity.lib.Log
 import android.app.ActivityManager
 import android.content.Context
 
@@ -29,10 +23,6 @@ class App : Application() {
         }
 
         IntegrityCore.init(this)
-
-        // Integrity core: initializing for file locations // todo locate dynamically as services
-        IntegrityCore.registerFileLocationUtil(LocalFolderLocation::class.java, LocalLocationUtil())
-        IntegrityCore.registerFileLocationUtil(SambaFolderLocation::class.java, SambaLocationUtil())
     }
 
     private fun isRecoveryProcess(context: Context): Boolean {

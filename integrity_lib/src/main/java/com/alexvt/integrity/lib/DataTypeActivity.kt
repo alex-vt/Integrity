@@ -181,8 +181,8 @@ abstract class DataTypeActivity : AppCompatActivity() {
                     archiveFolderLocations = IntentUtil.getSnapshot(data)!!.archiveFolderLocations,
                     tags = IntentUtil.getSnapshot(data)!!.tags
             )
-            updateFolderLocationSelectionInViews(IntentUtil.getFolderLocationNames(data))
-            updateTagSelectionInViews(IntentUtil.getTagNames(data))
+            updateFolderLocationSelectionInViews(snapshot.archiveFolderLocations)
+            updateTagSelectionInViews(snapshot.tags)
         }
     }
 
@@ -201,13 +201,13 @@ abstract class DataTypeActivity : AppCompatActivity() {
         binding.etDescription.isEnabled = isEditable
         binding.etDescription.append(snapshot.description)
 
-        updateFolderLocationSelectionInViews(IntentUtil.getFolderLocationNames(intent))
+        updateFolderLocationSelectionInViews(snapshot.archiveFolderLocations)
         binding.bArchiveLocation.isEnabled = isEditable
         binding.bArchiveLocation.setOnClickListener { openFolderLocationList(selectMode = true) }
         binding.bManageArchiveLocations.isEnabled = isEditable
         binding.bManageArchiveLocations.setOnClickListener { openFolderLocationList(selectMode = false) }
 
-        updateTagSelectionInViews(IntentUtil.getTagNames(intent))
+        updateTagSelectionInViews(snapshot.tags)
         binding.bTags.isEnabled = isEditable
         binding.bTags.setOnClickListener { openTagList(selectMode = true) }
         binding.bManageTags.isEnabled = isEditable
@@ -239,9 +239,9 @@ abstract class DataTypeActivity : AppCompatActivity() {
         startActivityForResult(intent, 0)
     }
 
-    private fun updateFolderLocationSelectionInViews(folderLocationTexts: Array<String>?) {
-        if (folderLocationTexts == null) return
-        binding.tvArchiveLocations.text = folderLocationTexts.joinToString(separator = ", ")
+    private fun updateFolderLocationSelectionInViews(folderLocations: List<FolderLocation>) {
+        binding.tvArchiveLocations.text = IntegrityCore.getFolderLocationNames(folderLocations)
+                .joinToString(separator = ", ")
     }
 
     // todo theme color selection UI
@@ -255,9 +255,8 @@ abstract class DataTypeActivity : AppCompatActivity() {
         startActivityForResult(intent, 0)
     }
 
-    private fun updateTagSelectionInViews(tagTexts: Array<String>?) {
-        if (tagTexts == null) return
-        binding.tvTags.text = tagTexts.joinToString(separator = ", ")
+    private fun updateTagSelectionInViews(tags: List<Tag>) {
+        binding.tvTags.text = tags.joinToString(separator = ", ") { it.text }
     }
 
     // todo improve this option

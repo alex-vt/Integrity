@@ -21,6 +21,8 @@ import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.job.ScheduledJobManager
 import android.content.ComponentName
 import android.content.pm.ActivityInfo
+import com.alexvt.integrity.core.filesystem.local.LocalFolderLocation
+import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocation
 import com.alexvt.integrity.core.log.*
 import com.alexvt.integrity.core.notification.ErrorNotifier
 import com.alexvt.integrity.core.tags.SimplePersistableTagRepository
@@ -115,8 +117,6 @@ object IntegrityCore {
         val intent = Intent()
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot)
-        IntentUtil.putFolderLocationNames(intent, getFolderNames(snapshot))
-        IntentUtil.putTagNames(intent, getTagNames(snapshot))
         activity.startActivityForResult(intent, 0)
     }
 
@@ -126,24 +126,16 @@ object IntegrityCore {
         val intent = Intent()
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot.copy(status = SnapshotStatus.BLUEPRINT)) // as blueprint
-        IntentUtil.putFolderLocationNames(intent, getFolderNames(snapshot))
-        IntentUtil.putTagNames(intent, getTagNames(snapshot))
         activity.startActivityForResult(intent, 0)
     }
 
-    fun getFolderNames(snapshot: Snapshot) = snapshot.archiveFolderLocations
+    fun getFolderLocationNames(archiveFolderLocations: List<FolderLocation>) = archiveFolderLocations
             .map { IntegrityCore.getFolderLocationName(it) }
-            .toTypedArray()
-
-    fun getTagNames(snapshot: Snapshot) = snapshot.tags
-            .map { it.text }
             .toTypedArray()
 
     fun openCreateNewArtifact(activity: Activity, componentName: ComponentName) {
         val intent = Intent()
         intent.component = componentName
-        IntentUtil.putFolderLocationNames(intent, emptyArray())
-        IntentUtil.putTagNames(intent, emptyArray())
         activity.startActivityForResult(intent, 0)
     }
 
@@ -219,11 +211,12 @@ object IntegrityCore {
     /**
      * Returns intent for editing archive location defined by title.
      */
-    fun getFolderLocationEditIntent(context: Context, title: String): Intent {
+    fun getFolderLocationEditIntent(title: String): Intent {
         val folderLocation = folderLocationRepository.getAllFolderLocations()
                 .first { it.title == title }
-        val activityClass = getFileLocationUtil(folderLocation).getViewMainActivityClass()
-        val typeViewCreateIntent = Intent(context, activityClass)
+        val typeViewCreateIntent = Intent()
+        typeViewCreateIntent.component = getFileLocationUtil(folderLocation.javaClass)
+                .getViewMainActivityComponent()
         typeViewCreateIntent.putExtra("title", title)
         return typeViewCreateIntent
     }
@@ -283,11 +276,6 @@ object IntegrityCore {
         return false
     }
 
-    fun <F: FolderLocation> registerFileLocationUtil(fileLocation: Class<F>,
-                                                                              archiveLocationUtil: ArchiveLocationUtil<F>) {
-        archiveLocationUtilMap[fileLocation.simpleName] = archiveLocationUtil
-    }
-
     /**
      * Gets alphabetically sorted set of names of available data types.
      */
@@ -296,27 +284,35 @@ object IntegrityCore {
             .sortedBy { it.className.substringAfterLast(".") } // sorted by simple name
 
     /**
-     * Gets alphabetically sorted map of labels of registered folder location types
+     * Gets alphabetically sorted map of labels of code listed folder location types
      * to intents of main view activities for these folder location types.
      */
-    fun getNamedFileLocationCreateIntentMap(context: Context): Map<String, Intent>
-            = archiveLocationUtilMap.map { it -> Pair(it.value.getFolderLocationLabel(),
-            Intent(context, it.value.getViewMainActivityClass())) }
+    fun getNamedFileLocationCreateIntentMap(): Map<String, Intent>
+            = listOf(
+            LocalFolderLocation::class.java,
+            SambaFolderLocation::class.java
+            ).map { getFileLocationUtil(it) }
+            .map { Pair(it.getFolderLocationLabel(), getNamedFileLocationCreateIntent(it)) }
             .toMap()
             .toSortedMap()
 
-    fun getFolderLocationName(folderLocation: FolderLocation) = folderLocation.title +
-            " (" + getFileLocationUtil(folderLocation).getFolderLocationLabel() + "): " +
-            getFileLocationUtil(folderLocation).getFolderLocationDescription(folderLocation)
+    private fun getNamedFileLocationCreateIntent(archiveLocationUtil: ArchiveLocationUtil<*>): Intent {
+        val intent = Intent()
+        intent.component = archiveLocationUtil.getViewMainActivityComponent()
+        return intent
+    }
 
-    private val archiveLocationUtilMap: MutableMap<String, ArchiveLocationUtil<*>> = HashMap()
+    fun getFolderLocationName(folderLocation: FolderLocation) = folderLocation.title +
+            " (" + getFileLocationUtil(folderLocation.javaClass).getFolderLocationLabel() + "): " +
+            getFileLocationUtil(folderLocation.javaClass).getFolderLocationDescription(folderLocation)
 
     /**
      * See https://stackoverflow.com/a/41103379
      */
-    fun <F: FolderLocation> getFileLocationUtil(dataArchiveLocation: F): ArchiveLocationUtil<F> {
-        val fileLocationUtil = archiveLocationUtilMap[dataArchiveLocation.javaClass.simpleName]!!
-        return (fileLocationUtil as ArchiveLocationUtil<F>)
+    fun <F: FolderLocation> getFileLocationUtil(dataArchiveLocationClass: Class<F>): ArchiveLocationUtil<F> {
+        val utilClassName = dataArchiveLocationClass.name
+                .replace("FolderLocation", "LocationUtil")
+        return Class.forName(utilClassName).kotlin.objectInstance as ArchiveLocationUtil<F>
     }
 
     private fun getDataTypeActivityInfo(typeClassName: String): ActivityInfo {

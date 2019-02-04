@@ -37,14 +37,14 @@ class FolderLocationsActivity : AppCompatActivity() {
 
         // Float Action Button action items for each available folder location type
         // Folder location type map is sorted by key, so the value will be obtained by index of clicked action
-        IntegrityCore.getNamedFileLocationCreateIntentMap(this).keys
+        IntegrityCore.getNamedFileLocationCreateIntentMap().keys
                 .forEachIndexed { index, key ->
                     sdAdd.addActionItem(SpeedDialActionItem.Builder(index, android.R.drawable.ic_input_add)
                             .setLabel(key)
                             .create())
                 }
         sdAdd.setOnActionSelectedListener { speedDialActionItem ->
-            val typeViewIntent = IntegrityCore.getNamedFileLocationCreateIntentMap(this).values
+            val typeViewIntent = IntegrityCore.getNamedFileLocationCreateIntentMap().values
                     .toList()[speedDialActionItem.id]
             startActivity(typeViewIntent)
             false
@@ -85,7 +85,7 @@ class FolderLocationsActivity : AppCompatActivity() {
 
 
     fun viewFolderLocation(title: String) {
-        startActivity(IntegrityCore.getFolderLocationEditIntent(this, title))
+        startActivity(IntegrityCore.getFolderLocationEditIntent(title))
     }
 
     fun toggleSelection(folderLocation: FolderLocation) {
@@ -118,7 +118,6 @@ class FolderLocationsActivity : AppCompatActivity() {
                     archiveFolderLocations = ArrayList(selectedFolderLocations)
             )
             IntentUtil.putSnapshot(returnIntent, snapshot)
-            IntentUtil.putFolderLocationNames(returnIntent, IntegrityCore.getFolderNames(snapshot))
         }
         setResult(Activity.RESULT_OK, returnIntent)
         finish()

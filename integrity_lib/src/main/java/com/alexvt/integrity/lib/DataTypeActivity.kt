@@ -218,8 +218,10 @@ abstract class DataTypeActivity : AppCompatActivity() {
 
     private fun fillInCommonOptions(snapshot: SnapshotMetadata, isEditable: Boolean) {
         binding.etName.isEnabled = isEditable
+        binding.etName.setText("")
         binding.etName.append(snapshot.title)
         binding.etDescription.isEnabled = isEditable
+        binding.etDescription.setText("")
         binding.etDescription.append(snapshot.description)
 
         updateFolderLocationSelectionInViews(snapshot.archiveFolderLocations)

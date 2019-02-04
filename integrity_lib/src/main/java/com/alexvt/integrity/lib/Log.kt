@@ -104,8 +104,8 @@ class Log(val context: Context, val text: String) {
         var className = "LogEntry-default"
         if (throwable != null) {
             className = throwable.stackTrace[0].className
-        } else if (currentThread.stackTrace.size >= threadStackTraceSkip) {
-            className = currentThread.stackTrace[threadStackTraceSkip - 1].className
+        } else if (currentThread.stackTrace.size > threadStackTraceSkip) {
+            className = currentThread.stackTrace[threadStackTraceSkip].className
         }
         return className.substringAfterLast(".").substringBefore("$")
     }

@@ -117,7 +117,9 @@ object IntegrityCore {
         val intent = Intent()
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot)
-        IntentUtil.putDates(intent, getViewableSnapshotDates(artifactId))
+        if (snapshot.status == SnapshotStatus.COMPLETE) {
+            IntentUtil.putDates(intent, getCompleteSnapshotDates(artifactId))
+        }
         activity.startActivityForResult(intent, 0)
     }
 
@@ -130,10 +132,9 @@ object IntegrityCore {
         activity.startActivityForResult(intent, 0)
     }
 
-    private fun getViewableSnapshotDates(artifactId: Long) = metadataRepository
+    private fun getCompleteSnapshotDates(artifactId: Long) = metadataRepository
             .getArtifactMetadata(artifactId).snapshots
-            .filter { it.status == SnapshotStatus.COMPLETE
-                    || it.status == SnapshotStatus.INCOMPLETE }
+            .filter { it.status == SnapshotStatus.COMPLETE }
             .map { it.date }
             .reversed() // in ascending order
 

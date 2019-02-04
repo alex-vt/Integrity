@@ -111,7 +111,9 @@ abstract class DataTypeActivity : AppCompatActivity() {
             snapshot = IntegrityCore.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
 
             viewSnapshot(snapshot)
-            showDateSelector(IntentUtil.getDates(intent))
+            if (snapshot.status == SnapshotStatus.COMPLETE) {
+                showDateSelector(IntentUtil.getDates(intent))
+            }
 
         } else if (isSnapshotCreateMode()) {
             snapshot = IntegrityCore.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)

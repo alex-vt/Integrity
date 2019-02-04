@@ -76,6 +76,9 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
                 getTypeMetadata(snapshot))
         writeMetadataFile(dataFolderPath, snapshot)
 
+        if (!IntegrityEx.isSnapshotDownloadRunning(snapshot.artifactId, snapshot.date)) {
+            return
+        }
         IntegrityEx.reportSnapshotDownloadProgress(applicationContext, snapshot.artifactId,
                 snapshot.date, "Saving preview")
         val previewScreenshot = generateOfflinePreview(snapshot.artifactId, snapshot.date,

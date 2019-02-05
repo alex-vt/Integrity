@@ -21,13 +21,15 @@ object ErrorNotifier {
     private const val NOTIFICATION_ID = 0
 
     fun notifyAboutErrors(context: Context, errorLogEntries: List<LogEntry>) {
-        val intent = Intent().apply {
+        val logViewPendingIntent = PendingIntent.getActivity(context, 0, Intent().apply {
             component = ComponentName("com.alexvt.integrity",
                     "com.alexvt.integrity.base.activity.LogViewActivity") // todo resolve
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or
                     Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
-        }
-        val logViewPendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
+        }, 0)
+        val logReadPendingIntent = PendingIntent.getBroadcast(context, 0, Intent().apply {
+            action = "com.alexvt.integrity.LOG_READ"
+        }, 0)
 
         val mBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.notification_icon_error)
@@ -37,6 +39,7 @@ object ErrorNotifier {
                         .bigText(getNotificationText(errorLogEntries)))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(logViewPendingIntent)
+                .addAction(0, "OK", logReadPendingIntent)
                 .addAction(0, "View log", logViewPendingIntent)
                 .setAutoCancel(true)
 

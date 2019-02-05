@@ -102,6 +102,7 @@ object IntegrityCore {
     }
 
     fun markErrorsRead(context: Context) {
+        android.util.Log.v("IntegrityCore", "Errors marked read")
         IntegrityCore.logRepository.markAllRead()
         ErrorNotifier.removeNotification(context)
     }

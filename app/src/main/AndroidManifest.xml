@@ -100,6 +100,12 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name="com.alexvt.integrity.core.log.LoggingUtil$LogReadReceiver" >
+            <intent-filter>
+                <action android:name="com.alexvt.integrity.LOG_READ" />
+            </intent-filter>
+        </receiver>
+
         <receiver android:name="com.alexvt.integrity.core.util.AutoStartUtil$AutoStartReceiver"
             >
             <intent-filter>

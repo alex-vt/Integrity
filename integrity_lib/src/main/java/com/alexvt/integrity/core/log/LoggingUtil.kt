@@ -97,4 +97,10 @@ object LoggingUtil {
             Runtime.getRuntime().exit(0) // recovery process not needed anymore
         }
     }
+
+    class LogReadReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            IntegrityCore.markErrorsRead(context)
+        }
+    }
 }

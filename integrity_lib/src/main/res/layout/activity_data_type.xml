@@ -45,12 +45,33 @@
                 android:layout_height="match_parent"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-                <!-- todo add custom views -->
-                <LinearLayout
+                <RelativeLayout
                     android:id="@+id/content"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical" />
+                    >
+
+                    <!-- todo add custom view -->
+
+                    <ImageView
+                        android:visibility="gone"
+                        android:id="@+id/ivPreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scaleType="fitCenter"
+                        android:adjustViewBounds="true"
+                        />
+
+                    <ProgressBar
+                        android:visibility="gone"
+                        android:id="@+id/pbLoading"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:indeterminate="true"
+                        />
+                    
+                </RelativeLayout>
 
             </androidx.core.widget.NestedScrollView>
 

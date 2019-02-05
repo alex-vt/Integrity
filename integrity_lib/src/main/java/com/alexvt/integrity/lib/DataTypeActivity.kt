@@ -23,7 +23,11 @@ import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.lib.databinding.ActivityDataTypeBinding
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.concurrent.schedule
 
 
 abstract class DataTypeActivity : AppCompatActivity() {
@@ -88,6 +92,16 @@ abstract class DataTypeActivity : AppCompatActivity() {
         binding.etName.setText(title)
     }
 
+    protected fun endPreview() { // todo end more gracefully
+        val previewEndDelayMillis = 300L
+        Timer().schedule(previewEndDelayMillis) {
+            runOnUiThread {
+                binding.ivPreview.visibility = View.GONE
+                binding.pbLoading.visibility = View.GONE
+            }
+        }
+    }
+
     protected fun closeFilterDrawer() {
         binding.dlAllContent.closeDrawers()
     }
@@ -103,7 +117,7 @@ abstract class DataTypeActivity : AppCompatActivity() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
-        binding.content.addView(inflateContentView(this).root)
+        binding.content.addView(inflateContentView(this).root, 0)
         binding.controls.addView(inflateControlsView(this).root)
         binding.filter.addView(inflateFilterView(this).root)
 
@@ -190,12 +204,26 @@ abstract class DataTypeActivity : AppCompatActivity() {
         } else {
             supportActionBar!!.title = "Viewing ${getTypeName()} Type Snapshot"
             setContinueSavingButtonVisible(false)
+
+            showPreview(snapshot)
         }
 
         fillInCommonOptions(snapshot, isEditable = false)
         fillInTypeOptions(snapshot, isEditable = false)
 
         snapshotViewModeAction(snapshot)
+    }
+
+    private fun showPreview(snapshot: SnapshotMetadata) {
+        val snapshotFolderName = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
+                snapshot.artifactId, snapshot.date)
+        binding.ivPreview.visibility = View.VISIBLE
+        Glide.with(this)
+                .asBitmap()
+                .load("$snapshotFolderName/_preview.png")
+                .apply(RequestOptions().dontAnimate())
+                .into(binding.ivPreview)
+        binding.pbLoading.visibility = View.VISIBLE
     }
 
     private fun showDateSelector(dates: Array<String>) {

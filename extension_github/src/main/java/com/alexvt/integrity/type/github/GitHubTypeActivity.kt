@@ -92,6 +92,7 @@ class GitHubTypeActivity : DataTypeActivity() {
                     true,
                     false) {
                 android.util.Log.v(this@GitHubTypeActivity.TAG, "Loaded HTML from file")
+                endPreview()
             }
         }
     }

@@ -190,6 +190,7 @@ class BlogTypeActivity : DataTypeActivity() {
                     getTypeMetadata(snapshot).loadImages,
                     getTypeMetadata(snapshot).desktopSite) {
                 android.util.Log.v(this@BlogTypeActivity.TAG, "Loaded HTML from file $firstArchivePath")
+                endPreview()
             }
         }
     }

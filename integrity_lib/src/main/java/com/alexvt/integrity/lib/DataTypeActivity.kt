@@ -12,17 +12,21 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.*
+import android.widget.RadioGroup
 import android.widget.Toast
+import android.widget.ToggleButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.list.listItems
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.DataCacheFolderUtil
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.lib.databinding.ActivityDataTypeBinding
+import com.alexvt.integrity.lib.databinding.ViewColorEditBinding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import java.util.*
@@ -262,8 +266,8 @@ abstract class DataTypeActivity : AppCompatActivity() {
         updateTagSelectionInViews(snapshot.tags)
         binding.bTags.isEnabled = isEditable
         binding.bTags.setOnClickListener { openTagList(selectMode = true) }
-        binding.bManageTags.isEnabled = isEditable
-        binding.bManageTags.setOnClickListener { openTagList(selectMode = false) }
+        binding.bThemeColor.isEnabled = isEditable
+        binding.bThemeColor.setOnClickListener { openThemeColorPicker() }
 
         binding.tvDownloadSchedule.text = getDownloadScheduleText(snapshot.downloadSchedule)
         binding.bDownloadSchedule.isEnabled = isEditable
@@ -309,6 +313,41 @@ abstract class DataTypeActivity : AppCompatActivity() {
 
     private fun updateTagSelectionInViews(tags: List<Tag>) {
         binding.tvTags.text = tags.joinToString(separator = ", ") { it.text }
+    }
+
+    private fun openThemeColorPicker() {
+        // todo improve color picker
+        val colorEditViews: ViewColorEditBinding = DataBindingUtil.inflate(LayoutInflater.from(this),
+                R.layout.view_color_edit, null, false)
+        colorEditViews.tbColor1.setOnClickListener { (it.parent as RadioGroup).check(it.id) }
+        colorEditViews.tbColor2.setOnClickListener { (it.parent as RadioGroup).check(it.id) }
+        colorEditViews.tbColor3.setOnClickListener { (it.parent as RadioGroup).check(it.id) }
+        colorEditViews.tbColor4.setOnClickListener { (it.parent as RadioGroup).check(it.id) }
+        colorEditViews.toggleGroup.setOnCheckedChangeListener { group, checkedId ->
+            for (j in 0 until group.childCount) {
+                val view = group.getChildAt(j) as ToggleButton
+                view.isChecked = (view.id == checkedId)
+            }
+        }
+        when {
+            snapshot.themeColor == "#FFFFFF" -> colorEditViews.tbColor1.isChecked = true
+            snapshot.themeColor == "#EE8888" -> colorEditViews.tbColor2.isChecked = true
+            snapshot.themeColor == "#88EE88" -> colorEditViews.tbColor3.isChecked = true
+            snapshot.themeColor == "#8888EE" -> colorEditViews.tbColor4.isChecked = true
+        }
+        MaterialDialog(this)
+                .customView(view = colorEditViews.toggleGroup)
+                .positiveButton(text = "Save") {
+                    val color = when {
+                        colorEditViews.tbColor2.isChecked -> "#EE8888"
+                        colorEditViews.tbColor3.isChecked -> "#88EE88"
+                        colorEditViews.tbColor4.isChecked -> "#8888EE"
+                        else -> "#FFFFFF" // color 1
+                    }
+                    snapshot = snapshot.copy(themeColor = color)
+                }
+                .negativeButton(text = "Cancel")
+                .show()
     }
 
     // todo improve this option

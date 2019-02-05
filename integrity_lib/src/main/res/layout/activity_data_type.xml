@@ -179,21 +179,21 @@
                             android:text="Tags"
                             />
 
-                        <!-- todo show tag colors -->
+                        <!-- todo show tag and theme colors -->
                         <TextView
                             android:id="@+id/tvTags"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="(none)"
                             android:layout_toRightOf="@+id/bTags"
-                            android:layout_toLeftOf="@+id/bManageTags"
+                            android:layout_toLeftOf="@+id/bThemeColor"
                             />
 
                         <Button
-                            android:id="@+id/bManageTags"
+                            android:id="@+id/bThemeColor"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Manage"
+                            android:text="Theme color"
                             android:layout_alignParentRight="true"
                             />
 

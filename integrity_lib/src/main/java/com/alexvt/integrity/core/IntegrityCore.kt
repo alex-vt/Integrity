@@ -132,6 +132,10 @@ object IntegrityCore {
         activity.startActivityForResult(intent, 0)
     }
 
+    fun getSnapshotPreviewPath(context: Context, artifactId: Long, date: String): String {
+        return DataCacheFolderUtil.getSnapshotFolderPath(context, artifactId, date) + "/_preview.png"
+    }
+
     private fun getCompleteSnapshotDates(artifactId: Long) = metadataRepository
             .getArtifactMetadata(artifactId).snapshots
             .filter { it.status == SnapshotStatus.COMPLETE }

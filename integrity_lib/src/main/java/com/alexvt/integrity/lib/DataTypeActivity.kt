@@ -215,12 +215,11 @@ abstract class DataTypeActivity : AppCompatActivity() {
     }
 
     private fun showPreview(snapshot: SnapshotMetadata) {
-        val snapshotFolderName = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
-                snapshot.artifactId, snapshot.date)
         binding.ivPreview.visibility = View.VISIBLE
         Glide.with(this)
                 .asBitmap()
-                .load("$snapshotFolderName/_preview.png")
+                .load(IntegrityCore.getSnapshotPreviewPath(applicationContext, snapshot.artifactId,
+                        snapshot.date))
                 .apply(RequestOptions().dontAnimate())
                 .into(binding.ivPreview)
         binding.pbLoading.visibility = View.VISIBLE

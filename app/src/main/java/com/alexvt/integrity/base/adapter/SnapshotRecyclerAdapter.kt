@@ -15,6 +15,8 @@ import com.alexvt.integrity.base.activity.ArtifactViewActivity
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.SnapshotStatus
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import kotlinx.android.synthetic.main.artifact_list_item.view.*
 
 class SnapshotRecyclerAdapter(val items: ArrayList<Snapshot>, val artifactViewActivity: ArtifactViewActivity)
@@ -38,7 +40,7 @@ class SnapshotRecyclerAdapter(val items: ArrayList<Snapshot>, val artifactViewAc
         val artifactId = items.get(position).artifactId
         val date = items.get(position).date
 
-        holder.tvTitle?.text = items.get(position).title + " snapshot\nat " +
+        holder.view.tvTitle?.text = items.get(position).title + " snapshot\nat " +
                 items.get(position).date +
                 if (items.get(position).status == SnapshotStatus.BLUEPRINT) {
                     " (blueprint)"
@@ -49,12 +51,19 @@ class SnapshotRecyclerAdapter(val items: ArrayList<Snapshot>, val artifactViewAc
                 } else {
                     " (incomplete)"
                 }
-        holder.tvTitle.setOnClickListener {
+        holder.view.setOnClickListener {
             IntegrityCore.openViewSnapshotOrShowProgress(artifactViewActivity, artifactId, date)
         }
+
+        Glide.with(artifactViewActivity)
+                .asBitmap()
+                .load(IntegrityCore.getSnapshotPreviewPath(artifactViewActivity,
+                        items[position].artifactId, items[position].date))
+                .apply(RequestOptions()
+                        .dontAnimate()
+                        .error(R.drawable.baseline_waves_black_36))
+                .into(holder.view.ivPreview)
     }
 }
 
-class SnapshotViewHolder (view: View) : RecyclerView.ViewHolder(view) {
-    val tvTitle = view.tvTitle
-}
+class SnapshotViewHolder (val view: View) : RecyclerView.ViewHolder(view)

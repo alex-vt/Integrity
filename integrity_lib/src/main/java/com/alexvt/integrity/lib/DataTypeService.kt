@@ -83,7 +83,7 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
                 snapshot.date, "Saving preview")
         val previewScreenshot = generateOfflinePreview(snapshot.artifactId, snapshot.date,
                 getTypeMetadata(snapshot))
-        writePreviewScreenshotFile(dataFolderPath, previewScreenshot)
+        writePreviewScreenshotFile(snapshot.artifactId, snapshot.date, previewScreenshot)
 
         // RunningJobManager job shouldn't be removed because job may continue in same process.
         IntegrityEx.reportSnapshotDownloaded(applicationContext, snapshot.artifactId, snapshot.date)
@@ -102,9 +102,9 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
                 JsonSerializerUtil.toJson(snapshotMetadata), metadataFilePath)
     }
 
-    private fun writePreviewScreenshotFile(dataFolderPath: String, previewScreenshot: Bitmap) {
-        val screenshotFilePath = "$dataFolderPath/_preview.png"
-        DataCacheFolderUtil.writeImageToFile(applicationContext,
-                previewScreenshot, screenshotFilePath)
+    private fun writePreviewScreenshotFile(artifactId: Long, date: String,
+                                           previewScreenshot: Bitmap) {
+        DataCacheFolderUtil.writeImageToFile(applicationContext, previewScreenshot,
+                IntegrityCore.getSnapshotPreviewPath(applicationContext, artifactId, date))
     }
 }

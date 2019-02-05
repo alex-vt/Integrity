@@ -12,8 +12,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.activity.MainActivity
+import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.SnapshotStatus
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import kotlinx.android.synthetic.main.artifact_list_item.view.*
 
 class ArtifactRecyclerAdapter(val items: ArrayList<Snapshot>, val mainActivity: MainActivity)
@@ -36,7 +39,7 @@ class ArtifactRecyclerAdapter(val items: ArrayList<Snapshot>, val mainActivity: 
     override fun onBindViewHolder(holder: ArtifactViewHolder, position: Int) {
         val artifactId = items.get(position).artifactId
 
-        holder.tvTitle?.text = items.get(position).title + "\n" +
+        holder.view.tvTitle?.text = items.get(position).title + "\n" +
                 if (items.get(position).status == SnapshotStatus.BLUEPRINT) {
                     "blueprint only"
                 } else if (items.get(position).status == SnapshotStatus.COMPLETE) {
@@ -46,16 +49,23 @@ class ArtifactRecyclerAdapter(val items: ArrayList<Snapshot>, val mainActivity: 
                 } else {
                     "at "  + items.get(position).date + " (incomplete)"
                 }
-        holder.tvTitle.setOnClickListener {mainActivity.viewArtifact(artifactId)}
+        holder.view.setOnClickListener {mainActivity.viewArtifact(artifactId)}
 
-        holder.tvTitle.setOnLongClickListener {
+        holder.view.setOnLongClickListener {
             mainActivity.askRemoveArtifact(artifactId)
             false
         }
+
+        Glide.with(mainActivity)
+                .asBitmap()
+                .load(IntegrityCore.getSnapshotPreviewPath(mainActivity,
+                        items[position].artifactId, items[position].date))
+                .apply(RequestOptions()
+                        .dontAnimate()
+                        .error(R.drawable.baseline_waves_black_36))
+                .into(holder.view.ivPreview)
     }
 }
 
 
-class ArtifactViewHolder (view: View) : RecyclerView.ViewHolder(view) {
-    val tvTitle = view.tvTitle
-}
+class ArtifactViewHolder (val view: View) : RecyclerView.ViewHolder(view)

@@ -44,7 +44,10 @@
 
         <activity
             android:name="com.alexvt.integrity.base.activity.LogViewActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            >
         </activity>
 
         <activity

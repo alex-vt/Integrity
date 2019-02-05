@@ -24,7 +24,8 @@ object ErrorNotifier {
         val intent = Intent().apply {
             component = ComponentName("com.alexvt.integrity",
                     "com.alexvt.integrity.base.activity.LogViewActivity") // todo resolve
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                    Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
         }
         val logViewPendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
 

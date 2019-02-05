@@ -144,7 +144,6 @@ Stage 1
 Stage 2
 
 * UI design
-* Snapshot timeline
 * Universal search
 * Version migration
 * Conventional architecture

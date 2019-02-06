@@ -291,20 +291,23 @@ class BlogTypeActivity : DataTypeActivity() {
             = getTypeMetadata(snapshot).pagination is LinkedPagination
 
     private fun updateMatchedRelatedLinkList() {
-        try {
-            val allLinkMap = LinkUtil.ccsSelectLinks(loadedHtml, "", "", content.webView.url)
-            val matchedLinkMap = LinkUtil.ccsSelectLinks(loadedHtml,
-                    filter.etLinkPattern.text.toString(),
-                    filter.etRelatedLinkFilter.text.toString(), content.webView.url)
-            val unmatchedLinkMap = allLinkMap.minus(matchedLinkMap)
-            // matched shown first
-            (filter.rvRelatedLinkList.adapter as RelatedLinkRecyclerAdapter).setItems(
-                    matchedLinkMap.map { it -> MatchableLink(it.key, it.value, true) }
-                            .plus(unmatchedLinkMap.map { it -> MatchableLink(it.key as String, it.value, false) })
-            )
-        } catch (t: Throwable) {
-            Log(this, "Marched related links extraction failed").logError(t)
+        if (loadedHtml.isEmpty()) { // no links
+            (filter.rvRelatedLinkList.adapter as RelatedLinkRecyclerAdapter).setItems(emptyList())
+            return
         }
+        val allLinkMap = LinkUtil.ccsSelectLinks(loadedHtml, "", "", content.webView.url)
+        val matchedLinkMap = LinkUtil.ccsSelectLinks(loadedHtml,
+                filter.etLinkPattern.text.toString(),
+                filter.etRelatedLinkFilter.text.toString(), content.webView.url)
+        val unmatchedLinkMap = allLinkMap.minus(matchedLinkMap)
+        // matched shown first
+        (filter.rvRelatedLinkList.adapter as RelatedLinkRecyclerAdapter).setItems(
+                matchedLinkMap.map {
+                    MatchableLink(it.key, it.value, true)
+                }.plus(unmatchedLinkMap.map {
+                    MatchableLink(it.key as String, it.value, false)
+                })
+        )
     }
 
     private var loadedHtml = ""

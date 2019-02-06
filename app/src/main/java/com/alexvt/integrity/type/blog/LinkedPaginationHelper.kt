@@ -69,11 +69,17 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
     private fun getAdditionalLinksOnPage(currentPageLink: String, currentPageHtml: String,
                                          dl: BlogMetadataDownload) =
             if (dl.metadata.relatedPageLinksUsed) {
-                LinkUtil.ccsSelectLinks(currentPageHtml, dl.metadata.relatedPageLinksPattern,
+                val linksIncludingNextPage = LinkUtil.ccsSelectLinks(currentPageHtml,
+                        dl.metadata.relatedPageLinksPattern,
                         dl.metadata.relatedPageLinksFilter, currentPageLink)
                         .keys
                         .minus(currentPageLink)
-                        .minus(getNextPageLink(currentPageHtml, dl)) // next page link is not additional
+                val linksWithoutNextPage = if (hasNextPageLink(currentPageHtml, dl)) {
+                    linksIncludingNextPage.minus(getNextPageLink(currentPageHtml, dl))
+                } else {
+                    linksIncludingNextPage
+                }
+                linksWithoutNextPage
             } else {
                 setOf()
             }

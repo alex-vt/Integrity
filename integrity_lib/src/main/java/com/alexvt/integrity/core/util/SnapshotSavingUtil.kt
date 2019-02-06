@@ -119,7 +119,9 @@ object SnapshotSavingUtil {
             val snapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(
                     IntentUtil.getArtifactId(intent), IntentUtil.getDate(intent))
             if (IntentUtil.isDownloaded(intent)) {
-                archiveSnapshot(context, snapshot)
+                GlobalScope.launch(Dispatchers.IO) {
+                    archiveSnapshot(context, snapshot)
+                }
                 // Final. Archiving will continue in the main app process.
             } else {
                 postSnapshotDownloadProgress(context, snapshot, IntentUtil.getMessage(intent))

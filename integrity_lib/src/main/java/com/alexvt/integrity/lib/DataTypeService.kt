@@ -12,7 +12,7 @@ import android.graphics.Bitmap
 import androidx.core.app.JobIntentService
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.job.RunningJobManager
-import com.alexvt.integrity.core.util.DataCacheFolderUtil
+import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 
@@ -55,7 +55,7 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
     /**
      * Generates snapshot preview image using downloaded snapshot data.
      */
-    abstract fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: T): Bitmap
+    abstract fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: T)
 
     /**
      * Starts service job execution according to intent extras.
@@ -81,9 +81,7 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
         }
         IntegrityEx.reportSnapshotDownloadProgress(applicationContext, snapshot.artifactId,
                 snapshot.date, "Saving preview")
-        val previewScreenshot = generateOfflinePreview(snapshot.artifactId, snapshot.date,
-                getTypeMetadata(snapshot))
-        writePreviewScreenshotFile(snapshot.artifactId, snapshot.date, previewScreenshot)
+        generateOfflinePreview(snapshot.artifactId, snapshot.date, getTypeMetadata(snapshot))
 
         // RunningJobManager job shouldn't be removed because job may continue in same process.
         IntegrityEx.reportSnapshotDownloaded(applicationContext, snapshot.artifactId, snapshot.date)
@@ -105,6 +103,6 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
     private fun writePreviewScreenshotFile(artifactId: Long, date: String,
                                            previewScreenshot: Bitmap) {
         DataCacheFolderUtil.writeImageToFile(applicationContext, previewScreenshot,
-                IntegrityCore.getSnapshotPreviewPath(applicationContext, artifactId, date))
+                IntegrityEx.getSnapshotPreviewPath(applicationContext, artifactId, date))
     }
 }

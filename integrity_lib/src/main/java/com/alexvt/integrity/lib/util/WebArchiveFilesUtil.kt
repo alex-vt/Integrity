@@ -7,7 +7,6 @@
 package com.alexvt.integrity.lib.util
 
 import android.content.Context
-import com.alexvt.integrity.core.util.DataCacheFolderUtil
 
 object WebArchiveFilesUtil {
 

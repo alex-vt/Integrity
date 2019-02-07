@@ -11,7 +11,7 @@ import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexArchiveLinks
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexLinks
-import com.alexvt.integrity.lib.util.WebViewUtil
+import com.alexvt.integrity.lib.util.WebPageLoader
 import kotlinx.coroutines.delay
 
 internal class IndexedPaginationHelper : CommonPaginationHelper() {
@@ -25,12 +25,12 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
      * Pagination position is saved after page archiving:
      * on resume getNextPageLink will return the next page after the saved pagination position.
      */
-    override suspend fun downloadPages(dl: BlogMetadataDownload): Boolean {
+    override fun downloadPages(dl: BlogMetadataDownload): Boolean {
         while (isRunning(dl) && hasNextPageLink(dl)) {
             val currentPageLink = getNextPageLink(dl)
             android.util.Log.v("IndexedPaginationHelper", "downloadPages: $currentPageLink")
             val additionalLinksOnPage = getAdditionalLinksOnPage(currentPageLink, dl)
-            saveArchives(currentPageLink, additionalLinksOnPage, dl)
+            saveArchivesAndAddToSearchIndex(currentPageLink, additionalLinksOnPage, dl)
             persistPaginationProgress(currentPageLink, dl)
         }
         return true
@@ -48,14 +48,13 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
     override fun getPaginationProgress(dl: BlogMetadataDownload)
             = getPageIndexArchiveLinks(dl.context, dl.snapshotPath).size
 
-    private suspend fun getAdditionalLinksOnPage(currentPageLink: String,
+    private fun getAdditionalLinksOnPage(currentPageLink: String,
                                                  dl: BlogMetadataDownload): Set<String> {
         IntegrityEx.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
                 "Collecting links\n${getPaginationProgressText(currentPageLink, dl)}")
         return if (pageContentsNeeded(dl)) {
-            val currentPageHtml = WebViewUtil.loadHtml(dl.webView, currentPageLink,
-                    dl.metadata.loadImages, dl.metadata.desktopSite)
-            delay(dl.metadata.loadIntervalMillis)
+            val currentPageHtml = WebPageLoader().getHtml(dl.context, currentPageLink,
+                    dl.metadata.loadImages, dl.metadata.desktopSite, dl.metadata.loadIntervalMillis)
             LinkUtil.ccsSelectLinks(currentPageHtml, dl.metadata.relatedPageLinksPattern,
                     dl.metadata.relatedPageLinksFilter, currentPageLink)
                     .keys

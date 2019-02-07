@@ -13,8 +13,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.activity.ArtifactViewActivity
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.SnapshotStatus
+import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import kotlinx.android.synthetic.main.artifact_list_item.view.*
@@ -55,14 +57,20 @@ class SnapshotRecyclerAdapter(val items: ArrayList<Snapshot>, val artifactViewAc
             IntegrityCore.openViewSnapshotOrShowProgress(artifactViewActivity, artifactId, date)
         }
 
-        Glide.with(artifactViewActivity)
-                .asBitmap()
-                .load(IntegrityCore.getSnapshotPreviewPath(artifactViewActivity,
-                        items[position].artifactId, items[position].date))
-                .apply(RequestOptions()
-                        .dontAnimate()
-                        .error(R.drawable.baseline_waves_black_36))
-                .into(holder.view.ivPreview)
+        val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(artifactViewActivity,
+                items[position].artifactId, items[position].date)
+        if (!DataCacheFolderUtil.fileExists(artifactViewActivity, snapshotPreviewPath)) {
+            Glide.with(artifactViewActivity)
+                    .asBitmap()
+                    .load(R.drawable.baseline_waves_black_36)
+                    .into(holder.view.ivPreview)
+        } else {
+            Glide.with(artifactViewActivity)
+                    .asBitmap()
+                    .load(snapshotPreviewPath)
+                    .apply(RequestOptions().error(R.drawable.baseline_waves_black_36))
+                    .into(holder.view.ivPreview)
+        }
     }
 }
 

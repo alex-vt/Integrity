@@ -26,18 +26,16 @@ class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
                               typeMetadata: GitHubTypeMetadata): String {
         val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
 
-        runBlocking(Dispatchers.Main) {
-            delay(3000) // todo implement
-        }
+        // todo implement
+
         return snapshotPath
     }
 
     /**
      * Gets saved user page screenshot.
      */
-    override fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: GitHubTypeMetadata): Bitmap {
+    override fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: GitHubTypeMetadata) {
         // todo implement
-        return Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
     }
 
 }

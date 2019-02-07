@@ -22,7 +22,7 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.list.listItems
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.DataCacheFolderUtil
+import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.lib.databinding.ActivityDataTypeBinding
@@ -220,10 +220,14 @@ abstract class DataTypeActivity : AppCompatActivity() {
 
     private fun showPreview(snapshot: SnapshotMetadata) {
         binding.ivPreview.visibility = View.VISIBLE
+        val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(applicationContext,
+                snapshot.artifactId, snapshot.date)
+        if (!DataCacheFolderUtil.fileExists(this, snapshotPreviewPath)) {
+            return
+        }
         Glide.with(this)
                 .asBitmap()
-                .load(IntegrityCore.getSnapshotPreviewPath(applicationContext, snapshot.artifactId,
-                        snapshot.date))
+                .load(snapshotPreviewPath)
                 .apply(RequestOptions().dontAnimate())
                 .into(binding.ivPreview)
         binding.pbLoading.visibility = View.VISIBLE

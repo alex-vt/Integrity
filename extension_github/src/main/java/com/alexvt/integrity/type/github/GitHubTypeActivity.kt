@@ -17,9 +17,8 @@ import com.alexvt.integrity.type.github.databinding.GitHubTypeFilterBinding
 import com.alexvt.integrity.lib.DataTypeActivity
 import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
-import com.alexvt.integrity.lib.util.WebViewUtil
+import com.alexvt.integrity.lib.util.WebPageLoader
 import com.alexvt.integrity.lib.IntegrityEx
-import com.alexvt.integrity.lib.Log
 import com.alexvt.integrity.lib.SnapshotMetadata
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -86,7 +85,7 @@ class GitHubTypeActivity : DataTypeActivity() {
                             "file://$snapshotPath/")
             val firstArchivePath = linkToArchivePathRedirectMap.entries.firstOrNull()?.value
                     ?: "file:blank" // todo replace
-            WebViewUtil.loadHtml(content.webView,
+            WebPageLoader().loadHtml(content.webView,
                     firstArchivePath,
                     linkToArchivePathRedirectMap,
                     true,
@@ -138,7 +137,7 @@ class GitHubTypeActivity : DataTypeActivity() {
     private fun getUserName(snapshot: SnapshotMetadata) = getTypeMetadata(snapshot).userName
 
     private fun goToGitHubUserPage(snapshot: SnapshotMetadata, userName: String): Boolean {
-        WebViewUtil.loadHtml(content.webView, LinkUtil.getFullFormUrl("https://github.com/" + userName),
+        WebPageLoader().loadHtml(content.webView, LinkUtil.getFullFormUrl("https://github.com/" + userName),
                 emptyMap(), true, false) {
             android.util.Log.v(this.TAG, "Loaded page from: ${content.webView.url}")
             loadedHtml = it

@@ -30,6 +30,7 @@ import com.alexvt.integrity.core.tags.TagRepository
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.util.*
 import com.alexvt.integrity.lib.*
+import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 
 
@@ -131,10 +132,6 @@ object IntegrityCore {
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot.copy(status = SnapshotStatus.BLUEPRINT)) // as blueprint
         activity.startActivityForResult(intent, 0)
-    }
-
-    fun getSnapshotPreviewPath(context: Context, artifactId: Long, date: String): String {
-        return DataCacheFolderUtil.getSnapshotFolderPath(context, artifactId, date) + "/_preview.png"
     }
 
     private fun getCompleteSnapshotDates(artifactId: Long) = metadataRepository

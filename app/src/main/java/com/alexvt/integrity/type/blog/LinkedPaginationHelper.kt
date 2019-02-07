@@ -10,7 +10,7 @@ import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexArchiveLinks
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexLinks
-import com.alexvt.integrity.lib.util.WebViewUtil
+import com.alexvt.integrity.lib.util.WebPageLoader
 import kotlinx.coroutines.delay
 
 internal class LinkedPaginationHelper : CommonPaginationHelper() {
@@ -18,7 +18,7 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
     /**
      * Entry point for linked pagination.
      */
-    override suspend fun downloadPages(dl: BlogMetadataDownload)
+    override fun downloadPages(dl: BlogMetadataDownload)
             = downloadPages(getStartPage(dl), dl)
 
     /**
@@ -38,7 +38,7 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
      * Pagination position is saved before page archiving:
      * on resume getPageIndexLinks will return the page at pagination position.
      */
-    private tailrec suspend fun downloadPages(currentPageLink: String,
+    private tailrec fun downloadPages(currentPageLink: String,
                                               dl: BlogMetadataDownload): Boolean {
         if (!dl.metadata.paginationUsed || dl.metadata.pagination !is LinkedPagination) {
             return false // no linked pagination
@@ -50,19 +50,18 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
         android.util.Log.v("LinkedPaginationHelper", "downloadPages: $currentPageLink")
         val pageContents = getPageContents(currentPageLink, dl) // always needed to look for next page link
         val additionalLinksOnPage = getAdditionalLinksOnPage(currentPageLink, pageContents, dl)
-        saveArchives(currentPageLink, additionalLinksOnPage, dl)
+        saveArchivesAndAddToSearchIndex(currentPageLink, additionalLinksOnPage, dl)
         if (!hasNextPageLink(pageContents, dl)) {
             return true // no more pages exist or allowed
         }
         return downloadPages(getNextPageLink(pageContents, dl), dl)
     }
 
-    private suspend fun getPageContents(currentPageLink: String, dl: BlogMetadataDownload): String {
+    private fun getPageContents(currentPageLink: String, dl: BlogMetadataDownload): String {
         IntegrityEx.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
                 "Looking for links\n${getPaginationProgressText(currentPageLink, dl)}")
-        val contents = WebViewUtil.loadHtml(dl.webView, currentPageLink, dl.metadata.loadImages,
-                dl.metadata.desktopSite)
-        delay(dl.metadata.loadIntervalMillis)
+        val contents = WebPageLoader().getHtml(dl.context, currentPageLink, dl.metadata.loadImages,
+                dl.metadata.desktopSite, dl.metadata.loadIntervalMillis)
         return contents
     }
 
@@ -116,6 +115,6 @@ internal class LinkedPaginationHelper : CommonPaginationHelper() {
 
     private fun getNextPageLink(currentPageHtml: String, dl: BlogMetadataDownload)
             = LinkUtil.getMatchedLinks(currentPageHtml,
-            (dl.metadata.pagination as LinkedPagination).nextPageLinkFilter).first()
+            (dl.metadata.pagination as LinkedPagination).nextPageLinkFilter).last() // todo resolve multiple
 
 }

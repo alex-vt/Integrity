@@ -19,9 +19,8 @@ import com.alexvt.integrity.databinding.BlogTypeFilterBinding
 import com.alexvt.integrity.lib.DataTypeActivity
 import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
-import com.alexvt.integrity.lib.util.WebViewUtil
+import com.alexvt.integrity.lib.util.WebPageLoader
 import com.alexvt.integrity.lib.IntegrityEx
-import com.alexvt.integrity.lib.Log
 import com.alexvt.integrity.lib.SnapshotMetadata
 import com.jakewharton.rxbinding3.widget.checkedChanges
 import com.jakewharton.rxbinding3.widget.textChanges
@@ -184,7 +183,7 @@ class BlogTypeActivity : DataTypeActivity() {
                             .map { OfflineLink(it.key, it.value) })
             val firstArchivePath = linkToArchivePathRedirectMap.entries.firstOrNull()?.value
                     ?: "file:blank" // todo replace
-            WebViewUtil.loadHtml(content.webView,
+            WebPageLoader().loadHtml(content.webView,
                     firstArchivePath,
                     linkToArchivePathRedirectMap,
                     getTypeMetadata(snapshot).loadImages,
@@ -283,7 +282,7 @@ class BlogTypeActivity : DataTypeActivity() {
     }
 
     fun goToOfflinePageDirectly(urlToView: String) {
-        content.webView.loadUrl(urlToView) // todo use WebViewUtil; show current URL above when offline or editing
+        content.webView.loadUrl(urlToView) // todo use WebPageLoader; show current URL above when offline or editing
         closeFilterDrawer()
     }
 
@@ -319,7 +318,7 @@ class BlogTypeActivity : DataTypeActivity() {
     private fun getLatestSnapshotUrl(snapshot: SnapshotMetadata) = getTypeMetadata(snapshot).url
 
     private fun goToWebPage(snapshot: SnapshotMetadata, urlToView: String): Boolean {
-        WebViewUtil.loadHtml(content.webView, LinkUtil.getFullFormUrl(urlToView), emptyMap(),
+        WebPageLoader().loadHtml(content.webView, LinkUtil.getFullFormUrl(urlToView), emptyMap(),
                 getTypeMetadata(snapshot).loadImages, getTypeMetadata(snapshot).desktopSite) {
             android.util.Log.v(this.TAG, "Loaded page from: ${content.webView.url}")
             loadedHtml = it

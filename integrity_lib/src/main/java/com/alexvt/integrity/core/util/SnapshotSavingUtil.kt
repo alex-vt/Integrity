@@ -18,6 +18,7 @@ import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.job.ScheduledJobManager
 import com.alexvt.integrity.core.type.SnapshotDownloadStartRequest
 import com.alexvt.integrity.lib.Log
+import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope

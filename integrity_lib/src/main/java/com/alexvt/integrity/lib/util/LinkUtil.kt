@@ -7,6 +7,8 @@
 package com.alexvt.integrity.lib.util
 
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.safety.Whitelist
 import java.net.URL
 import java.util.regex.Pattern
 
@@ -26,6 +28,24 @@ object LinkUtil {
             .map { it.attr("href").trimEnd('/') }
             .filter { it.contains(partOfLink) }
             .toSet()
+
+    fun getVisibleTextWithLinks(html: String) = Jsoup.clean(html, "", whitelistWithLinks,
+            Document.OutputSettings().outline(true))!!
+            .replace("<a href=\"", "") // todo extract link as text in a better way
+            .replace("<a>", "")
+            .replace("</a>", "")
+            .replace("<img src=\"", "")
+            .replace("<img>", "")
+            .replace("</img>", "")
+            .replace("\">", "\n")
+
+    private val whitelistWithLinks = Whitelist()
+            .addTags("img")
+            .addAttributes("img", "src")
+            .addProtocols("img", "src", "http", "https")
+            .addTags("a")
+            .addAttributes("a", "href")
+            .addProtocols("a", "href", "ftp", "ftps", "http", "https", "mailto")
 
     val linkRegexString = "(?<=" + Pattern.quote("href=\"") + ")" +
             "[^\"]+" +

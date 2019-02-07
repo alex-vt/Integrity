@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.activity.MainActivity
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.SnapshotStatus
 import com.bumptech.glide.Glide
@@ -58,7 +59,7 @@ class ArtifactRecyclerAdapter(val items: ArrayList<Snapshot>, val mainActivity: 
 
         Glide.with(mainActivity)
                 .asBitmap()
-                .load(IntegrityCore.getSnapshotPreviewPath(mainActivity,
+                .load(IntegrityEx.getSnapshotPreviewPath(mainActivity,
                         items[position].artifactId, items[position].date))
                 .apply(RequestOptions()
                         .dontAnimate()

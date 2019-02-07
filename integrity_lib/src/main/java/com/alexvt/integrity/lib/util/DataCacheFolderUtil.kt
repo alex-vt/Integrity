@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.core.util
+package com.alexvt.integrity.lib.util
 
 import android.annotation.SuppressLint
 import android.content.Context

@@ -7,14 +7,10 @@
 package com.alexvt.integrity.type.blog
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.webkit.WebView
 import com.alexvt.integrity.lib.DataTypeService
 import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
-import com.alexvt.integrity.lib.util.WebViewUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import com.alexvt.integrity.lib.util.WebPageLoader
 
 class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
 
@@ -29,19 +25,16 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
                               typeMetadata: BlogTypeMetadata): String {
         val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
 
-        runBlocking(Dispatchers.Main) {
-            val dl = BlogMetadataDownload(
-                    context = applicationContext,
-                    artifactId = artifactId,
-                    date = date,
-                    webView = WebView(applicationContext),
-                    metadata = typeMetadata,
-                    snapshotPath = snapshotPath
-            )
+        val dl = BlogMetadataDownload(
+                context = applicationContext,
+                artifactId = artifactId,
+                date = date,
+                metadata = typeMetadata,
+                snapshotPath = snapshotPath
+        )
 
-            if (!LinkedPaginationHelper().downloadPages(dl)) {
-                IndexedPaginationHelper().downloadPages(dl)
-            }
+        if (!LinkedPaginationHelper().downloadPages(dl)) {
+            IndexedPaginationHelper().downloadPages(dl)
         }
 
         return snapshotPath
@@ -50,14 +43,16 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
     /**
      * Gets first saved page screenshot.
      */
-    override fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: BlogTypeMetadata): Bitmap {
+    override fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: BlogTypeMetadata) {
         val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
         val firstPageArchiveLink = WebArchiveFilesUtil.getPageIndexArchiveLinks(applicationContext,
                 snapshotPath).first()
-        return WebViewUtil.getScreenshot(applicationContext,
-                "file://$snapshotPath/$firstPageArchiveLink",
-                typeMetadata.loadIntervalMillis, typeMetadata.loadImages, typeMetadata.desktopSite)
-    }
+        val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(applicationContext, artifactId, date)
+
+        WebPageLoader().getHtmlAndSaveScreenshot(applicationContext,
+                "file://$snapshotPath/$firstPageArchiveLink", typeMetadata.loadImages,
+                typeMetadata.desktopSite, snapshotPreviewPath, typeMetadata.loadIntervalMillis)
+        }
 }
 
 /**
@@ -69,7 +64,6 @@ internal data class BlogMetadataDownload(
         val context: Context,
         val artifactId: Long,
         val date: String,
-        val webView: WebView,
         val metadata: BlogTypeMetadata,
         val snapshotPath: String
 )

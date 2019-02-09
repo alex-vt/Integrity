@@ -16,7 +16,9 @@ import com.alexvt.integrity.lib.SnapshotStatus
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.job.ScheduledJobManager
+import com.alexvt.integrity.core.search.DataChunks
 import com.alexvt.integrity.core.type.SnapshotDownloadStartRequest
+import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.Log
 import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.alexvt.integrity.lib.util.IntentUtil
@@ -179,6 +181,20 @@ object SnapshotSavingUtil {
                 snapshotInProgress.date)
         IntegrityCore.metadataRepository.addSnapshotMetadata(completeSnapshot)
         DataCacheFolderUtil.clearFiles(context) // folders remain
+        if (!RunningJobManager.isRunning(completeSnapshot)) {
+            return
+        }
+
+        if (DataCacheFolderUtil.fileExists(context, IntegrityEx.getSnapshotDataChunksPath(context,
+                        completeSnapshot.artifactId, completeSnapshot.date))) {
+            postSnapshotDownloadProgress(context, completeSnapshot, "Updating search index")
+            val dataChunkListJson = DataCacheFolderUtil.getTextFromFile(context,
+                    IntegrityEx.getSnapshotDataChunksPath(context,
+                    completeSnapshot.artifactId, completeSnapshot.date))
+            val dataChunks = JsonSerializerUtil.fromJson("{\"chunks\": [$dataChunkListJson]}",
+                    DataChunks::class.java).chunks // todo make clean, ensure no duplicates
+            IntegrityCore.searchIndexRepository.add(dataChunks)
+        }
 
         if (RunningJobManager.isRunning(completeSnapshot)) {
             postSnapshotDownloadProgress(context, completeSnapshot, "Done")

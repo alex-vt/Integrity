@@ -54,6 +54,16 @@ object PreferencesUtil {
     }
 
 
+    private val DATA_CHUNKS = "DATA_CHUNKS"
+
+    fun getDataChunksJson(context: Context)
+            = getSharedPreferences(context).getString(DATA_CHUNKS, null)
+
+    fun setDataChunksJson(context: Context, value: String) {
+        getPreferencesEditor(context).putString(DATA_CHUNKS, value).commit()
+    }
+
+
     private val PREFERENCES_NAME = "SHARED_PREFERENCES"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {

@@ -18,9 +18,6 @@ import com.alexvt.integrity.lib.Tag
  */
 object SimplePersistableTagRepository : TagRepository {
 
-    /**
-     * A collection of folder locations and credentials
-     */
     private data class Tags(val tagSet: LinkedHashSet<Tag> = linkedSetOf())
 
     private lateinit var tags: Tags

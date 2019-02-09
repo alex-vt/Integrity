@@ -9,7 +9,17 @@ package com.alexvt.integrity.core.search
 data class DataChunk(val artifactId: Long = 0,
                      val date: String = "",
                      val text: String = "",
-                     val links: ArrayList<Pair<String, String>> = arrayListOf()
+                     val index: String = "", // unique within the snapshot
+                     val links: ArrayList<NamedLink> = arrayListOf()
 )
 
-data class DataChunks(val dataChunkList: ArrayList<DataChunk> = arrayListOf())
+data class DataChunks(val chunks: ArrayList<DataChunk> = arrayListOf())
+
+data class NamedLink(val title: String = "", val link: String = "")
+
+data class SearchResult(val artifactTitle: String = "",
+                        val date: String = "",
+                        val searchedText: String = "",
+                        val viewedText: String = "",
+                        val viewedLinks: ArrayList<NamedLink> = arrayListOf()
+)

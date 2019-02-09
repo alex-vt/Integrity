@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.search.DataChunk
+import com.alexvt.integrity.core.search.NamedLink
 import com.alexvt.integrity.core.util.*
 import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.alexvt.integrity.lib.util.IntentUtil
@@ -39,13 +40,17 @@ object IntegrityEx {
         return DataCacheFolderUtil.getSnapshotFolderPath(context, artifactId, date) + "/_preview.png"
     }
 
-    fun addDataToSearchIndex(context: Context, artifactId: Long, date: String, text: String,
-                             vararg links: Pair<String, String>) {
-        val dataChunk = DataChunk(artifactId, date, text, arrayListOf(*links))
+    fun getSnapshotDataChunksPath(context: Context, artifactId: Long, date: String): String {
+        return DataCacheFolderUtil.getSnapshotFolderPath(context, artifactId, date) + "/_text.txt"
+    }
+
+    fun addDataForSearchIndex(context: Context, artifactId: Long, date: String, text: String,
+                              index: String, vararg links: Pair<String, String>) {
+        val dataChunk = DataChunk(artifactId, date, text, index,
+                ArrayList(links.map { NamedLink(it.first, it.second) }))
         val dataChunkJson = JsonSerializerUtil.toJson(dataChunk)
 
-        val snapshotPath = getSnapshotDataFolderPath(context, artifactId, date)
-        val textSearchIndexPath = "$snapshotPath/_text.txt"
+        val textSearchIndexPath = getSnapshotDataChunksPath(context, artifactId, date)
 
         // todo prevent duplicates
         val prefix = if (DataCacheFolderUtil.fileExists(context, textSearchIndexPath)) ",\n" else ""

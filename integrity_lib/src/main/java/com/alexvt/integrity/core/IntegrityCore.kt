@@ -25,6 +25,8 @@ import com.alexvt.integrity.core.filesystem.local.LocalFolderLocation
 import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocation
 import com.alexvt.integrity.core.log.*
 import com.alexvt.integrity.core.notification.ErrorNotifier
+import com.alexvt.integrity.core.search.SearchIndexRepository
+import com.alexvt.integrity.core.search.SimplePersistableSearchIndexRepository
 import com.alexvt.integrity.core.tags.SimplePersistableTagRepository
 import com.alexvt.integrity.core.tags.TagRepository
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
@@ -43,6 +45,7 @@ object IntegrityCore {
     lateinit var metadataRepository: MetadataRepository
     lateinit var folderLocationRepository: FolderLocationRepository
     lateinit var tagRepository: TagRepository
+    lateinit var searchIndexRepository: SearchIndexRepository
     lateinit var logRepository: LogRepository
 
     lateinit var context: Context
@@ -65,6 +68,8 @@ object IntegrityCore {
             folderLocationRepository.init(context)
             tagRepository = SimplePersistableTagRepository // todo replace with database
             tagRepository.init(context)
+            searchIndexRepository = SimplePersistableSearchIndexRepository // todo replace with database
+            searchIndexRepository.init(context)
 
             resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
             ScheduledJobManager.updateSchedule(context)
@@ -238,6 +243,7 @@ object IntegrityCore {
      */
     fun removeArtifact(artifactId: Long, alsoRemoveData: Boolean) {
         metadataRepository.removeArtifactMetadata(artifactId)
+        searchIndexRepository.removeForArtifact(artifactId)
         DataCacheFolderUtil.clear(context, artifactId)
         // todo alsoRemoveData if needed
     }
@@ -248,6 +254,7 @@ object IntegrityCore {
      */
     fun removeSnapshot(artifactId: Long, date: String, alsoRemoveData: Boolean) {
         metadataRepository.removeSnapshotMetadata(artifactId, date)
+        searchIndexRepository.removeForSnapshot(artifactId, date)
         DataCacheFolderUtil.clear(context, artifactId, date)
         // todo alsoRemoveData if needed
     }
@@ -258,6 +265,7 @@ object IntegrityCore {
      */
     fun removeAll(alsoRemoveData: Boolean) {
         metadataRepository.clear()
+        searchIndexRepository.clear()
         DataCacheFolderUtil.clear(context)
         // todo alsoRemoveData if needed
     }

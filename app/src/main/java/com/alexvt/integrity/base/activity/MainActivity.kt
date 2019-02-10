@@ -10,17 +10,25 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.adapter.ArtifactRecyclerAdapter
+import com.alexvt.integrity.base.adapter.SearchResultRecyclerAdapter
 import com.alexvt.integrity.base.adapter.JobRecyclerAdapter
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.search.DataChunk
+import com.alexvt.integrity.core.search.SearchResult
+import com.alexvt.integrity.core.search.SearchUtil
 import com.alexvt.integrity.lib.util.IntentUtil
+import com.jakewharton.rxbinding3.widget.textChanges
 import com.leinardi.android.speeddial.SpeedDialActionItem
+import io.reactivex.android.schedulers.AndroidSchedulers
 
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
@@ -48,9 +56,31 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
-        rvArtifactList.adapter = ArtifactRecyclerAdapter(ArrayList(), this)
+        rvSnapshotList.adapter = ArtifactRecyclerAdapter(ArrayList(), this)
         rvJobs.adapter = JobRecyclerAdapter(ArrayList(), this)
         bLog.setOnClickListener { viewLog() }
+        bindSearch()
+    }
+
+    private fun bindSearch() {
+        rvSearchResults.adapter = SearchResultRecyclerAdapter(ArrayList(), this)
+        etSearch.textChanges()
+                .debounce(500, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { search(it.toString().trim()) }
+    }
+
+    private fun search(searchedText: String) {
+        toolbar.title = if (searchedText.isBlank()) "Artifacts" else "Search"
+        if (searchedText.length >= 3) {
+            val searchResults = SearchUtil.searchText(searchedText)
+            (rvSearchResults.adapter as SearchResultRecyclerAdapter).setItems(searchResults)
+            tvNoResults.visibility = if (searchResults.isEmpty()) View.VISIBLE else View.GONE
+        } else {
+            tvNoResults.visibility = View.GONE
+        }
+        rvSnapshotList.visibility = if (searchedText.isBlank()) View.VISIBLE else View.GONE
+        rvSearchResults.visibility = if (searchedText.isBlank()) View.GONE else View.VISIBLE
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -71,7 +101,7 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         IntegrityCore.metadataRepository.addChangesListener(MainActivity::class.java.simpleName) {
-            refreshArtifactList()
+            refreshSnapshotList()
         }
         IntegrityCore.subscribeToScheduledJobListing(MainActivity::class.java.simpleName) {
             refreshJobList(it, false)
@@ -117,8 +147,8 @@ class MainActivity : AppCompatActivity() {
                 .show()
     }
 
-    private fun refreshArtifactList() {
-        (rvArtifactList.adapter as ArtifactRecyclerAdapter)
+    private fun refreshSnapshotList() {
+        (rvSnapshotList.adapter as ArtifactRecyclerAdapter)
                 .setItems(IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(true)
                         .snapshots.toList())
     }

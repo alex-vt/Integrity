@@ -271,14 +271,6 @@ object IntegrityCore {
     }
 
     /**
-     * Returns artifacts with only those snapshots data in which contains the provided query text.
-     */
-    fun searchText(queryText: String): List<MetadataCollection> {
-        // todo
-        return ArrayList()
-    }
-
-    /**
      * Checks integrity of all stored and archived metadata, and also optionally the data.
      *
      * If data verification is not required,

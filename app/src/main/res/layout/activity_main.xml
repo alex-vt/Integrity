@@ -46,10 +46,28 @@
             tools:showIn="@layout/activity_main">
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvArtifactList"
+                android:id="@+id/rvSnapshotList"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:visibility="gone"
+                android:id="@+id/rvSearchResults"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                />
+
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/tvNoResults"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:text="No results"
+                android:gravity="center"
+                />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -63,11 +81,71 @@
             app:sdMainFabOpenedSrc="@android:drawable/ic_menu_close_clear_cancel"
             />
 
+        <!-- Bottom sheet -->
+        <LinearLayout
+            android:id="@+id/llBottomSheet"
+            android:layout_width="match_parent"
+            android:layout_height="350dp"
+            android:background="@android:color/background_light"
+            android:orientation="vertical"
+            app:behavior_hideable="false"
+            app:behavior_peekHeight="68dp"
+            android:elevation="10dp"
+            app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+            android:clickable="true"
+            >
+
+            <!-- Header of bottom sheet -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <View
+                    android:id="@+id/vPullUpTab"
+                    android:layout_width="50dp"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="6dp"
+                    android:layout_centerHorizontal="true"
+                    android:background="@android:color/darker_gray" />
+
+                <EditText
+                    android:id="@+id/etSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:hint="Search"
+                    android:layout_below="@+id/vPullUpTab"
+                    android:inputType="text"
+                    />
+
+                <TextView
+                    android:id="@+id/tvExplore"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:text="Explore"
+                    android:layout_below="@+id/etSearch"
+                    />
+
+                <TextView
+                    android:id="@+id/tvEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:text="(empty)"
+                    android:layout_below="@+id/tvExplore"
+                    />
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <!-- Main drawer -->
     <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nvFilter"
+        android:id="@+id/nvMainDrawer"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"

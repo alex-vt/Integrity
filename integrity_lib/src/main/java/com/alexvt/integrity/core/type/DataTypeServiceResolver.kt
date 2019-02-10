@@ -28,6 +28,7 @@ object DataTypeServiceResolver {
         intent.component = componentName
 
         JobIntentService.enqueueWork(context, componentName, 100, intent)
+        android.util.Log.v("DataTypeServiceResolver", "JobIntentService enqueueWork $intent")
     }
 
     private fun getDataTypeServiceInfo(context: Context, packageName: String) =

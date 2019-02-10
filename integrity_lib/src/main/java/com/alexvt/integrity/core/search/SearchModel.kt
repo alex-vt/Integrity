@@ -17,9 +17,13 @@ data class DataChunks(val chunks: ArrayList<DataChunk> = arrayListOf())
 
 data class NamedLink(val title: String = "", val link: String = "")
 
-data class SearchResult(val artifactTitle: String = "",
-                        val date: String = "",
-                        val searchedText: String = "",
-                        val viewedText: String = "",
-                        val viewedLinks: ArrayList<NamedLink> = arrayListOf()
+/**
+ * User viewable data chunk part containing its text truncated around the searched text in it,
+ * and the most relevant links (around the searched text, and general ones in the data chunk).
+ */
+data class SearchResult(val snapshotTitle: String,
+                        val date: String,
+                        val truncatedText: String,
+                        val highlightRange: IntRange,
+                        val relevantLinkOrNull: NamedLink?
 )

@@ -50,7 +50,7 @@ internal abstract class CommonPaginationHelper {
                                 + getPaginationProgressText(currentPageLink, dl))
                 IntegrityEx.addDataForSearchIndex(dl.context, dl.artifactId, dl.date,
                         LinkUtil.getVisibleTextWithLinks(pageHtml), "${pageIndex}_$linkIndex",
-                        "Page archive" to webArchivePath)
+                        "Page archive" to "file://$webArchivePath")
             }
         } }
     }

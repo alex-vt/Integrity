@@ -88,13 +88,15 @@ class MainActivity : AppCompatActivity() {
                 false
             }
         } else {
-            IntegrityCore.getTypeNames()
-                    .forEachIndexed { index, component -> sdAdd.addActionItem(SpeedDialActionItem
-                            .Builder(index, android.R.drawable.ic_input_add)
-                            .setLabel(component.className.substringAfterLast(".")
-                                    .removeSuffix("TypeActivity")) // todo names from resources
-                            .create())
-                    }
+            IntegrityCore.getTypeNames().map {
+                // todo names from resources
+                it.className.substringAfterLast(".").removeSuffix("TypeActivity")
+            }.forEachIndexed {
+                index, name -> sdAdd.addActionItem(SpeedDialActionItem
+                    .Builder(index, android.R.drawable.ic_input_add)
+                    .setLabel(name)
+                    .create())
+            }
             sdAdd.setOnActionSelectedListener { speedDialActionItem ->
                 val typeName = IntegrityCore.getTypeNames().toList()[speedDialActionItem.id]
                 IntegrityCore.openCreateNewArtifact(this, typeName)
@@ -148,6 +150,7 @@ class MainActivity : AppCompatActivity() {
         }
         rvSnapshotList.visibility = if (searchedText.isBlank()) View.VISIBLE else View.GONE
         rvSearchResults.visibility = if (searchedText.isBlank()) View.GONE else View.VISIBLE
+        sdAdd.visibility = if (searchedText.isBlank()) View.VISIBLE else View.GONE
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

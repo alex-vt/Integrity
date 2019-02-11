@@ -8,9 +8,6 @@ package com.alexvt.integrity.base.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
@@ -28,6 +25,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
+import android.view.*
+import com.alexvt.integrity.util.SpeedDialCompatUtil
 
 
 class MainActivity : AppCompatActivity() {
@@ -41,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         refreshSnapshotList(inputs.filteredArtifactId)
         search(inputs.searchText, inputs.filteredArtifactId)
         updateFilterView(inputs.filteredArtifactId)
-        updateAddArtifactButton(inputs.filteredArtifactId)
+        updateAddButton(inputs.filteredArtifactId)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         bindDrawer()
+        bindAddButton()
         bindSnapshotList()
         bindFilter()
         bindSearch()
@@ -73,7 +73,11 @@ class MainActivity : AppCompatActivity() {
         rvSnapshotList.adapter = ArtifactRecyclerAdapter(ArrayList(), this)
     }
 
-    private fun updateAddArtifactButton(artifactId: Long?) {
+    private fun bindAddButton() {
+        SpeedDialCompatUtil.setStayOnExpand(sdAdd)
+    }
+
+    private fun updateAddButton(artifactId: Long?) {
         sdAdd.clearActionItems()
         if (artifactId != null) {
             sdAdd.addActionItem(SpeedDialActionItem.Builder(0, android.R.drawable.ic_input_add)

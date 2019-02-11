@@ -144,7 +144,7 @@ Stage 1
 Stage 2
 
 * UI design
-* Universal search
+* Advanced search
 * Version migration
 * Conventional architecture
 * Testing

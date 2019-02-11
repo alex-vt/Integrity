@@ -38,11 +38,6 @@
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.base.activity.ArtifactViewActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
-
-        <activity
             android:name="com.alexvt.integrity.base.activity.LogViewActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:taskAffinity=""

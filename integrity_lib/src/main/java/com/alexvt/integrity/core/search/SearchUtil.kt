@@ -11,8 +11,9 @@ import java.util.regex.Pattern
 
 object SearchUtil {
 
-    fun searchText(searchedText: String) = IntegrityCore.searchIndexRepository
+    fun searchText(searchedText: String, artifactId: Long?) = IntegrityCore.searchIndexRepository
             .searchText(searchedText)
+            .filter { if (artifactId != null) it.artifactId == artifactId else true }
             .map { chunk -> getLocationsOfSearchedText(chunk.text, searchedText)
                     .map { range -> run {
                         val truncatedTextWithHighlightRange = truncateTextRange(chunk.text, range)

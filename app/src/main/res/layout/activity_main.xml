@@ -75,8 +75,10 @@
             android:id="@+id/sdAdd"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
+            app:layout_anchorGravity="bottom|end"
+            app:layout_insetEdge="bottom"
+            app:layout_anchor="@+id/llBottomSheet"
+            android:layout_marginRight="@dimen/fab_margin"
             app:sdMainFabClosedSrc="@android:drawable/ic_input_add"
             app:sdMainFabOpenedSrc="@android:drawable/ic_menu_close_clear_cancel"
             />
@@ -89,7 +91,7 @@
             android:background="@android:color/background_light"
             android:orientation="vertical"
             app:behavior_hideable="false"
-            app:behavior_peekHeight="68dp"
+            app:behavior_peekHeight="80dp"
             android:elevation="10dp"
             app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
             android:clickable="true"
@@ -119,13 +121,45 @@
                     android:inputType="text"
                     />
 
+                <RelativeLayout
+                    android:id="@+id/llFilteredArtifact"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_below="@+id/etSearch"
+                    android:background="@color/colorShade"
+                    >
+
+                    <TextView
+                        android:id="@+id/tvFilteredArtifactTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Viewing in: Filtered Artifact Title"
+                        android:layout_centerVertical="true"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginRight="5dp"
+                        android:ellipsize="end"
+                        />
+
+                    <ImageView
+                        android:id="@+id/ivUnFilterArtifact"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@android:drawable/ic_delete"
+                        android:layout_alignParentEnd="true"
+                        android:padding="3dp"
+                        />
+
+                </RelativeLayout>
+
                 <TextView
                     android:id="@+id/tvExplore"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="20dp"
                     android:text="Explore"
-                    android:layout_below="@+id/etSearch"
+                    android:layout_below="@+id/llFilteredArtifact"
                     />
 
                 <TextView

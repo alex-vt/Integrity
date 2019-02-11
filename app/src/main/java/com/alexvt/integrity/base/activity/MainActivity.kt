@@ -19,9 +19,8 @@ import com.alexvt.integrity.base.adapter.ArtifactRecyclerAdapter
 import com.alexvt.integrity.base.adapter.SearchResultRecyclerAdapter
 import com.alexvt.integrity.base.adapter.JobRecyclerAdapter
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.search.DataChunk
-import com.alexvt.integrity.core.search.SearchResult
 import com.alexvt.integrity.core.search.SearchUtil
+import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.jakewharton.rxbinding3.widget.textChanges
 import com.leinardi.android.speeddial.SpeedDialActionItem
@@ -33,33 +32,83 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
+    data class Inputs(val filteredArtifactId: Long?, val searchText: String)
+
+    private var inputs: Inputs = Inputs(null, "")
+
+    private fun onInputsUpdate(newInputs: Inputs) {
+        inputs = newInputs
+        refreshSnapshotList(inputs.filteredArtifactId)
+        search(inputs.searchText, inputs.filteredArtifactId)
+        updateFilterView(inputs.filteredArtifactId)
+        updateAddArtifactButton(inputs.filteredArtifactId)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        setupDrawerToggle()
-        toolbar.title = "Artifacts"
+        bindDrawer()
+        bindSnapshotList()
+        bindFilter()
+        bindSearch()
 
-        // Float Action Button action items for each available data type
-        // Data type map is sorted by key, so the value will be obtained by index of clicked action
-        IntegrityCore.getTypeNames()
-                .forEachIndexed { index, component ->
-            sdAdd.addActionItem(SpeedDialActionItem.Builder(index, android.R.drawable.ic_input_add)
-                    .setLabel(component.className.substringAfterLast(".")
-                            .removeSuffix("TypeActivity")) // todo names from resources
-                    .create())
-        }
-        sdAdd.setOnActionSelectedListener { speedDialActionItem ->
-            val typeName = IntegrityCore.getTypeNames().toList()[speedDialActionItem.id]
-            IntegrityCore.openCreateNewArtifact(this, typeName)
-            false
-        }
+        onInputsUpdate(inputs)
+    }
 
-        rvSnapshotList.adapter = ArtifactRecyclerAdapter(ArrayList(), this)
+    private fun bindDrawer() {
+        // toggling
+        supportActionBar!!.setDisplayShowTitleEnabled(false)
+        val drawerToggle = ActionBarDrawerToggle(this, dlAllContent, toolbar, 0, 0)
+        dlAllContent.setDrawerListener(drawerToggle)
+        drawerToggle.syncState()
+
+        // content
         rvJobs.adapter = JobRecyclerAdapter(ArrayList(), this)
         bLog.setOnClickListener { viewLog() }
-        bindSearch()
+    }
+
+    private fun bindSnapshotList() {
+        rvSnapshotList.adapter = ArtifactRecyclerAdapter(ArrayList(), this)
+    }
+
+    private fun updateAddArtifactButton(artifactId: Long?) {
+        sdAdd.clearActionItems()
+        if (artifactId != null) {
+            sdAdd.addActionItem(SpeedDialActionItem.Builder(0, android.R.drawable.ic_input_add)
+                    .setLabel("Create another snapshot")
+                    .create())
+            sdAdd.setOnActionSelectedListener { speedDialActionItem ->
+                addSnapshot(artifactId)
+                false
+            }
+        } else {
+            IntegrityCore.getTypeNames()
+                    .forEachIndexed { index, component -> sdAdd.addActionItem(SpeedDialActionItem
+                            .Builder(index, android.R.drawable.ic_input_add)
+                            .setLabel(component.className.substringAfterLast(".")
+                                    .removeSuffix("TypeActivity")) // todo names from resources
+                            .create())
+                    }
+            sdAdd.setOnActionSelectedListener { speedDialActionItem ->
+                val typeName = IntegrityCore.getTypeNames().toList()[speedDialActionItem.id]
+                IntegrityCore.openCreateNewArtifact(this, typeName)
+                false
+            }
+        }
+    }
+
+    private fun bindFilter() {
+        ivUnFilterArtifact.setOnClickListener { removeArtifactFilter() }
+    }
+
+    private fun updateFilterView(artifactId: Long?) {
+        if (artifactId != null) {
+            tvFilteredArtifactTitle.text = IntegrityCore.metadataRepository
+                    .getLatestSnapshotMetadata(artifactId).title
+        }
+        llFilteredArtifact.visibility = if (artifactId != null) View.VISIBLE else View.GONE
     }
 
     private fun bindSearch() {
@@ -67,13 +116,27 @@ class MainActivity : AppCompatActivity() {
         etSearch.textChanges()
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { search(it.toString().trim()) }
+                .subscribe { onInputsUpdate(inputs.copy(searchText = it.trim().toString())) }
     }
 
-    private fun search(searchedText: String) {
-        toolbar.title = if (searchedText.isBlank()) "Artifacts" else "Search"
+    private fun search(searchedText: String, filteredArtifactId: Long?) {
+        if (searchedText.isBlank()) {
+            toolbar.title = "Snapshots"
+            toolbar.subtitle = when {
+                filteredArtifactId != null -> "of ${IntegrityCore.metadataRepository
+                        .getLatestSnapshotMetadata(filteredArtifactId).title}"
+                else -> "Recent in all"
+            }
+        } else {
+            toolbar.title = "Search"
+            toolbar.subtitle = when {
+                filteredArtifactId != null -> "in ${IntegrityCore.metadataRepository
+                        .getLatestSnapshotMetadata(filteredArtifactId).title}"
+                else -> "In all"
+            }
+        }
         if (searchedText.length >= 3) {
-            val searchResults = SearchUtil.searchText(searchedText)
+            val searchResults = SearchUtil.searchText(searchedText, filteredArtifactId)
             (rvSearchResults.adapter as SearchResultRecyclerAdapter).setItems(searchResults)
             tvNoResults.visibility = if (searchResults.isEmpty()) View.VISIBLE else View.GONE
         } else {
@@ -91,17 +154,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun setupDrawerToggle() {
-        supportActionBar!!.setDisplayShowTitleEnabled(false)
-        val drawerToggle = ActionBarDrawerToggle(this, dlAllContent, toolbar, 0, 0)
-        dlAllContent.setDrawerListener(drawerToggle)
-        drawerToggle.syncState()
-    }
-
     override fun onStart() {
         super.onStart()
         IntegrityCore.metadataRepository.addChangesListener(MainActivity::class.java.simpleName) {
-            refreshSnapshotList()
+            refreshSnapshotList(inputs.filteredArtifactId)
         }
         IntegrityCore.subscribeToScheduledJobListing(MainActivity::class.java.simpleName) {
             refreshJobList(it, false)
@@ -129,29 +185,36 @@ class MainActivity : AppCompatActivity() {
         MaterialDialog(this)
                 .title(text = "Delete artifact?\nData archives will not be affected.")
                 .positiveButton(text = "Delete") {
-                    dialog ->
                     IntegrityCore.removeArtifact(artifactId, false)
                 }
                 .negativeButton(text = "Cancel")
                 .show()
     }
 
-    fun askRemoveAll() {
+    private fun askRemoveAll() {
         MaterialDialog(this)
                 .title(text = "Delete all artifacts?")
                 .positiveButton(text = "Delete") {
-                    dialog ->
                     IntegrityCore.removeAll(false)
                 }
                 .negativeButton(text = "Cancel")
                 .show()
     }
 
-    private fun refreshSnapshotList() {
+    fun addSnapshot(artifactId: Long) = IntegrityCore.openCreateNewSnapshot(this, artifactId)
+
+    private fun refreshSnapshotList(artifactId: Long?) {
+        val snapshots = when (artifactId) {
+            null -> IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(true)
+            else -> IntegrityCore.metadataRepository.getArtifactMetadata(artifactId)
+        }.snapshots
         (rvSnapshotList.adapter as ArtifactRecyclerAdapter)
-                .setItems(IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(true)
-                        .snapshots.toList())
+                .setItems(snapshots.map { Pair(it, getSnapshotCount(it.artifactId)) }.toList(),
+                        inputs.filteredArtifactId == null)
     }
+
+    private fun getSnapshotCount(artifactId: Long) = IntegrityCore.metadataRepository
+            .getArtifactMetadata(artifactId).snapshots.count()
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -159,42 +222,41 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_folder_locations -> {
-                viewFolderLocations()
-                true
-            }
-            R.id.action_tags -> {
-                viewTags()
-                true
-            }
-            R.id.action_delete_all -> {
-                askRemoveAll()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.action_folder_locations -> {
+            viewFolderLocations()
+            true
         }
+        R.id.action_tags -> {
+            viewTags()
+            true
+        }
+        R.id.action_delete_all -> {
+            askRemoveAll()
+            true
+        }
+        else -> super.onOptionsItemSelected(item)
     }
 
-    fun viewLog() {
+    private fun viewLog() {
         startActivity(Intent(this, LogViewActivity::class.java))
     }
 
-    fun viewFolderLocations() {
+    private fun viewFolderLocations() {
         startActivity(Intent(this, FolderLocationsActivity::class.java))
     }
 
-    fun viewTags() {
+    private fun viewTags() {
         startActivity(Intent(this, TagsActivity::class.java))
     }
 
-    fun viewArtifact(artifactId: Long) {
-        val intent = Intent(this, ArtifactViewActivity::class.java)
-        intent.putExtra("artifactId", artifactId)
-        startActivity(intent)
+    fun filterArtifact(artifactId: Long?) {
+        onInputsUpdate(inputs.copy(filteredArtifactId = artifactId))
+    }
+
+    private fun removeArtifactFilter() = filterArtifact(null)
+
+    fun viewSnapshot(snapshot: Snapshot) {
+        IntegrityCore.openViewSnapshotOrShowProgress(this, snapshot.artifactId, snapshot.date)
     }
 }

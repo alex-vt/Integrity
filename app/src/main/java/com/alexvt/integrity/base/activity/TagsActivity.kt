@@ -50,7 +50,7 @@ class TagsActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        refreshTagList()
+        refreshTagList() // no other sources of data, no need to listen to changes
     }
 
 

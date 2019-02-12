@@ -41,16 +41,16 @@ object SimplePersistableLogRepository : LogRepository {
     /**
      * Registers database contents changes listener with a tag.
      */
-    override fun addChangesListener(tag: String, changesListener: () -> Unit) {
-        changesListenerMap = changesListenerMap.plus(Pair(tag, changesListener))
+    override fun addChangesListener(context: Context, changesListener: () -> Unit) {
+        changesListenerMap = changesListenerMap.plus(Pair(context.toString(), changesListener))
         invokeChangesListeners()
     }
 
     /**
      * Removes database contents changes listener by a tag
      */
-    override fun removeChangesListener(tag: String) {
-        changesListenerMap = changesListenerMap.minus(tag)
+    override fun removeChangesListener(context: Context) {
+        changesListenerMap = changesListenerMap.minus(context.toString())
     }
 
     private fun invokeChangesListeners() {

@@ -276,23 +276,23 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        IntegrityCore.metadataRepository.addChangesListener(MainActivity::class.java.simpleName) {
+        IntegrityCore.metadataRepository.addChangesListener(this) {
             refreshSnapshotList(inputs.filteredArtifactId)
         }
-        IntegrityCore.subscribeToScheduledJobListing(MainActivity::class.java.simpleName) {
+        IntegrityCore.subscribeToScheduledJobListing(this) {
             refreshJobList(it, false)
         }
-        IntegrityCore.subscribeToRunningJobListing(MainActivity::class.java.simpleName) {
+        IntegrityCore.subscribeToRunningJobListing(this) {
             refreshJobList(it, true)
         }
         updateDrawer(IntegrityCore.logRepository.getUnreadErrors().count())
     }
 
     override fun onStop() {
+        IntegrityCore.metadataRepository.removeChangesListener(this)
+        IntegrityCore.unsubscribeFromScheduledJobListing(this)
+        IntegrityCore.unsubscribeFromRunningJobListing(this)
         super.onStop()
-        IntegrityCore.metadataRepository.removeChangesListener(MainActivity::class.java.simpleName)
-        IntegrityCore.unsubscribeFromScheduledJobListing(MainActivity::class.java.simpleName)
-        IntegrityCore.unsubscribeFromRunningJobListing(MainActivity::class.java.simpleName)
     }
 
     private fun refreshJobList(scheduledJobIds: List<Pair<Long, String>>, isRunning: Boolean) {

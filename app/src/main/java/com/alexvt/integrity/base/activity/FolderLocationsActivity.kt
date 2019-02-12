@@ -57,7 +57,7 @@ class FolderLocationsActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        refreshFolderLocationList()
+        refreshFolderLocationList() // no other sources of data, no need to listen to changes
     }
 
 

@@ -162,20 +162,20 @@ object IntegrityCore {
         SnapshotSavingUtil.saveSnapshot(context, snapshot)
     }
 
-    fun subscribeToRunningJobListing(tag: String, jobsListener: (List<Pair<Long, String>>) -> Unit) {
-        RunningJobManager.addJobListListener(tag, jobsListener)
+    fun subscribeToRunningJobListing(context: Context, jobsListener: (List<Pair<Long, String>>) -> Unit) {
+        RunningJobManager.addJobListListener(context.toString(), jobsListener)
     }
 
-    fun unsubscribeFromRunningJobListing(tag: String) {
-        RunningJobManager.removeJobListListener(tag)
+    fun unsubscribeFromRunningJobListing(context: Context) {
+        RunningJobManager.removeJobListListener(context.toString())
     }
 
-    fun subscribeToScheduledJobListing(tag: String, jobsListener: (List<Pair<Long, String>>) -> Unit) {
-        ScheduledJobManager.addScheduledJobsListener(tag, jobsListener)
+    fun subscribeToScheduledJobListing(context: Context, jobsListener: (List<Pair<Long, String>>) -> Unit) {
+        ScheduledJobManager.addScheduledJobsListener(context.toString(), jobsListener)
     }
 
-    fun unsubscribeFromScheduledJobListing(tag: String) {
-        ScheduledJobManager.removeScheduledJobsListener(tag)
+    fun unsubscribeFromScheduledJobListing(context: Context) {
+        ScheduledJobManager.removeScheduledJobsListener(context.toString())
     }
 
     fun getNextJobRunTimestamp(snapshot: Snapshot)

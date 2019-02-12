@@ -29,14 +29,14 @@ class LogViewActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        IntegrityCore.logRepository.addChangesListener(LogViewActivity::class.java.simpleName) {
+        IntegrityCore.logRepository.addChangesListener(this) {
             refreshLogList()
         }
     }
 
     override fun onStop() {
+        IntegrityCore.logRepository.removeChangesListener(this)
         super.onStop()
-        IntegrityCore.logRepository.removeChangesListener(LogViewActivity::class.java.simpleName)
     }
 
     private fun refreshLogList() {

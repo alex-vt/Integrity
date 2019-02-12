@@ -25,12 +25,12 @@ interface MetadataRepository {
      * Registers database contents changes listener with a tag.
      * todo narrow down to tracking changes of subset of data
      */
-    fun addChangesListener(tag: String, changesListener: () -> Unit)
+    fun addChangesListener(context: Context, changesListener: () -> Unit)
 
     /**
      * Removes database contents changes listener by a tag
      */
-    fun removeChangesListener(tag: String)
+    fun removeChangesListener(context: Context)
 
     /**
      * Writes snapshot metadata to database.

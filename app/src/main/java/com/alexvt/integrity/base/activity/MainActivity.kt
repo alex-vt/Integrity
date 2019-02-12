@@ -8,13 +8,11 @@ package com.alexvt.integrity.base.activity
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
-import com.alexvt.integrity.base.adapter.ArtifactRecyclerAdapter
+import com.alexvt.integrity.base.adapter.SnapshotRecyclerAdapter
 import com.alexvt.integrity.base.adapter.SearchResultRecyclerAdapter
-import com.alexvt.integrity.base.adapter.JobRecyclerAdapter
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.search.SearchUtil
 import com.alexvt.integrity.lib.Snapshot
@@ -26,12 +24,25 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
 import android.view.*
+import androidx.databinding.DataBindingUtil
+import co.zsmb.materialdrawerkt.builders.drawer
+import co.zsmb.materialdrawerkt.builders.footer
+import co.zsmb.materialdrawerkt.draweritems.badgeable.primaryItem
+import co.zsmb.materialdrawerkt.draweritems.divider
+import co.zsmb.materialdrawerkt.draweritems.toggleable.toggleItem
+import com.alexvt.integrity.databinding.DrawerHeaderBinding
 import com.alexvt.integrity.util.SpeedDialCompatUtil
+import com.mikepenz.materialdrawer.Drawer
+import com.mikepenz.materialdrawer.holder.BadgeStyle
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
 
     data class Inputs(val filteredArtifactId: Long?, val searchText: String)
+
+    private lateinit var drawer: Drawer
 
     private var inputs: Inputs = Inputs(null, "")
 
@@ -58,19 +69,121 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun bindDrawer() {
-        // toggling
-        supportActionBar!!.setDisplayShowTitleEnabled(false)
-        val drawerToggle = ActionBarDrawerToggle(this, dlAllContent, toolbar, 0, 0)
-        dlAllContent.setDrawerListener(drawerToggle)
-        drawerToggle.syncState()
+        drawer = drawer {
+            toolbar = this@MainActivity.toolbar
+            selectedItem = -1
+            // Header is updatable
+            primaryItem("Running jobs") {} // updatable
+            primaryItem("Up next") {} // updatable
+            divider {}
+            primaryItem("Archives & Storage") {
+                selectable = false
+                onClick { _ ->
+                    viewFolderLocations() // todo also show data cache folder
+                    false
+                }
+            }
+            primaryItem("Tags") {
+                selectable = false
+                onClick { _ ->
+                    viewTags()
+                    false
+                }
+            }
+            divider {}
+            primaryItem("Extensions") {
+                selectable = false
+                onClick { _ ->
+                    // todo go to tab in settings
+                    false
+                }
+            }
+            divider {}
+            primaryItem("Recover...") {
+                selectable = false
+                enabled = false
+                onClick { _ ->
+                    // todo show options for snapshots (including app settings) recovery from archives
+                    false
+                }
+            }
+            footer {
+                toggleItem("Offline mode") {
+                    selectable = false
+                    enabled = false
+                    onToggled {
+                        // todo (also show notification)
+                    }
+                }
+                divider {}
+                primaryItem("Log") {} // updatable
+                primaryItem("Settings") {
+                    selectable = false
+                    onClick { _ ->
+                        // todo
+                        false
+                    }
+                }
+                primaryItem("Help") {
+                    selectable = false
+                    onClick { _ ->
+                        // todo
+                        false
+                    }
+                }
+                divider {}
+                primaryItem("Legal") {
+                    selectable = false
+                    onClick { _ ->
+                        // todo
+                        false
+                    }
+                }
+            }
+            actionBarDrawerToggleAnimated = true
+            actionBarDrawerToggleEnabled = true
+        }
+    }
 
-        // content
-        rvJobs.adapter = JobRecyclerAdapter(ArrayList(), this)
-        bLog.setOnClickListener { viewLog() }
+    private fun updateDrawer(unreadErrorCount: Int) {
+        // todo restore rvJobs.adapter = JobRecyclerAdapter(ArrayList(), this)
+
+        // Header
+        val headerBinding: DrawerHeaderBinding = DataBindingUtil.inflate(LayoutInflater.from(
+                this@MainActivity), R.layout.drawer_header, null, false)
+        headerBinding.tvTitle.text = if (unreadErrorCount == 0) {
+            "App is working normally"
+        } else {
+            "There are errors."
+        }
+        headerBinding.bViewLog.visibility = if (unreadErrorCount == 0) View.GONE else View.VISIBLE
+        headerBinding.bViewLog.setOnClickListener {
+            viewLog()
+            drawer.closeDrawer()
+        }
+        drawer.header = headerBinding.rlView
+
+        // Log with error badge
+        val badgeText = if (unreadErrorCount == 0) "" else "Errors: $unreadErrorCount"
+        val badgeColorRes = if (unreadErrorCount == 0) R.color.colorNone else R.color.colorError
+        drawer.updateStickyFooterItemAtPosition(PrimaryDrawerItem()
+                .withName("Log").withSelectable(false)
+                .withOnDrawerItemClickListener { view, position, drawerItem -> run {
+                    viewLog()
+                    false
+                } }
+                .withBadge(badgeText)
+                .withBadgeStyle(BadgeStyle()
+                        .withColorRes(badgeColorRes)
+                        .withTextColorRes(R.color.colorWhite)
+                        .withPaddingLeftRightDp(8)
+                        .withCornersDp(12)
+                ),
+        2)
     }
 
     private fun bindSnapshotList() {
-        rvSnapshotList.adapter = ArtifactRecyclerAdapter(ArrayList(), this)
+        rvSnapshotList.adapter = SnapshotRecyclerAdapter(ArrayList(), this)
     }
 
     private fun bindAddButton() {
@@ -172,6 +285,7 @@ class MainActivity : AppCompatActivity() {
         IntegrityCore.subscribeToRunningJobListing(MainActivity::class.java.simpleName) {
             refreshJobList(it, true)
         }
+        updateDrawer(IntegrityCore.logRepository.getUnreadErrors().count())
     }
 
     override fun onStop() {
@@ -182,10 +296,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun refreshJobList(scheduledJobIds: List<Pair<Long, String>>, isRunning: Boolean) {
+        /* todo show on new drawer
         (rvJobs.adapter as JobRecyclerAdapter)
                 .setItems(scheduledJobIds.map {
                     IntegrityCore.metadataRepository.getSnapshotMetadata(it.first, it.second)
                 }, isRunning)
+                */
     }
 
     fun askRemoveArtifact(artifactId: Long) {
@@ -215,7 +331,7 @@ class MainActivity : AppCompatActivity() {
             null -> IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(true)
             else -> IntegrityCore.metadataRepository.getArtifactMetadata(artifactId)
         }.snapshots
-        (rvSnapshotList.adapter as ArtifactRecyclerAdapter)
+        (rvSnapshotList.adapter as SnapshotRecyclerAdapter)
                 .setItems(snapshots.map { Pair(it, getSnapshotCount(it.artifactId)) }.toList(),
                         inputs.filteredArtifactId == null)
     }
@@ -230,15 +346,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.action_folder_locations -> {
-            viewFolderLocations()
+        R.id.action_select_view -> {
+            // todo show list view selection (for snapshots or search results)
             true
         }
-        R.id.action_tags -> {
-            viewTags()
-            true
-        }
-        R.id.action_delete_all -> {
+        R.id.action_delete_all -> { // todo move
             askRemoveAll()
             true
         }

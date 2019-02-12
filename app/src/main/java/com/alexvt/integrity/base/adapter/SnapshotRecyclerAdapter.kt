@@ -18,11 +18,11 @@ import com.alexvt.integrity.lib.SnapshotStatus
 import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import kotlinx.android.synthetic.main.artifact_list_item.view.*
+import kotlinx.android.synthetic.main.snapshot_list_item.view.*
 
-class ArtifactRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Int>>,
+class SnapshotRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Int>>,
                               private val mainActivity: MainActivity)
-    : RecyclerView.Adapter<ArtifactViewHolder>() {
+    : RecyclerView.Adapter<SnapshotViewHolder>() {
 
     private var showMoreButton: Boolean = false
 
@@ -35,10 +35,10 @@ class ArtifactRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Int>>,
 
     override fun getItemCount() = items.size
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ArtifactViewHolder(
-            LayoutInflater.from(mainActivity).inflate(R.layout.artifact_list_item, parent, false))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = SnapshotViewHolder(
+            LayoutInflater.from(mainActivity).inflate(R.layout.snapshot_list_item, parent, false))
 
-    override fun onBindViewHolder(holder: ArtifactViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: SnapshotViewHolder, position: Int) {
         val snapshot = items[position].first
 
         holder.view.tvTitle.text = snapshot.title
@@ -85,4 +85,4 @@ class ArtifactRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Int>>,
 }
 
 
-class ArtifactViewHolder (val view: View) : RecyclerView.ViewHolder(view)
+class SnapshotViewHolder (val view: View) : RecyclerView.ViewHolder(view)

@@ -9,18 +9,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".base.activity.MainActivity">
     <item
-        android:id="@+id/action_folder_locations"
+        android:id="@+id/action_select_view"
         android:orderInCategory="1"
-        android:title="Manage archive locations"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_tags"
-        android:orderInCategory="2"
-        android:title="Manage tags"
-        app:showAsAction="never" />
+        android:title="Select View"
+        android:icon="@drawable/baseline_view_carousel_white_24"
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_delete_all"
         android:orderInCategory="100"
-        android:title="@string/action_delete_all"
+        android:title="Delete all"
         app:showAsAction="never" />
 </menu>

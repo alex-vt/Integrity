@@ -9,6 +9,8 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorBlack">#000</color>
+    <color name="colorWhite">#FFF</color>
+    <color name="colorNone">#0FFF</color>
     <color name="colorAccent">#D81B60</color>
     <color name="colorError">#C00</color>
     <color name="colorShade">#E7E7E7</color>

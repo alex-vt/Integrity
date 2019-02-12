@@ -6,5 +6,4 @@
 
 <resources>
     <string name="app_name">Integrity</string>
-    <string name="action_delete_all">Delete all</string>
 </resources>

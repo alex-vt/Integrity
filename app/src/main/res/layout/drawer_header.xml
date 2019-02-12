@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <RelativeLayout
+        android:id="@+id/rlView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorShade"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="44dp"
+        android:paddingBottom="20dp"
+        >
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            tools:text="App is working normally"
+            />
+
+        <Button
+            android:id="@+id/bViewLog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="View Log"
+            android:layout_below="@+id/tvTitle"
+            android:layout_alignParentRight="true"
+            />
+
+    </RelativeLayout>
+
+</layout>

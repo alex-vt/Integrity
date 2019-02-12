@@ -5,230 +5,167 @@
   ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   -->
 
-<androidx.drawerlayout.widget.DrawerLayout
-    android:id="@+id/dlAllContent"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    >
+    tools:context=".base.activity.MainActivity">
 
-    <!-- Main content -->
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".base.activity.MainActivity">
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
 
-        <com.google.android.material.appbar.AppBarLayout
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:theme="@style/AppTheme.AppBarOverlay">
-
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:popupTheme="@style/AppTheme.PopupOverlay"
-                />
-
-        </com.google.android.material.appbar.AppBarLayout>
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:context=".base.activity.MainActivity"
-            tools:showIn="@layout/activity_main">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvSnapshotList"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:visibility="gone"
-                android:id="@+id/rvSearchResults"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                />
-
-            <TextView
-                android:visibility="gone"
-                android:id="@+id/tvNoResults"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:text="No results"
-                android:gravity="center"
-                />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <com.leinardi.android.speeddial.SpeedDialView
-            android:id="@+id/sdAdd"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_anchor="@+id/llBottomSheet"
-            app:layout_anchorGravity="top|end"
-            app:layout_insetEdge="bottom"
-            app:layout_dodgeInsetEdges="bottom"
-            android:layout_marginRight="@dimen/fab_margin"
-            android:layout_marginBottom="-35dp"
-            app:sdExpansionMode="top"
-            app:sdMainFabClosedSrc="@android:drawable/ic_input_add"
-            app:sdMainFabOpenedSrc="@android:drawable/ic_menu_close_clear_cancel"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
             />
 
-        <!-- Bottom sheet -->
-        <LinearLayout
-            android:id="@+id/llBottomSheet"
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:context=".base.activity.MainActivity"
+        tools:showIn="@layout/activity_main">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSnapshotList"
             android:layout_width="match_parent"
-            android:layout_height="350dp"
-            android:background="@android:color/background_light"
-            android:orientation="vertical"
-            app:behavior_hideable="false"
-            app:behavior_peekHeight="80dp"
-            android:elevation="10dp"
-            app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
-            android:clickable="true"
-            >
+            android:layout_height="match_parent"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            />
 
-            <!-- Header of bottom sheet -->
-            <RelativeLayout
+        <androidx.recyclerview.widget.RecyclerView
+            android:visibility="gone"
+            android:id="@+id/rvSearchResults"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            />
+
+        <TextView
+            android:visibility="gone"
+            android:id="@+id/tvNoResults"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:text="No results"
+            android:gravity="center"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.leinardi.android.speeddial.SpeedDialView
+        android:id="@+id/sdAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_anchor="@+id/llBottomSheet"
+        app:layout_anchorGravity="top|end"
+        app:layout_insetEdge="bottom"
+        app:layout_dodgeInsetEdges="bottom"
+        android:layout_marginRight="@dimen/fab_margin"
+        android:layout_marginBottom="-35dp"
+        app:sdExpansionMode="top"
+        app:sdMainFabClosedSrc="@android:drawable/ic_input_add"
+        app:sdMainFabOpenedSrc="@android:drawable/ic_menu_close_clear_cancel"
+        />
+
+    <!-- Bottom sheet -->
+    <LinearLayout
+        android:id="@+id/llBottomSheet"
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
+        android:background="@android:color/background_light"
+        android:orientation="vertical"
+        app:behavior_hideable="false"
+        app:behavior_peekHeight="80dp"
+        android:elevation="10dp"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+        android:clickable="true"
+        >
+
+        <!-- Header of bottom sheet -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <View
+                android:id="@+id/vPullUpTab"
+                android:layout_width="50dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="6dp"
+                android:layout_centerHorizontal="true"
+                android:background="@android:color/darker_gray" />
+
+            <EditText
+                android:id="@+id/etSearch"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:hint="Search"
+                android:layout_below="@+id/vPullUpTab"
+                android:inputType="text"
+                />
 
-                <View
-                    android:id="@+id/vPullUpTab"
-                    android:layout_width="50dp"
-                    android:layout_height="4dp"
-                    android:layout_marginTop="6dp"
-                    android:layout_centerHorizontal="true"
-                    android:background="@android:color/darker_gray" />
-
-                <EditText
-                    android:id="@+id/etSearch"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:hint="Search"
-                    android:layout_below="@+id/vPullUpTab"
-                    android:inputType="text"
-                    />
-
-                <RelativeLayout
-                    android:id="@+id/llFilteredArtifact"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="15dp"
-                    android:layout_marginRight="15dp"
-                    android:layout_below="@+id/etSearch"
-                    android:background="@color/colorShade"
-                    >
-
-                    <TextView
-                        android:id="@+id/tvFilteredArtifactTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Viewing in: Filtered Artifact Title"
-                        android:layout_centerVertical="true"
-                        android:layout_marginLeft="8dp"
-                        android:layout_marginRight="5dp"
-                        android:ellipsize="end"
-                        />
-
-                    <ImageView
-                        android:id="@+id/ivUnFilterArtifact"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@android:drawable/ic_delete"
-                        android:layout_alignParentEnd="true"
-                        android:padding="3dp"
-                        />
-
-                </RelativeLayout>
+            <RelativeLayout
+                android:id="@+id/llFilteredArtifact"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:layout_below="@+id/etSearch"
+                android:background="@color/colorShade"
+                >
 
                 <TextView
-                    android:id="@+id/tvExplore"
-                    android:layout_width="match_parent"
+                    android:id="@+id/tvFilteredArtifactTitle"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:text="Explore"
-                    android:layout_below="@+id/llFilteredArtifact"
+                    android:text="Viewing in: Filtered Artifact Title"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginRight="5dp"
+                    android:ellipsize="end"
                     />
 
-                <TextView
-                    android:id="@+id/tvEmpty"
-                    android:layout_width="match_parent"
+                <ImageView
+                    android:id="@+id/ivUnFilterArtifact"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:text="(empty)"
-                    android:layout_below="@+id/tvExplore"
+                    android:src="@android:drawable/ic_delete"
+                    android:layout_alignParentEnd="true"
+                    android:padding="3dp"
                     />
 
             </RelativeLayout>
 
-        </LinearLayout>
-
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
-    <!-- Main drawer -->
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nvMainDrawer"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:fitsSystemWindows="true"
-        android:paddingTop="50dp"
-        android:paddingBottom="80dp"
-        >
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            >
-
-            <LinearLayout
+            <TextView
+                android:id="@+id/tvExplore"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                >
+                android:layout_marginLeft="20dp"
+                android:text="Explore"
+                android:layout_below="@+id/llFilteredArtifact"
+                />
 
-                <!-- todo 2 sections, running and upcoming -->
-                <TextView
-                    android:id="@+id/tvScheduledJobs"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Jobs"
-                    android:paddingTop="8dp"
-                    />
+            <TextView
+                android:id="@+id/tvEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:text="(empty)"
+                android:layout_below="@+id/tvExplore"
+                />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvJobs"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    />
+        </RelativeLayout>
 
-                <Button
-                    android:id="@+id/bLog"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Log"
-                    />
+    </LinearLayout>
 
-            </LinearLayout>
-
-        </ScrollView>
-
-    </com.google.android.material.navigation.NavigationView>
-
-</androidx.drawerlayout.widget.DrawerLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

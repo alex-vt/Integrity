@@ -24,6 +24,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
 import android.view.*
+import androidx.core.view.LayoutInflaterCompat
 import androidx.databinding.DataBindingUtil
 import co.zsmb.materialdrawerkt.builders.drawer
 import co.zsmb.materialdrawerkt.builders.footer
@@ -33,6 +34,7 @@ import co.zsmb.materialdrawerkt.draweritems.expandable.expandableItem
 import co.zsmb.materialdrawerkt.draweritems.toggleable.toggleItem
 import com.alexvt.integrity.databinding.DrawerHeaderBinding
 import com.alexvt.integrity.util.SpeedDialCompatUtil
+import com.mikepenz.iconics.context.IconicsLayoutInflater2
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.holder.BadgeStyle
 import com.mikepenz.materialdrawer.model.ExpandableDrawerItem
@@ -40,6 +42,9 @@ import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
 import java.util.*
 import kotlin.random.Random
+import android.view.MenuInflater
+import com.mikepenz.community_material_typeface_library.CommunityMaterial
+import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 
 
 class MainActivity : AppCompatActivity() {
@@ -62,6 +67,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        LayoutInflaterCompat.setFactory2(layoutInflater, IconicsLayoutInflater2(delegate))
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
@@ -88,6 +94,7 @@ class MainActivity : AppCompatActivity() {
                     userExpandJobs(false)
                     false
                 }
+                iicon = CommunityMaterial.Icon2.cmd_playlist_play
             } // updatable
             expandableItem("Up next") {
                 identifier = 2
@@ -96,6 +103,7 @@ class MainActivity : AppCompatActivity() {
                     userExpandJobs(true)
                     false
                 }
+                iicon = CommunityMaterial.Icon.cmd_calendar_clock
             } // updatable
             divider { identifier = 3 }
             primaryItem("Archives & Storage") {
@@ -105,6 +113,7 @@ class MainActivity : AppCompatActivity() {
                     viewFolderLocations() // todo also show data cache folder
                     false
                 }
+                iicon = CommunityMaterial.Icon.cmd_archive
             }
             primaryItem("Tags") {
                 identifier = 5
@@ -113,6 +122,7 @@ class MainActivity : AppCompatActivity() {
                     viewTags()
                     false
                 }
+                iicon = CommunityMaterial.Icon2.cmd_tag_multiple
             }
             divider { identifier = 6 }
             primaryItem("Extensions") {
@@ -121,6 +131,7 @@ class MainActivity : AppCompatActivity() {
                     // todo go to tab in settings
                     false
                 }
+                iicon = CommunityMaterial.Icon2.cmd_puzzle
             }
             divider { identifier = 7 }
             primaryItem("Recover...") {
@@ -131,6 +142,7 @@ class MainActivity : AppCompatActivity() {
                     // todo show options for snapshots (including app settings) recovery from archives
                     false
                 }
+                iicon = CommunityMaterial.Icon2.cmd_history
             }
             footer {
                 toggleItem("Offline mode") {
@@ -441,8 +453,7 @@ class MainActivity : AppCompatActivity() {
             .getArtifactMetadata(artifactId).snapshots.count()
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
+        IconicsMenuInflaterUtil.inflate(menuInflater, this, R.menu.menu_main, menu)
         return true
     }
 

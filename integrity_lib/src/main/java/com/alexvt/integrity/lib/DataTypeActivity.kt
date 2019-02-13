@@ -29,6 +29,7 @@ import com.alexvt.integrity.lib.databinding.ActivityDataTypeBinding
 import com.alexvt.integrity.lib.databinding.ViewColorEditBinding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
@@ -158,7 +159,7 @@ abstract class DataTypeActivity : AppCompatActivity() {
     }
 
     final override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_data_view, menu)
+        IconicsMenuInflaterUtil.inflate(menuInflater, this, R.menu.menu_data_view, menu)
         return true
     }
 

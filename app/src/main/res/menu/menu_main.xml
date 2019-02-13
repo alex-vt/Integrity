@@ -12,7 +12,9 @@
         android:id="@+id/action_select_view"
         android:orderInCategory="1"
         android:title="Select View"
-        android:icon="@drawable/baseline_view_carousel_white_24"
+        app:ico_icon="cmd-view-carousel"
+        app:ico_size="24dp"
+        app:ico_color="@color/colorWhite"
         app:showAsAction="always" />
     <item
         android:id="@+id/action_delete_all"

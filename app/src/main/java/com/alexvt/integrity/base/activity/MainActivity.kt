@@ -29,22 +29,29 @@ import co.zsmb.materialdrawerkt.builders.drawer
 import co.zsmb.materialdrawerkt.builders.footer
 import co.zsmb.materialdrawerkt.draweritems.badgeable.primaryItem
 import co.zsmb.materialdrawerkt.draweritems.divider
+import co.zsmb.materialdrawerkt.draweritems.expandable.expandableItem
 import co.zsmb.materialdrawerkt.draweritems.toggleable.toggleItem
 import com.alexvt.integrity.databinding.DrawerHeaderBinding
 import com.alexvt.integrity.util.SpeedDialCompatUtil
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.holder.BadgeStyle
+import com.mikepenz.materialdrawer.model.ExpandableDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
+import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
 import java.util.*
+import kotlin.random.Random
 
 
 class MainActivity : AppCompatActivity() {
 
-    data class Inputs(val filteredArtifactId: Long?, val searchText: String)
+    data class Inputs(val filteredArtifactId: Long?,
+                      val searchText: String,
+                      val runningJobsExpanded: Boolean,
+                      val scheduledJobsExpanded: Boolean)
 
     private lateinit var drawer: Drawer
 
-    private var inputs: Inputs = Inputs(null, "")
+    private var inputs: Inputs = Inputs(null, "", true, true)
 
     private fun onInputsUpdate(newInputs: Inputs) {
         inputs = newInputs
@@ -70,13 +77,29 @@ class MainActivity : AppCompatActivity() {
 
     private fun bindDrawer() {
         drawer = drawer {
+            hasStableIds = true
             toolbar = this@MainActivity.toolbar
             selectedItem = -1
             // Header is updatable
-            primaryItem("Running jobs") {} // updatable
-            primaryItem("Up next") {} // updatable
-            divider {}
+            expandableItem("Running jobs") {
+                identifier = 1
+                selectable = false
+                onClick { _ ->
+                    userExpandJobs(false)
+                    false
+                }
+            } // updatable
+            expandableItem("Up next") {
+                identifier = 2
+                selectable = false
+                onClick { _ ->
+                    userExpandJobs(true)
+                    false
+                }
+            } // updatable
+            divider { identifier = 3 }
             primaryItem("Archives & Storage") {
+                identifier = 4
                 selectable = false
                 onClick { _ ->
                     viewFolderLocations() // todo also show data cache folder
@@ -84,13 +107,14 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             primaryItem("Tags") {
+                identifier = 5
                 selectable = false
                 onClick { _ ->
                     viewTags()
                     false
                 }
             }
-            divider {}
+            divider { identifier = 6 }
             primaryItem("Extensions") {
                 selectable = false
                 onClick { _ ->
@@ -98,8 +122,9 @@ class MainActivity : AppCompatActivity() {
                     false
                 }
             }
-            divider {}
+            divider { identifier = 7 }
             primaryItem("Recover...") {
+                identifier = 8
                 selectable = false
                 enabled = false
                 onClick { _ ->
@@ -143,11 +168,24 @@ class MainActivity : AppCompatActivity() {
             actionBarDrawerToggleAnimated = true
             actionBarDrawerToggleEnabled = true
         }
+        drawer.recyclerView.scrollBarDefaultDelayBeforeFade = 3000 // todo don't show when updating but keeping size
     }
 
-    private fun updateDrawer(unreadErrorCount: Int) {
-        // todo restore rvJobs.adapter = JobRecyclerAdapter(ArrayList(), this)
+    private fun userExpandJobs(isScheduledJobs: Boolean) {
+        val sectionId = if (isScheduledJobs) 2L else 1L
+        val isExpandable = drawer.getDrawerItem(sectionId).subItems.isNotEmpty()
+        if (!isExpandable) {
+            return
+        }
+        val isExpanded = drawer.getDrawerItem(sectionId).isExpanded
+        onInputsUpdate(if (isScheduledJobs) {
+            inputs.copy(scheduledJobsExpanded = isExpanded)
+        } else {
+            inputs.copy(runningJobsExpanded = isExpanded)
+        })
+    }
 
+    private fun updateErrorViewsOnDrawer(unreadErrorCount: Int) {
         // Header
         val headerBinding: DrawerHeaderBinding = DataBindingUtil.inflate(LayoutInflater.from(
                 this@MainActivity), R.layout.drawer_header, null, false)
@@ -180,6 +218,74 @@ class MainActivity : AppCompatActivity() {
                         .withCornersDp(12)
                 ),
         2)
+    }
+
+    /**
+     * Updates the jobs header and job list.
+     */
+    private fun updateJobsInDrawer(jobListItems: List<SecondaryDrawerItem>,
+                                   sectionId: Long, title: String, titlePlaceholder: String,
+                                   isExpanded: Boolean) {
+        val sectionPosition = drawer.getPosition(sectionId)
+
+        val countSuffix = if (jobListItems.isEmpty()) "" else "(${jobListItems.size})"
+        val visibleTitle = if (jobListItems.isEmpty()) titlePlaceholder else "$title $countSuffix"
+        val arrowColorRes = if (jobListItems.isEmpty()) R.color.colorWhite else R.color.colorPrimary
+
+        val jobsExpandableItem = drawer.getDrawerItem(sectionId) as ExpandableDrawerItem
+
+        val nullSubItems = jobsExpandableItem.subItems == null
+
+        val updatedExpandableItem
+                = (if (nullSubItems) jobsExpandableItem.withSubItems() else jobsExpandableItem)
+                .withName(visibleTitle)
+                .withArrowColorRes(arrowColorRes)
+        drawer.updateItem(updatedExpandableItem)
+
+        val subItems = (drawer.getDrawerItem(sectionId) as ExpandableDrawerItem).subItems
+        subItems.clear()
+        subItems.addAll(jobListItems)
+        drawer.adapter.notifyAdapterDataSetChanged()
+
+        if (isExpanded) {
+            drawer.expandableExtension.expand(sectionPosition)
+        }
+    }
+
+    private fun getScheduledJobDrawerItem(artifactId: Long): SecondaryDrawerItem {
+        val snapshot = IntegrityCore.metadataRepository.getLatestSnapshotMetadata(artifactId)
+        val timeRemainingMillis = IntegrityCore.getNextJobRunTimestamp(snapshot) -
+                System.currentTimeMillis()
+        val timeText = if (timeRemainingMillis <= 0) {
+            "Should start now"
+        } else {
+            "Starting in ${timeRemainingMillis / 1000} s"
+        }
+        return SecondaryDrawerItem()
+                .withName(snapshot.title)
+                .withDescription(timeText)
+                .withIdentifier(artifactId)
+                .withLevel(2)
+                .withSelectable(false)
+                .withOnDrawerItemClickListener { _, _, _ ->
+                    IntegrityCore.openCreateNewSnapshot(this, snapshot.artifactId)
+                    false
+                }
+    }
+
+    private fun getRunningJobDrawerItem(artifactId: Long, date: String): SecondaryDrawerItem {
+        val snapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId, date)
+        return SecondaryDrawerItem()
+                .withName(snapshot.title)
+                .withDescription("Running")
+                .withIdentifier(artifactId - 1_000_000_000L) // todo distinguish better
+                .withLevel(2)
+                .withSelectable(false)
+                .withOnDrawerItemClickListener { _, _, _ ->
+                    IntegrityCore.openViewSnapshotOrShowProgress(this, snapshot.artifactId,
+                            snapshot.date)
+                    false
+                }
     }
 
     private fun bindSnapshotList() {
@@ -280,12 +386,16 @@ class MainActivity : AppCompatActivity() {
             refreshSnapshotList(inputs.filteredArtifactId)
         }
         IntegrityCore.subscribeToScheduledJobListing(this) {
-            refreshJobList(it, false)
+            updateJobsInDrawer(it.map { getScheduledJobDrawerItem(it.first) },
+                    2L, "Up next", "No scheduled jobs",
+                    inputs.scheduledJobsExpanded)
         }
         IntegrityCore.subscribeToRunningJobListing(this) {
-            refreshJobList(it, true)
+            updateJobsInDrawer(it.map { getRunningJobDrawerItem(it.first, it.second) },
+                    1L, "Running now", "No running jobs",
+                    inputs.runningJobsExpanded)
         }
-        updateDrawer(IntegrityCore.logRepository.getUnreadErrors().count())
+        updateErrorViewsOnDrawer(IntegrityCore.logRepository.getUnreadErrors().count())
     }
 
     override fun onStop() {
@@ -293,15 +403,6 @@ class MainActivity : AppCompatActivity() {
         IntegrityCore.unsubscribeFromScheduledJobListing(this)
         IntegrityCore.unsubscribeFromRunningJobListing(this)
         super.onStop()
-    }
-
-    private fun refreshJobList(scheduledJobIds: List<Pair<Long, String>>, isRunning: Boolean) {
-        /* todo show on new drawer
-        (rvJobs.adapter as JobRecyclerAdapter)
-                .setItems(scheduledJobIds.map {
-                    IntegrityCore.metadataRepository.getSnapshotMetadata(it.first, it.second)
-                }, isRunning)
-                */
     }
 
     fun askRemoveArtifact(artifactId: Long) {

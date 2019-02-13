@@ -265,6 +265,7 @@ class WebPageLoader {
                     GlobalScope.launch(Dispatchers.Main) {
                         Log(webView.context,"Web page loading timeout\n" +
                                 "exceeded $loadingTimeoutMillis ms: ${webView.url}").logError()
+                        // todo use; self interrupt download
                     }
                 }
     }

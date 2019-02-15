@@ -124,7 +124,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon2.cmd_tag_multiple
             }
-            divider { identifier = 6 }
+            primaryItem("Log") {
+                identifier = 6
+            } // updatable
+            divider { identifier = 7 }
             primaryItem("Extensions") {
                 selectable = false
                 onClick { _ ->
@@ -133,9 +136,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon2.cmd_puzzle
             }
-            divider { identifier = 7 }
+            divider { identifier = 8 }
             primaryItem("Restore...") {
-                identifier = 8
+                identifier = 9
                 selectable = false
                 enabled = false
                 onClick { _ ->
@@ -153,7 +156,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 divider {}
-                primaryItem("Log") {} // updatable
                 primaryItem("Settings") {
                     selectable = false
                     onClick { _ ->
@@ -216,20 +218,22 @@ class MainActivity : AppCompatActivity() {
         // Log with error badge
         val badgeText = if (unreadErrorCount == 0) "" else "Errors: $unreadErrorCount"
         val badgeColorRes = if (unreadErrorCount == 0) R.color.colorNone else R.color.colorError
-        drawer.updateStickyFooterItemAtPosition(PrimaryDrawerItem()
-                .withName("Log").withSelectable(false)
+        drawer.updateItem(PrimaryDrawerItem()
+                .withIdentifier(6)
+                .withName("Log")
+                .withSelectable(false)
                 .withOnDrawerItemClickListener { view, position, drawerItem -> run {
                     viewLog()
                     false
                 } }
+                .withIcon(CommunityMaterial.Icon2.cmd_text)
                 .withBadge(badgeText)
                 .withBadgeStyle(BadgeStyle()
                         .withColorRes(badgeColorRes)
                         .withTextColorRes(R.color.colorWhite)
                         .withPaddingLeftRightDp(8)
                         .withCornersDp(12)
-                ),
-        2)
+                ))
     }
 
     /**

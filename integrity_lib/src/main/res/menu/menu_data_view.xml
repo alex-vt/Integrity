@@ -13,6 +13,7 @@
         android:orderInCategory="100"
         android:title="Options"
         app:ico_icon="cmd-settings"
-        app:ico_size="24dp"
+        app:ico_size="20dp"
+        app:ico_color="@color/colorWhite"
         app:showAsAction="always" />
 </menu>

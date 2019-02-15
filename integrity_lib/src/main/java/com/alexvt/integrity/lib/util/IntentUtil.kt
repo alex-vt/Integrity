@@ -24,6 +24,7 @@ object IntentUtil {
     private const val snapshot = "snapshot"
     private const val selectMode = "selectMode"
     private const val logEntry = "logEntry"
+    private const val viewExtensions = "viewExtensions"
 
     fun putArtifactId(intent: Intent?, artifactId: Long): Intent {
         intent!!.putExtra(IntentUtil.artifactId, artifactId)
@@ -90,4 +91,11 @@ object IntentUtil {
 
     fun getLogEntry(intent: Intent?) = intent!!.getSerializableExtra(logEntry) as LogEntry
 
+    fun putViewExtensions(intent: Intent?, value: Boolean): Intent {
+        intent!!.putExtra(IntentUtil.viewExtensions, value)
+        return intent
+    }
+
+    fun getViewExtensions(intent: Intent?) = intent?.getBooleanExtra(viewExtensions, false)
+            ?: false
 }

@@ -35,6 +35,8 @@ class TagsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tags)
         setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         if (IntentUtil.getSnapshot(intent) != null) {
             selectedTags = IntentUtil.getSnapshot(intent)!!.tags
@@ -154,5 +156,10 @@ class TagsActivity : AppCompatActivity() {
         }
         setResult(Activity.RESULT_OK, returnIntent)
         finish()
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        super.onBackPressed()
+        return true
     }
 }

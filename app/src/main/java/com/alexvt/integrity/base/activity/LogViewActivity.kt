@@ -22,6 +22,8 @@ class LogViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log_view)
         setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         rvLogList.adapter = LogRecyclerAdapter(ArrayList(), this)
         IntegrityCore.markErrorsRead(this)
@@ -59,7 +61,6 @@ class LogViewActivity : AppCompatActivity() {
         }
     }
 
-
     private fun askClearLog() {
         MaterialDialog(this)
                 .title(text = "Clear log?")
@@ -68,5 +69,10 @@ class LogViewActivity : AppCompatActivity() {
                 }
                 .negativeButton(text = "Cancel")
                 .show()
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        super.onBackPressed()
+        return true
     }
 }

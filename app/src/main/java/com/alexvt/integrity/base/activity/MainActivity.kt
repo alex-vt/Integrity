@@ -128,13 +128,13 @@ class MainActivity : AppCompatActivity() {
             primaryItem("Extensions") {
                 selectable = false
                 onClick { _ ->
-                    // todo go to tab in settings
+                    viewSettings(true)
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_puzzle
             }
             divider { identifier = 7 }
-            primaryItem("Recover...") {
+            primaryItem("Restore...") {
                 identifier = 8
                 selectable = false
                 enabled = false
@@ -157,7 +157,7 @@ class MainActivity : AppCompatActivity() {
                 primaryItem("Settings") {
                     selectable = false
                     onClick { _ ->
-                        // todo
+                        viewSettings()
                         false
                     }
                 }
@@ -462,10 +462,6 @@ class MainActivity : AppCompatActivity() {
             // todo show list view selection (for snapshots or search results)
             true
         }
-        R.id.action_delete_all -> { // todo move
-            askRemoveAll()
-            true
-        }
         else -> super.onOptionsItemSelected(item)
     }
 
@@ -479,6 +475,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun viewTags() {
         startActivity(Intent(this, TagsActivity::class.java))
+    }
+
+    private fun viewSettings(viewExtensions: Boolean = false) {
+        startActivity(IntentUtil.putViewExtensions(Intent(this, SettingsActivity::class.java),
+                viewExtensions))
     }
 
     fun filterArtifact(artifactId: Long?) {

@@ -9,10 +9,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".base.activity.MainActivity">
     <item
-        android:id="@+id/action_select_view"
+        android:id="@+id/action_restore"
         android:orderInCategory="1"
-        android:title="Select View"
-        app:ico_icon="cmd-view-carousel"
+        android:title="Restore..."
+        app:ico_icon="cmd-history"
         app:ico_size="20dp"
         app:ico_color="@color/colorWhite"
         app:showAsAction="always" />

@@ -1,0 +1,36 @@
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    >
+    <item
+        android:id="@+id/action_appearance"
+        android:title="Appearance"
+        app:showAsAction="ifRoom"
+        />
+    <item
+        android:id="@+id/action_behavior"
+        android:title="Behavior"
+        app:showAsAction="ifRoom"
+        />
+    <item
+        android:id="@+id/action_data"
+        android:title="Data"
+        app:showAsAction="ifRoom"
+        />
+    <item
+        android:id="@+id/action_notifications"
+        android:title="Notifications"
+        app:showAsAction="ifRoom"
+        />
+    <item
+        android:id="@+id/action_extensions"
+        android:title="Extensions"
+        app:showAsAction="ifRoom"
+        />
+</menu>

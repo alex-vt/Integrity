@@ -9,8 +9,6 @@ package com.alexvt.integrity.base.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
@@ -30,6 +28,8 @@ class FolderLocationsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_folder_locations)
         setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         if (IntentUtil.getSnapshot(intent) != null) {
             selectedFolderLocations = IntentUtil.getSnapshot(intent)!!.archiveFolderLocations
@@ -71,19 +71,6 @@ class FolderLocationsActivity : AppCompatActivity() {
                 Pair(it, selectedFolderLocations.contains(it))
             }
 
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_delete_all -> true
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-
     fun viewFolderLocation(title: String) {
         startActivity(IntegrityCore.getFolderLocationEditIntent(title))
     }
@@ -121,5 +108,10 @@ class FolderLocationsActivity : AppCompatActivity() {
         }
         setResult(Activity.RESULT_OK, returnIntent)
         finish()
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        super.onBackPressed()
+        return true
     }
 }

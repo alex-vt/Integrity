@@ -41,8 +41,8 @@ import com.mikepenz.materialdrawer.model.ExpandableDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
 import java.util.*
-import kotlin.random.Random
-import android.view.MenuInflater
+import co.zsmb.materialdrawerkt.draweritems.badge
+import com.alexvt.integrity.BuildConfig
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 
@@ -95,6 +95,7 @@ class MainActivity : AppCompatActivity() {
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_playlist_play
+                iconTintingEnabled = true
             } // updatable
             expandableItem("Up next") {
                 identifier = 2
@@ -104,6 +105,7 @@ class MainActivity : AppCompatActivity() {
                     false
                 }
                 iicon = CommunityMaterial.Icon.cmd_calendar_clock
+                iconTintingEnabled = true
             } // updatable
             divider { identifier = 3 }
             primaryItem("Archives & Storage") {
@@ -114,6 +116,7 @@ class MainActivity : AppCompatActivity() {
                     false
                 }
                 iicon = CommunityMaterial.Icon.cmd_archive
+                iconTintingEnabled = true
             }
             primaryItem("Tags") {
                 identifier = 5
@@ -123,6 +126,7 @@ class MainActivity : AppCompatActivity() {
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_tag_multiple
+                iconTintingEnabled = true
             }
             primaryItem("Log") {
                 identifier = 6
@@ -135,6 +139,7 @@ class MainActivity : AppCompatActivity() {
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_puzzle
+                iconTintingEnabled = true
             }
             divider { identifier = 8 }
             primaryItem("Restore...") {
@@ -146,6 +151,7 @@ class MainActivity : AppCompatActivity() {
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_history
+                iconTintingEnabled = true
             }
             footer {
                 toggleItem("Offline mode") {
@@ -231,6 +237,7 @@ class MainActivity : AppCompatActivity() {
                     false
                 } }
                 .withIcon(CommunityMaterial.Icon2.cmd_text)
+                .withIconTintingEnabled(true)
                 .withBadge(badgeText)
                 .withBadgeStyle(BadgeStyle()
                         .withColorRes(badgeColorRes)

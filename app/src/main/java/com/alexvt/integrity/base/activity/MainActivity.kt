@@ -169,6 +169,10 @@ class MainActivity : AppCompatActivity() {
                         // todo
                         false
                     }
+                    badge("version ${BuildConfig.VERSION_NAME}") {
+                        textColorRes = R.color.colorDim
+                        colorRes = R.color.colorNone
+                    }
                 }
                 divider {}
                 primaryItem("Legal") {

@@ -69,8 +69,9 @@ class SettingsActivity : AppCompatActivity() {
             }
             true
         }
-        if (IntentUtil.getViewExtensions(intent)) {
-            bnView.selectedItemId = R.id.action_extensions
+        bnView.selectedItemId = when {
+            IntentUtil.getViewExtensions(intent) -> R.id.action_extensions
+            else -> R.id.action_appearance
         }
     }
 

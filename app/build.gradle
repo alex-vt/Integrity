@@ -74,6 +74,7 @@ dependencies {
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.drawerlayout:drawerlayout:1.0.0'
     implementation 'androidx.core:core-ktx:1.0.1'
+    implementation "androidx.preference:preference:1.1.0-alpha03"
 
     implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
     implementation 'com.jakewharton.rxbinding3:rxbinding-core:3.0.0-alpha1'
@@ -82,7 +83,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.0'
 
-    implementation 'android.arch.work:work-runtime:1.0.0-beta04'
+    implementation 'android.arch.work:work-runtime:1.0.0-beta05'
 
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'

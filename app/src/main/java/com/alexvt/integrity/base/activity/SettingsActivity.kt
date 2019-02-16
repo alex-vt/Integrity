@@ -16,6 +16,7 @@ import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import kotlinx.android.synthetic.main.activity_settings.*
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
+import androidx.preference.PreferenceFragmentCompat
 
 
 class SettingsActivity : AppCompatActivity() {
@@ -53,25 +54,52 @@ class SettingsActivity : AppCompatActivity() {
 
         bnView.setOnNavigationItemSelectedListener { item ->
             toolbar.subtitle = item.title
-            when (item.itemId) {
-                R.id.action_appearance -> {
-                    // todo
-                }
-                R.id.action_behavior -> {
-                    // todo
-                }
-                R.id.action_notifications -> {
-                    // todo
-                }
-                R.id.action_extensions -> {
-                    // todo
-                }
+            val sectionFragment = when (item.itemId) {
+                R.id.action_appearance -> AppearanceSettingsFragment()
+                R.id.action_behavior -> BehaviorSettingsFragment()
+                R.id.action_data -> DataSettingsFragment()
+                R.id.action_notifications -> NotificationSettingsFragment()
+                else -> ExtensionSettingsFragment()
             }
+            supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.flSettingSection, sectionFragment)
+                    .commit()
             true
         }
         bnView.selectedItemId = when {
             IntentUtil.getViewExtensions(intent) -> R.id.action_extensions
             else -> R.id.action_appearance
+        }
+    }
+
+    class AppearanceSettingsFragment : PreferenceFragmentCompat() {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            setPreferencesFromResource(R.xml.settings_appearance, rootKey)
+        }
+    }
+
+    class BehaviorSettingsFragment : PreferenceFragmentCompat() {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            setPreferencesFromResource(R.xml.settings_behavior, rootKey)
+        }
+    }
+
+    class DataSettingsFragment : PreferenceFragmentCompat() {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            setPreferencesFromResource(R.xml.settings_data, rootKey)
+        }
+    }
+
+    class NotificationSettingsFragment : PreferenceFragmentCompat() {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            setPreferencesFromResource(R.xml.settings_notifications, rootKey)
+        }
+    }
+
+    class ExtensionSettingsFragment : PreferenceFragmentCompat() {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            setPreferencesFromResource(R.xml.settings_extensions, rootKey)
         }
     }
 

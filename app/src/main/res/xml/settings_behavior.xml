@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        app:title="Side menu"
+        >
+
+        <CheckBoxPreference
+            app:key="behavior_drawer_expand_running"
+            app:title="Expand running job list"
+            app:summary="Shows running job list if there are any"
+            />
+
+        <CheckBoxPreference
+            app:key="behavior_drawer_expand_scheduled"
+            app:title="Expand scheduled job list"
+            app:summary="Shows scheduled job list if there are any"
+            />
+
+    </PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>

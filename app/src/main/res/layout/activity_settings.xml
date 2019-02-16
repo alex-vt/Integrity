@@ -5,11 +5,12 @@
   ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   -->
 
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     >
 
     <com.google.android.material.appbar.AppBarLayout
@@ -33,23 +34,12 @@
         android:layout_height="match_parent"
         >
 
-        <ScrollView
+        <FrameLayout
+            android:id="@+id/flSettingSection"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_above="@+id/bnView"
-            >
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                >
-
-                <!-- todo content -->
-
-            </LinearLayout>
-
-        </ScrollView>
+            />
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bnView"
@@ -65,14 +55,4 @@
 
     </RelativeLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-
-
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>

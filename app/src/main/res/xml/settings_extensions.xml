@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        app:title="Included in this app"
+        >
+
+        <Preference
+            app:key="extensions_blog"
+            app:title="Blog type"
+            app:summary="Downloads website pages, with pagination"
+            />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="Integrity for GitHub"
+        app:initialExpandedChildrenCount="0"
+        >
+
+        <Preference
+            app:key="extensions_github_type"
+            app:title="GitHub type"
+            app:summary="Downloads info about a GitHub user. Experimental."
+            />
+
+        <Preference
+            app:key="extensions_github_info"
+            app:title="About &amp; Options..."
+            />
+
+    </PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>

@@ -5,20 +5,51 @@
   ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   -->
 
-<!--
-  ~ This Source Code Form is subject to the terms of the Mozilla Public
-  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
-  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
-  -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <color name="cyanea_primary_reference">#008577</color>
+    <color name="cyanea_accent_reference">#EE0077</color>
 
-<resources>
+    <color name="material_drawer_divider">#DDDDDD</color>
+
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorPrimaryLight">#77AAA0</color>
 
     <color name="colorBlack">#000</color>
+    <color name="colorDark">#FF303030</color>
+    <color name="colorLight">#FFFAFAFA</color>
     <color name="colorWhite">#FFF</color>
     <color name="colorNone">#0FFF</color>
+
+
+    <color name="colorPalette1">#EE0000</color>
+    <color name="colorPalette2">#00CC00</color>
+    <color name="colorPalette3">#0000FF</color>
+    <color name="colorPalette4">#777700</color>
+    <color name="colorPalette5">#33AAFF</color>
+    <color name="colorPalette6">#770077</color>
+    <color name="colorPalette7">#777777</color>
+
+
+    <integer-array name="colorsBackground">
+        <item>@color/colorWhite</item>
+        <item>@color/colorLight</item>
+        <item>@color/colorDark</item>
+        <item>@color/colorBlack</item>
+    </integer-array>
+
+    <integer-array name="colorsPrimary">
+        <item>@color/cyanea_primary_reference</item>
+        <item>@color/cyanea_accent_reference</item>
+        <item>@color/colorPalette1</item>
+        <item>@color/colorPalette2</item>
+        <item>@color/colorPalette3</item>
+        <item>@color/colorPalette4</item>
+        <item>@color/colorPalette5</item>
+        <item>@color/colorPalette6</item>
+        <item>@color/colorPalette7</item>
+    </integer-array>
+
 
     <color name="colorAccent">#D81B60</color>
 

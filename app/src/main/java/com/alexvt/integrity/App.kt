@@ -10,7 +10,7 @@ import android.app.Application
 import com.alexvt.integrity.core.*
 import android.app.ActivityManager
 import android.content.Context
-
+import com.jaredrummler.cyanea.Cyanea
 
 
 class App : Application() {
@@ -22,6 +22,7 @@ class App : Application() {
             return // recovery process is only used to restart the main one, doesn't init anything
         }
 
+        Cyanea.init(this, resources)
         IntegrityCore.init(this)
     }
 

@@ -9,17 +9,20 @@ package com.alexvt.integrity.base.activity
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.*
-import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.*
 import com.alexvt.integrity.R
+import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import kotlinx.android.synthetic.main.activity_settings.*
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
-import androidx.preference.PreferenceFragmentCompat
+import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
+import com.jaredrummler.android.colorpicker.ColorPickerDialog
+import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : CyaneaAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,9 +38,9 @@ class SettingsActivity : AppCompatActivity() {
                 intArrayOf(android.R.attr.state_checked),
                 intArrayOf()
         ), intArrayOf(
-                getColor(R.color.colorPrimaryDark),
-                getColor(R.color.colorPrimary),
-                getColor(R.color.colorPrimaryLight))
+                getColor(R.color.colorWhite),
+                getColor(R.color.colorLight),
+                getColor(R.color.colorShade))
         )
         bnView.itemTextColor = bottomMenuItemColorStates
         bnView.itemIconTintList = bottomMenuItemColorStates
@@ -76,7 +79,83 @@ class SettingsActivity : AppCompatActivity() {
     class AppearanceSettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.settings_appearance, rootKey)
+
+            val prefColorBackground: Preference = findPreference("appearance_color_background")
+            val prefColorPrimary: Preference = findPreference("appearance_color_main")
+            val prefColorAccent: Preference = findPreference("appearance_color_accent")
+
+            prefColorBackground.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                val dialog = ColorPickerDialog.newBuilder()
+                        .setAllowCustom(false)
+                        .setShowColorShades(false)
+                        .setColor(ThemeUtil.getColorBackground())
+                        .setPresets(resources.getIntArray(R.array.colorsBackground))
+                        .create()
+                dialog.setColorPickerDialogListener(object : ColorPickerDialogListener {
+                    override fun onColorSelected(dialogId: Int, color: Int) {
+                        ThemeUtil.saveColorBackground(context!!, color)
+                        (activity as SettingsActivity).applyTheme()
+                    }
+
+                    override fun onDialogDismissed(dialogId: Int) { }
+                })
+                dialog.show(fragmentManager!!, "ColorPickerDialog")
+                true
+            }
+            prefColorPrimary.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                val dialog = ColorPickerDialog.newBuilder()
+                        .setAllowCustom(false)
+                        .setShowColorShades(false)
+                        .setColor(ThemeUtil.getColorPrimary())
+                        .setPresets(resources.getIntArray(R.array.colorsPrimary))
+                        .create()
+                dialog.setColorPickerDialogListener(object : ColorPickerDialogListener {
+                    override fun onColorSelected(dialogId: Int, color: Int) {
+                        ThemeUtil.saveColorPrimary(context!!, color)
+                        (activity as SettingsActivity).applyTheme()
+                    }
+
+                    override fun onDialogDismissed(dialogId: Int) { }
+                })
+                dialog.show(fragmentManager!!, "ColorPickerDialog")
+                true
+            }
+            prefColorAccent.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                val dialog = ColorPickerDialog.newBuilder()
+                        .setAllowCustom(false)
+                        .setShowColorShades(false)
+                        .setColor(ThemeUtil.getColorAccent())
+                        .setPresets(resources.getIntArray(R.array.colorsPrimary))
+                        .create()
+                dialog.setColorPickerDialogListener(object : ColorPickerDialogListener {
+                    override fun onColorSelected(dialogId: Int, color: Int) {
+                        ThemeUtil.saveColorAccent(context!!, color)
+                        (activity as SettingsActivity).applyTheme()
+                    }
+
+                    override fun onDialogDismissed(dialogId: Int) { }
+                })
+                dialog.show(fragmentManager!!, "ColorPickerDialog")
+                true
+            }
+            //applyTheme() // todo propagate to all UI
         }
+
+    }
+
+    companion object {
+
+    }
+    private fun applyTheme() {
+        cyanea.edit {
+            primary(ThemeUtil.getColorPrimary())
+            primaryDark(ThemeUtil.getColorPrimaryDark())
+            accent(ThemeUtil.getColorAccent())
+            shouldTintNavBar(true)
+            shouldTintStatusBar(true)
+            navigationBar(ThemeUtil.getColorPrimaryDark())
+            background(ThemeUtil.getColorBackground())
+        }.recreate(this)
     }
 
     class BehaviorSettingsFragment : PreferenceFragmentCompat() {

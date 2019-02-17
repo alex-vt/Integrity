@@ -7,8 +7,8 @@
 package com.alexvt.integrity.base.activity
 
 import android.content.Intent
+import android.graphics.PorterDuff
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.adapter.SnapshotRecyclerAdapter
@@ -43,11 +43,13 @@ import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
 import java.util.*
 import co.zsmb.materialdrawerkt.draweritems.badge
 import com.alexvt.integrity.BuildConfig
+import com.alexvt.integrity.core.util.ThemeUtil
+import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : CyaneaAppCompatActivity() {
 
     data class Inputs(val filteredArtifactId: Long?,
                       val searchText: String,
@@ -81,6 +83,14 @@ class MainActivity : AppCompatActivity() {
         onInputsUpdate(inputs)
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // todo fix and remove
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        window.statusBarColor = ThemeUtil.getColorPrimaryDark()
+    }
+
     private fun bindDrawer() {
         drawer = drawer {
             hasStableIds = true
@@ -96,6 +106,8 @@ class MainActivity : AppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon2.cmd_playlist_play
                 iconTintingEnabled = true
+                textColor = ThemeUtil.getTextColorPrimary().toLong()
+                iconColor = ThemeUtil.getTextColorSecondary().toLong()
             } // updatable
             expandableItem("Up next") {
                 identifier = 2
@@ -106,6 +118,8 @@ class MainActivity : AppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon.cmd_calendar_clock
                 iconTintingEnabled = true
+                textColor = ThemeUtil.getTextColorPrimary().toLong()
+                iconColor = ThemeUtil.getTextColorSecondary().toLong()
             } // updatable
             divider { identifier = 3 }
             primaryItem("Archives & Storage") {
@@ -117,6 +131,8 @@ class MainActivity : AppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon.cmd_archive
                 iconTintingEnabled = true
+                textColor = ThemeUtil.getTextColorPrimary().toLong()
+                iconColor = ThemeUtil.getTextColorSecondary().toLong()
             }
             primaryItem("Tags") {
                 identifier = 5
@@ -127,6 +143,8 @@ class MainActivity : AppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon2.cmd_tag_multiple
                 iconTintingEnabled = true
+                textColor = ThemeUtil.getTextColorPrimary().toLong()
+                iconColor = ThemeUtil.getTextColorSecondary().toLong()
             }
             primaryItem("Log") {
                 identifier = 6
@@ -140,6 +158,8 @@ class MainActivity : AppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon2.cmd_puzzle
                 iconTintingEnabled = true
+                textColor = ThemeUtil.getTextColorPrimary().toLong()
+                iconColor = ThemeUtil.getTextColorSecondary().toLong()
             }
             divider { identifier = 8 }
             primaryItem("Restore...") {
@@ -152,6 +172,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon2.cmd_history
                 iconTintingEnabled = true
+                textColor = ThemeUtil.getTextColorPrimary().toLong()
+                iconColor = ThemeUtil.getTextColorSecondary().toLong()
+                disabledTextColor = ThemeUtil.getTextColorSecondary().toLong()
+                disabledIconColor = ThemeUtil.getTextColorSecondary().toLong()
             }
             footer {
                 toggleItem("Offline mode") {
@@ -160,6 +184,10 @@ class MainActivity : AppCompatActivity() {
                     onToggled {
                         // todo (also show notification)
                     }
+                    textColor = ThemeUtil.getTextColorPrimary().toLong()
+                    iconColor = ThemeUtil.getTextColorSecondary().toLong()
+                    disabledTextColor = ThemeUtil.getTextColorSecondary().toLong()
+                    disabledIconColor = ThemeUtil.getTextColorSecondary().toLong()
                 }
                 divider {}
                 primaryItem("Settings") {
@@ -168,6 +196,7 @@ class MainActivity : AppCompatActivity() {
                         viewSettings()
                         false
                     }
+                    textColor = ThemeUtil.getTextColorPrimary().toLong()
                 }
                 primaryItem("Help") {
                     selectable = false
@@ -176,9 +205,10 @@ class MainActivity : AppCompatActivity() {
                         false
                     }
                     badge("version ${BuildConfig.VERSION_NAME}") {
-                        textColorRes = R.color.colorDim
+                        textColor = ThemeUtil.getTextColorSecondary().toLong()
                         colorRes = R.color.colorNone
                     }
+                    textColor = ThemeUtil.getTextColorPrimary().toLong()
                 }
                 divider {}
                 primaryItem("Legal") {
@@ -187,12 +217,17 @@ class MainActivity : AppCompatActivity() {
                         // todo
                         false
                     }
+                    textColor = ThemeUtil.getTextColorPrimary().toLong()
                 }
             }
             actionBarDrawerToggleAnimated = true
             actionBarDrawerToggleEnabled = true
         }
         drawer.recyclerView.scrollBarDefaultDelayBeforeFade = 3000 // todo don't show when updating but keeping size
+        drawer.slider.setBackgroundColor(ThemeUtil.getColorBackground())
+        drawer.stickyFooter.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary())
+        cyanea.tinter.tint(drawer.slider)
+        cyanea.tinter.tint(drawer.stickyFooter)
     }
 
     private fun userExpandJobs(isScheduledJobs: Boolean) {
@@ -224,10 +259,17 @@ class MainActivity : AppCompatActivity() {
             drawer.closeDrawer()
         }
         drawer.header = headerBinding.rlView
+        headerBinding.rlView.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary())
+        headerBinding.tvTitle.setTextColor(ThemeUtil.getTextColorPrimary())
+        headerBinding.bViewLog.setTextColor(ThemeUtil.getTextColorSecondary())
 
         // Log with error badge
         val badgeText = if (unreadErrorCount == 0) "" else "Errors: $unreadErrorCount"
-        val badgeColorRes = if (unreadErrorCount == 0) R.color.colorNone else R.color.colorError
+        val badgeColor = if (unreadErrorCount == 0) {
+            ThemeUtil.getColorBackground()
+        } else {
+            getColor(R.color.colorError)
+        }
         drawer.updateItem(PrimaryDrawerItem()
                 .withIdentifier(6)
                 .withName("Log")
@@ -236,11 +278,13 @@ class MainActivity : AppCompatActivity() {
                     viewLog()
                     false
                 } }
+                .withTextColor(ThemeUtil.getTextColorPrimary())
+                .withIconColor(ThemeUtil.getTextColorSecondary())
                 .withIcon(CommunityMaterial.Icon2.cmd_text)
                 .withIconTintingEnabled(true)
                 .withBadge(badgeText)
                 .withBadgeStyle(BadgeStyle()
-                        .withColorRes(badgeColorRes)
+                        .withColor(badgeColor)
                         .withTextColorRes(R.color.colorWhite)
                         .withPaddingLeftRightDp(8)
                         .withCornersDp(12)
@@ -257,7 +301,11 @@ class MainActivity : AppCompatActivity() {
 
         val countSuffix = if (jobListItems.isEmpty()) "" else "(${jobListItems.size})"
         val visibleTitle = if (jobListItems.isEmpty()) titlePlaceholder else "$title $countSuffix"
-        val arrowColorRes = if (jobListItems.isEmpty()) R.color.colorWhite else R.color.colorPrimary
+        val arrowColor = if (jobListItems.isEmpty()) {
+            ThemeUtil.getColorBackground()
+        } else {
+            ThemeUtil.getColorAccent()
+        }
 
         val jobsExpandableItem = drawer.getDrawerItem(sectionId) as ExpandableDrawerItem
 
@@ -266,7 +314,7 @@ class MainActivity : AppCompatActivity() {
         val updatedExpandableItem
                 = (if (nullSubItems) jobsExpandableItem.withSubItems() else jobsExpandableItem)
                 .withName(visibleTitle)
-                .withArrowColorRes(arrowColorRes)
+                .withArrowColor(arrowColor)
         drawer.updateItem(updatedExpandableItem)
 
         val subItems = (drawer.getDrawerItem(sectionId) as ExpandableDrawerItem).subItems
@@ -294,6 +342,8 @@ class MainActivity : AppCompatActivity() {
                 .withIdentifier(artifactId)
                 .withLevel(2)
                 .withSelectable(false)
+                .withTextColor(ThemeUtil.getTextColorSecondary())
+                .withDescriptionTextColor(ThemeUtil.getTextColorSecondary())
                 .withOnDrawerItemClickListener { _, _, _ ->
                     IntegrityCore.openCreateNewSnapshot(this, snapshot.artifactId)
                     false
@@ -328,6 +378,10 @@ class MainActivity : AppCompatActivity() {
         if (artifactId != null) {
             sdAdd.addActionItem(SpeedDialActionItem.Builder(0, android.R.drawable.ic_input_add)
                     .setLabel("Create another snapshot")
+                    .setFabBackgroundColor(ThemeUtil.getColorAccent())
+                    .setFabImageTintColor(getColor(R.color.colorWhite))
+                    .setLabelBackgroundColor(ThemeUtil.getTextColorSecondary())
+                    .setLabelColor(ThemeUtil.getColorBackground())
                     .create())
             sdAdd.setOnActionSelectedListener { speedDialActionItem ->
                 addSnapshot(artifactId)
@@ -341,6 +395,10 @@ class MainActivity : AppCompatActivity() {
                 index, name -> sdAdd.addActionItem(SpeedDialActionItem
                     .Builder(index, android.R.drawable.ic_input_add)
                     .setLabel(name)
+                    .setFabBackgroundColor(ThemeUtil.getColorAccent())
+                    .setFabImageTintColor(getColor(R.color.colorWhite))
+                    .setLabelBackgroundColor(ThemeUtil.getTextColorSecondary())
+                    .setLabelColor(ThemeUtil.getColorBackground())
                     .create())
             }
             sdAdd.setOnActionSelectedListener { speedDialActionItem ->
@@ -353,6 +411,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun bindFilter() {
         ivUnFilterArtifact.setOnClickListener { removeArtifactFilter() }
+        llBottomSheet.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary())
+        etSearch.background.setColorFilter(ThemeUtil.getColorBackground(), PorterDuff.Mode.DARKEN)
     }
 
     private fun updateFilterView(artifactId: Long?) {

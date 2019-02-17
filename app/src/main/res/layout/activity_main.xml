@@ -72,6 +72,8 @@
         android:layout_marginRight="@dimen/fab_margin"
         android:layout_marginBottom="-35dp"
         app:sdExpansionMode="top"
+        app:sdMainFabOpenedBackgroundColor="?attr/colorAccent"
+        app:sdMainFabClosedBackgroundColor="?attr/colorAccent"
         app:sdMainFabClosedSrc="@android:drawable/ic_input_add"
         app:sdMainFabOpenedSrc="@android:drawable/ic_menu_close_clear_cancel"
         />
@@ -81,7 +83,7 @@
         android:id="@+id/llBottomSheet"
         android:layout_width="match_parent"
         android:layout_height="350dp"
-        android:background="@android:color/background_light"
+        android:background="?attr/backgroundColor"
         android:orientation="vertical"
         app:behavior_hideable="false"
         app:behavior_peekHeight="80dp"
@@ -100,6 +102,7 @@
                 android:layout_width="50dp"
                 android:layout_height="4dp"
                 android:layout_marginTop="6dp"
+                android:layout_marginBottom="4dp"
                 android:layout_centerHorizontal="true"
                 android:background="@android:color/darker_gray" />
 
@@ -109,9 +112,15 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
+                android:layout_marginBottom="4dp"
                 android:hint="Search"
                 android:layout_below="@+id/vPullUpTab"
                 android:inputType="text"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:background="@drawable/oval"
                 />
 
             <RelativeLayout

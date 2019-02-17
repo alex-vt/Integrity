@@ -5,9 +5,9 @@
   ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -46,9 +46,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="@color/colorWhite"
-            app:itemIconTint="@color/colorPrimary"
-            app:itemTextColor="@color/colorPrimary"
+            android:background="?attr/colorPrimary"
             app:menu="@menu/menu_settings_bottom"
             android:layout_alignParentBottom="true"
             />

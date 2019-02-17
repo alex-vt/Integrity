@@ -31,6 +31,7 @@
             android:textSize="18sp"
             android:layout_marginRight="8dp"
             tools:text="Title"
+            android:textColor="?android:attr/textColorPrimary"
             android:layout_toRightOf="@+id/ivPreview"
             android:layout_toLeftOf="@+id/bMore"
             android:lines="2"
@@ -44,6 +45,7 @@
             android:layout_marginRight="8dp"
             tools:text="Date"
             android:alpha="0.7"
+            android:textColor="?android:attr/textColorSecondary"
             android:layout_toRightOf="@+id/ivPreview"
             android:layout_toLeftOf="@+id/bMore"
             android:layout_below="@+id/tvTitle"
@@ -59,7 +61,7 @@
             android:layout_marginRight="5dp"
             android:textSize="14sp"
             android:textAllCaps="false"
-            android:textColor="@color/colorPrimary"
+            android:backgroundTint="?attr/colorPrimary"
             />
 
         <View

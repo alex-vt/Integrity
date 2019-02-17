@@ -5,23 +5,22 @@
   ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   -->
 
-<androidx.preference.PreferenceScreen
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    >
 
-    <PreferenceCategory
-        app:title="Colors"
-        >
+    <PreferenceCategory app:title="Colors">
 
         <Preference
-            app:key="appearance_color_theme"
+            app:key="appearance_color_background"
             app:title="Theme"
-            app:summary="Light"
+            app:summary="Background color"
             />
 
         <Preference
             app:key="appearance_color_main"
             app:title="Main color"
-            app:summary="Common color"
+            app:summary="Common color for items and buttons"
             />
 
         <Preference

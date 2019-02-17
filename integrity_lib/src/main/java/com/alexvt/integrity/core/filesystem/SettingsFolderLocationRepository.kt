@@ -11,26 +11,28 @@ import com.alexvt.integrity.lib.EmptyLocationCredentials
 import com.alexvt.integrity.lib.FolderLocation
 import com.alexvt.integrity.lib.FolderLocationCredentials
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.settings.SimplePersistableSettingsRepository
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.core.util.PreferencesUtil
 
 /**
- * Stores folder locations and credentials simply in Java objects
+ * Stores folder locations in app settings.
+ *
+ * Stores folder credentials simply in Java objects
  * and persists them to Android SharedPreferences as JSON string.
  * todo secure credentials
  */
-object SimplePersistableFolderLocationRepository : FolderLocationRepository {
+object SettingsFolderLocationRepository : FolderLocationRepository {
 
     /**
      * A collection of folder locations and credentials
      */
-    private data class FolderLocations(
-            val folderLocationSet: LinkedHashSet<FolderLocation> = linkedSetOf(),
+    private data class Credentials(
             val folderLocationCredentialsSet: LinkedHashSet<FolderLocationCredentials>
             = linkedSetOf()
     )
 
-    private lateinit var folderLocations: FolderLocations
+    private lateinit var credentials: Credentials
 
 
     /**
@@ -39,43 +41,51 @@ object SimplePersistableFolderLocationRepository : FolderLocationRepository {
     override fun init(context: Context) {
         val folderLocationsJson = PreferencesUtil.getFolderLocationsJson(context)
         if (folderLocationsJson != null) {
-            folderLocations = JsonSerializerUtil.fromJson(folderLocationsJson, FolderLocations::class.java)
+            credentials = JsonSerializerUtil.fromJson(folderLocationsJson, Credentials::class.java)
         }
-        if (!::folderLocations.isInitialized) {
-            folderLocations = FolderLocations()
+        if (!::credentials.isInitialized) {
+            credentials = Credentials()
         }
     }
 
     override fun addFolderLocation(folderLocation: FolderLocation): String {
-        folderLocations.folderLocationSet.add(folderLocation)
-        persistAll()
+        val settings = SimplePersistableSettingsRepository.get()
+        settings.dataFolderLocations.add(folderLocation)
+        SimplePersistableSettingsRepository.set(IntegrityCore.context, settings)
+
         return folderLocation.title
     }
 
     override fun addFolderLocationCredentials(folderLocationCredentials: FolderLocationCredentials) {
-        folderLocations.folderLocationCredentialsSet.add(folderLocationCredentials)
-        persistAll()
+        credentials.folderLocationCredentialsSet.add(folderLocationCredentials)
+        persistCredentials()
     }
 
     override fun getAllFolderLocations(): List<FolderLocation> {
-        return ArrayList(folderLocations.folderLocationSet)
+        return SimplePersistableSettingsRepository.get().dataFolderLocations
     }
 
     override fun getCredentials(folderLocation: FolderLocation): FolderLocationCredentials
-            = folderLocations.folderLocationCredentialsSet
+            = credentials.folderLocationCredentialsSet
             .firstOrNull { it.title == folderLocation.title }
             ?: EmptyLocationCredentials()
 
     override fun removeFolderLocationAndCredentials(title: String) {
-        folderLocations.folderLocationSet.removeIf { it.title == title }
-        folderLocations.folderLocationCredentialsSet.removeIf { it.title == title }
-        persistAll()
+        val settings = SimplePersistableSettingsRepository.get()
+        settings.dataFolderLocations.removeIf { it.title == title }
+        SimplePersistableSettingsRepository.set(IntegrityCore.context, settings)
+
+        credentials.folderLocationCredentialsSet.removeIf { it.title == title }
+        persistCredentials()
     }
 
     override fun clear() {
-        folderLocations.folderLocationSet.clear()
-        folderLocations.folderLocationCredentialsSet.clear()
-        persistAll()
+        val settings = SimplePersistableSettingsRepository.get()
+        settings.dataFolderLocations.clear()
+        SimplePersistableSettingsRepository.set(IntegrityCore.context, settings)
+
+        credentials.folderLocationCredentialsSet.clear()
+        persistCredentials()
     }
 
     /**
@@ -83,8 +93,8 @@ object SimplePersistableFolderLocationRepository : FolderLocationRepository {
      *
      * Should be called after every presets modification.
      */
-    @Synchronized private fun persistAll() {
-        val presetsJson = JsonSerializerUtil.toJson(folderLocations)
+    @Synchronized private fun persistCredentials() {
+        val presetsJson = JsonSerializerUtil.toJson(credentials)
         PreferencesUtil.setFolderLocationsJson(IntegrityCore.context, presetsJson)
     }
 }

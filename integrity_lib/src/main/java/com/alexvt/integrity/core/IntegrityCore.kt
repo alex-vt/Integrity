@@ -15,7 +15,7 @@ import com.alexvt.integrity.core.database.MetadataRepository
 import com.alexvt.integrity.core.database.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
 import com.alexvt.integrity.core.filesystem.FolderLocationRepository
-import com.alexvt.integrity.core.filesystem.SimplePersistableFolderLocationRepository
+import com.alexvt.integrity.core.filesystem.SettingsFolderLocationRepository
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.job.ScheduledJobManager
@@ -27,7 +27,9 @@ import com.alexvt.integrity.core.log.*
 import com.alexvt.integrity.core.notification.ErrorNotifier
 import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.search.SimplePersistableSearchIndexRepository
-import com.alexvt.integrity.core.tags.SimplePersistableTagRepository
+import com.alexvt.integrity.core.settings.SettingsRepository
+import com.alexvt.integrity.core.settings.SimplePersistableSettingsRepository
+import com.alexvt.integrity.core.tags.SettingsTagRepository
 import com.alexvt.integrity.core.tags.TagRepository
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.util.*
@@ -47,6 +49,7 @@ object IntegrityCore {
     lateinit var tagRepository: TagRepository
     lateinit var searchIndexRepository: SearchIndexRepository
     lateinit var logRepository: LogRepository
+    lateinit var settingsRepository: SettingsRepository
 
     lateinit var context: Context
 
@@ -62,11 +65,13 @@ object IntegrityCore {
             IntegrityCore.context = context
             logRepository = SimplePersistableLogRepository // todo replace with database
             logRepository.init(context)
+            settingsRepository = SimplePersistableSettingsRepository
+            settingsRepository.init(context)
             metadataRepository = SimplePersistableMetadataRepository // todo replace with database
             metadataRepository.init(context)
-            folderLocationRepository = SimplePersistableFolderLocationRepository // todo replace with database
+            folderLocationRepository = SettingsFolderLocationRepository
             folderLocationRepository.init(context)
-            tagRepository = SimplePersistableTagRepository // todo replace with database
+            tagRepository = SettingsTagRepository
             tagRepository.init(context)
             searchIndexRepository = SimplePersistableSearchIndexRepository // todo replace with database
             searchIndexRepository.init(context)

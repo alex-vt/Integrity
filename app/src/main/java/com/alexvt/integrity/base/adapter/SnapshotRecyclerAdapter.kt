@@ -6,26 +6,18 @@
 
 package com.alexvt.integrity.base.adapter
 
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.activity.MainActivity
+import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.SnapshotStatus
 import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DataSource
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.DrawableImageViewTarget
-import com.bumptech.glide.request.target.SimpleTarget
-import com.bumptech.glide.request.target.Target
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
 import kotlinx.android.synthetic.main.snapshot_list_item.view.*
@@ -45,8 +37,12 @@ class SnapshotRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Int>>,
 
     override fun getItemCount() = items.size
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = SnapshotViewHolder(
-            LayoutInflater.from(mainActivity).inflate(R.layout.snapshot_list_item, parent, false))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SnapshotViewHolder {
+        val view = LayoutInflater.from(mainActivity).inflate(R.layout.snapshot_list_item, parent,
+                false)
+        FontUtil.setFont(mainActivity, view)
+        return SnapshotViewHolder(view)
+    }
 
     override fun onBindViewHolder(holder: SnapshotViewHolder, position: Int) {
         val snapshot = items[position].first

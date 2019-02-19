@@ -16,6 +16,7 @@ import com.alexvt.integrity.core.util.JsonSerializerUtil
  */
 object IntentUtil {
 
+    private const val recreate = "recreate"
     private const val artifactId = "artifactId"
     private const val date = "date"
     private const val dates = "dates"
@@ -25,6 +26,14 @@ object IntentUtil {
     private const val selectMode = "selectMode"
     private const val logEntry = "logEntry"
     private const val viewExtensions = "viewExtensions"
+
+    fun withRecreate(downloaded: Boolean): Intent {
+        val intent = Intent()
+        intent.putExtra(IntentUtil.recreate, downloaded)
+        return intent
+    }
+
+    fun isRecreate(intent: Intent?) = intent?.getBooleanExtra(recreate, false) ?: false
 
     fun putArtifactId(intent: Intent?, artifactId: Long): Intent {
         intent!!.putExtra(IntentUtil.artifactId, artifactId)

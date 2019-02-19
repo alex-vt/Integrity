@@ -6,11 +6,18 @@
 
 package com.alexvt.integrity.base.activity
 
+import android.app.Activity
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.*
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.preference.*
+import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.alexvt.integrity.R
+import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
@@ -20,6 +27,9 @@ import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class SettingsActivity : CyaneaAppCompatActivity() {
@@ -31,6 +41,14 @@ class SettingsActivity : CyaneaAppCompatActivity() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
+        setBottomNavigationIcons()
+
+        bindBottomNavigation()
+
+        FontUtil.setFont(this)
+    }
+
+    private fun setBottomNavigationIcons() {
         // Custom icon support // todo improve
         // see https://github.com/mikepenz/Android-Iconics/issues/270#issuecomment-296468885
         val bottomMenuItemColorStates = ColorStateList(arrayOf(
@@ -54,6 +72,21 @@ class SettingsActivity : CyaneaAppCompatActivity() {
                 .icon(CommunityMaterial.Icon.cmd_bell_ring)
         bnView.menu.getItem(4).icon = IconicsDrawable(this.applicationContext)
                 .icon(CommunityMaterial.Icon2.cmd_puzzle)
+    }
+
+    private fun bindBottomNavigation() {
+        // todo set fonts better
+        supportFragmentManager.registerFragmentLifecycleCallbacks(
+                object : FragmentManager.FragmentLifecycleCallbacks() {
+                    override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
+                        super.onFragmentResumed(fm, f)
+                        GlobalScope.launch(Dispatchers.Main) {
+                            if (f.view != null) {
+                                FontUtil.setFont(this@SettingsActivity, f.view!!)
+                            }
+                        }
+                    }
+                }, true)
 
         bnView.setOnNavigationItemSelectedListener { item ->
             toolbar.subtitle = item.title
@@ -64,8 +97,7 @@ class SettingsActivity : CyaneaAppCompatActivity() {
                 R.id.action_notifications -> NotificationSettingsFragment()
                 else -> ExtensionSettingsFragment()
             }
-            supportFragmentManager
-                    .beginTransaction()
+            supportFragmentManager.beginTransaction()
                     .replace(R.id.flSettingSection, sectionFragment)
                     .commit()
             true
@@ -83,6 +115,7 @@ class SettingsActivity : CyaneaAppCompatActivity() {
             val prefColorBackground: Preference = findPreference("appearance_color_background")
             val prefColorPrimary: Preference = findPreference("appearance_color_main")
             val prefColorAccent: Preference = findPreference("appearance_color_accent")
+            val prefTextFont: Preference = findPreference("appearance_text_font")
 
             prefColorBackground.onPreferenceClickListener = Preference.OnPreferenceClickListener {
                 val dialog = ColorPickerDialog.newBuilder()
@@ -138,14 +171,30 @@ class SettingsActivity : CyaneaAppCompatActivity() {
                 dialog.show(fragmentManager!!, "ColorPickerDialog")
                 true
             }
-            //applyTheme() // todo propagate to all UI
+
+            val currentFontName = IntegrityCore.settingsRepository.get().textFont
+            prefTextFont.summary = currentFontName
+            prefTextFont.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                val fontNames = listOf("Default").plus(FontUtil.getNames())
+                val currentFontName = IntegrityCore.settingsRepository.get().textFont
+                val currentFontIndex = Math.max(fontNames.indexOf(currentFontName), 0) // default 0
+                MaterialDialog(context!!)
+                        .title(text = "Select font")
+                        .listItemsSingleChoice(items = fontNames,
+                                initialSelection = currentFontIndex) { dialog, index, text ->
+                            val selectedFontName = fontNames[index]
+                            if (selectedFontName != currentFontName) {
+                                FontUtil.saveFont(context!!, selectedFontName)
+                                prefTextFont.summary = selectedFontName
+                                FontUtil.setFont(activity!!)
+                                activity!!.setResult(Activity.RESULT_OK, IntentUtil.withRecreate(true))
+                            }
+                        }.show()
+                true
+            }
         }
-
     }
 
-    companion object {
-
-    }
     private fun applyTheme() {
         cyanea.edit {
             primary(ThemeUtil.getColorPrimary())

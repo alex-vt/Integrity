@@ -38,7 +38,7 @@
         <Preference
             app:key="appearance_text_font"
             app:title="Font"
-            app:summary="Roboto"/>
+            app:summary="Default"/>
 
         <Preference
             app:key="appearance_text_size"

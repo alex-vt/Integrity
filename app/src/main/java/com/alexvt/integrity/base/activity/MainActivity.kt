@@ -46,6 +46,7 @@ import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
 import java.util.*
 import co.zsmb.materialdrawerkt.draweritems.badge
 import com.alexvt.integrity.BuildConfig
+import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
@@ -81,10 +82,13 @@ class MainActivity : CyaneaAppCompatActivity() {
         bindDrawer()
         bindAddButton()
         bindSnapshotList()
+        bindSnapshotList()
         bindFilter()
         bindSearch()
 
         onInputsUpdate(inputs)
+
+        FontUtil.setFont(this)
     }
 
     override fun onAttachedToWindow() {
@@ -112,6 +116,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 iconTintingEnabled = true
                 textColor = ThemeUtil.getTextColorPrimary().toLong()
                 iconColor = ThemeUtil.getTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity)
             } // updatable
             expandableItem("Up next") {
                 identifier = 2
@@ -124,6 +129,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 iconTintingEnabled = true
                 textColor = ThemeUtil.getTextColorPrimary().toLong()
                 iconColor = ThemeUtil.getTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity)
             } // updatable
             divider { identifier = 3 }
             primaryItem("Archives & Storage") {
@@ -137,6 +143,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 iconTintingEnabled = true
                 textColor = ThemeUtil.getTextColorPrimary().toLong()
                 iconColor = ThemeUtil.getTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity)
             }
             primaryItem("Tags") {
                 identifier = 5
@@ -149,6 +156,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 iconTintingEnabled = true
                 textColor = ThemeUtil.getTextColorPrimary().toLong()
                 iconColor = ThemeUtil.getTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity)
             }
             primaryItem("Log") {
                 identifier = 6
@@ -164,6 +172,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 iconTintingEnabled = true
                 textColor = ThemeUtil.getTextColorPrimary().toLong()
                 iconColor = ThemeUtil.getTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity)
             }
             divider { identifier = 8 }
             primaryItem("Restore...") {
@@ -180,6 +189,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 iconColor = ThemeUtil.getTextColorSecondary().toLong()
                 disabledTextColor = ThemeUtil.getTextColorSecondary().toLong()
                 disabledIconColor = ThemeUtil.getTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity)
             }
             footer {
                 toggleItem("Offline mode") {
@@ -252,6 +262,7 @@ class MainActivity : CyaneaAppCompatActivity() {
         // Header
         val headerBinding: DrawerHeaderBinding = DataBindingUtil.inflate(LayoutInflater.from(
                 this@MainActivity), R.layout.drawer_header, null, false)
+        FontUtil.setFont(this, headerBinding.rlView)
         headerBinding.tvTitle.text = if (unreadErrorCount == 0) {
             "App is working normally"
         } else {
@@ -286,6 +297,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 .withIconColor(ThemeUtil.getTextColorSecondary())
                 .withIcon(CommunityMaterial.Icon2.cmd_text)
                 .withIconTintingEnabled(true)
+                .withTypeface(FontUtil.getTypeface(this))
                 .withBadge(badgeText)
                 .withBadgeStyle(BadgeStyle()
                         .withColor(badgeColor)
@@ -348,6 +360,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 .withSelectable(false)
                 .withTextColor(ThemeUtil.getTextColorSecondary())
                 .withDescriptionTextColor(ThemeUtil.getTextColorSecondary())
+                .withTypeface(FontUtil.getTypeface(this))
                 .withOnDrawerItemClickListener { _, _, _ ->
                     IntegrityCore.openCreateNewSnapshot(this, snapshot.artifactId)
                     false
@@ -362,6 +375,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 .withIdentifier(artifactId - 1_000_000_000L) // todo distinguish better
                 .withLevel(2)
                 .withSelectable(false)
+                .withTypeface(FontUtil.getTypeface(this))
                 .withOnDrawerItemClickListener { _, _, _ ->
                     IntegrityCore.openViewSnapshotOrShowProgress(this, snapshot.artifactId,
                             snapshot.date)
@@ -411,6 +425,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 false
             }
         }
+        FontUtil.setFont(this, sdAdd)
     }
 
     private fun bindFilter() {
@@ -504,6 +519,9 @@ class MainActivity : CyaneaAppCompatActivity() {
         if (snapshot != null) {
             IntegrityCore.saveSnapshot(this, snapshot)
         }
+        if (IntentUtil.isRecreate(data)) {
+            recreate()
+        }
     }
 
     override fun onStart() {
@@ -592,8 +610,8 @@ class MainActivity : CyaneaAppCompatActivity() {
     }
 
     private fun viewSettings(viewExtensions: Boolean = false) {
-        startActivity(IntentUtil.putViewExtensions(Intent(this, SettingsActivity::class.java),
-                viewExtensions))
+        startActivityForResult(IntentUtil.putViewExtensions(
+                Intent(this, SettingsActivity::class.java), viewExtensions), 0)
     }
 
     fun filterArtifact(artifactId: Long?) {

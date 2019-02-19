@@ -24,6 +24,15 @@ object ThemeUtil { // todo keep parsed colors until color settings change
         }
     }
 
+    fun getColorBackgroundBleached(): Int {
+        val colorBackground = getColorBackground()
+        return if (ColorUtils.calculateLuminance(colorBackground) < 0.5) {
+            colorBackground
+        } else {
+            Color.WHITE
+        }
+    }
+
     fun getColorPrimary() = Color.parseColor(IntegrityCore.settingsRepository.get().colorPrimary)
 
     fun getColorPrimaryDark() = darken(getColorPrimary(), 0.2f)

@@ -100,27 +100,27 @@
             <View
                 android:id="@+id/vPullUpTab"
                 android:layout_width="50dp"
-                android:layout_height="4dp"
+                android:layout_height="4.5dp"
                 android:layout_marginTop="6dp"
-                android:layout_marginBottom="4dp"
+                android:layout_marginBottom="5dp"
                 android:layout_centerHorizontal="true"
                 android:background="@android:color/darker_gray" />
 
-            <EditText
-                android:id="@+id/etSearch"
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/svMain"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
+                app:iconifiedByDefault="false"
+                app:queryBackground="@color/colorNone"
+                android:voiceSearchMode="showVoiceSearchButton|launchRecognizer"
+                app:queryHint="Search"
+                android:layout_marginLeft="12dp"
+                android:layout_marginRight="12dp"
                 android:layout_marginBottom="4dp"
-                android:hint="Search"
+                android:background="@drawable/rounded_white"
+                android:imeOptions="actionSearch"
                 android:layout_below="@+id/vPullUpTab"
                 android:inputType="text"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
-                android:background="@drawable/oval"
                 />
 
             <RelativeLayout
@@ -129,7 +129,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
-                android:layout_below="@+id/etSearch"
+                android:layout_below="@+id/svMain"
                 android:background="@color/colorShade"
                 >
 

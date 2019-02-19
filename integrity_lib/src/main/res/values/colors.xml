@@ -20,6 +20,7 @@
     <color name="colorLight">#FFFAFAFA</color>
     <color name="colorWhite">#FFF</color>
     <color name="colorNone">#0FFF</color>
+    <color name="colorTranslucentGray">#7F7F7F7F</color>
 
 
     <color name="colorPalette1">#EE0000</color>

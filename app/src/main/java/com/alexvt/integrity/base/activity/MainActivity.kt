@@ -6,6 +6,8 @@
 
 package com.alexvt.integrity.base.activity
 
+import android.app.SearchManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.PorterDuff
 import android.os.Bundle
@@ -17,13 +19,14 @@ import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.search.SearchUtil
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.util.IntentUtil
-import com.jakewharton.rxbinding3.widget.textChanges
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import io.reactivex.android.schedulers.AndroidSchedulers
 
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
 import android.view.*
+import android.widget.ImageView
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.LayoutInflaterCompat
 import androidx.databinding.DataBindingUtil
 import co.zsmb.materialdrawerkt.builders.drawer
@@ -47,6 +50,7 @@ import com.alexvt.integrity.core.util.ThemeUtil
 import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
+import com.jakewharton.rxbinding3.appcompat.queryTextChanges
 
 
 class MainActivity : CyaneaAppCompatActivity() {
@@ -412,7 +416,8 @@ class MainActivity : CyaneaAppCompatActivity() {
     private fun bindFilter() {
         ivUnFilterArtifact.setOnClickListener { removeArtifactFilter() }
         llBottomSheet.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary())
-        etSearch.background.setColorFilter(ThemeUtil.getColorBackground(), PorterDuff.Mode.DARKEN)
+        svMain.background.setColorFilter(ThemeUtil.getColorBackgroundBleached(),
+                PorterDuff.Mode.DARKEN)
     }
 
     private fun updateFilterView(artifactId: Long?) {
@@ -425,13 +430,47 @@ class MainActivity : CyaneaAppCompatActivity() {
 
     private fun bindSearch() {
         rvSearchResults.adapter = SearchResultRecyclerAdapter(ArrayList(), this)
-        etSearch.textChanges()
+
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as? SearchManager
+            if (searchManager != null) {
+                svMain.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+            }
+
+        fixMicIconBackground(svMain)
+        svMain.queryTextChanges()
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { onInputsUpdate(inputs.copy(searchText = it.trim().toString())) }
     }
 
+    /**
+     * Fixes default SearchView voice search icon background shape and visual artifacts.
+     * todo improve and move
+     */
+    private fun fixMicIconBackground(svMain: SearchView) {
+        // Rounded mic icon background that doesn't extend outsize the rounded search view
+        val ivMicButton: ImageView? = svMain.findViewById(R.id.search_voice_btn)
+        if (ivMicButton != null) {
+            ivMicButton.setBackgroundResource(R.drawable.rounded_padded_clickable)
+        }
+        // Removing the thin gray line visual artifact on the mic icon background
+        val llSubmitArea: View? = svMain.findViewById(R.id.submit_area)
+        if (llSubmitArea != null) {
+            llSubmitArea.setBackgroundColor(getColor(R.color.colorNone))
+            llSubmitArea.setPadding(0, 0, 0, 0)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (Intent.ACTION_SEARCH == intent.action) {
+            val query = intent.getStringExtra(SearchManager.QUERY)
+            onInputsUpdate(inputs.copy(searchText = query.trim()))
+        }
+    }
+
     private fun search(searchedText: String, filteredArtifactId: Long?) {
+        svMain.setQuery(searchedText, false)
         if (searchedText.isBlank()) {
             toolbar.title = "Snapshots"
             toolbar.subtitle = when {

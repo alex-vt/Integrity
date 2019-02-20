@@ -8,11 +8,20 @@
 <androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <SwitchPreferenceCompat
-        app:key="notifications_errors"
-        app:title="Error notifications"
-        app:summaryOn="Show a notification once an error happens in the app"
-        app:summaryOff="Don\'t receive notifications about errors (use log to see them)"
-        />
+    <PreferenceCategory
+        app:title="Notifications for errors"
+        >
+
+        <SwitchPreferenceCompat
+            app:key="notifications_errors_enable"
+            app:title="Enable"
+            app:summaryOn="Show a notification when there are new errors"
+            app:summaryOff="Don\'t receive notifications about errors (use log to see them)"
+            />
+
+        <!-- todo sound, etc. controls, including on Oreo+ -->
+
+    </PreferenceCategory>
+
 
 </androidx.preference.PreferenceScreen>

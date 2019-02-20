@@ -106,7 +106,11 @@ object IntegrityCore {
     fun notifyAboutUnreadErrors(context: Context) {
         val unreadErrors = logRepository.getUnreadErrors()
         if (unreadErrors.isNotEmpty()) {
-            ErrorNotifier.notifyAboutErrors(context, unreadErrors)
+            if (settingsRepository.get().notificationShowErrors) {
+                ErrorNotifier.notifyAboutErrors(context, unreadErrors)
+            } else {
+                ErrorNotifier.removeNotification(context)
+            }
         } else {
             ErrorNotifier.removeNotification(context)
         }

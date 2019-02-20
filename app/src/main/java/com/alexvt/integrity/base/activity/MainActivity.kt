@@ -58,13 +58,11 @@ import com.jakewharton.rxbinding3.appcompat.queryTextChanges
 class MainActivity : CyaneaAppCompatActivity() {
 
     data class Inputs(val filteredArtifactId: Long?,
-                      val searchText: String,
-                      val runningJobsExpanded: Boolean,
-                      val scheduledJobsExpanded: Boolean)
+                      val searchText: String)
 
     private lateinit var drawer: Drawer
 
-    private var inputs: Inputs = Inputs(null, "", true, true)
+    private var inputs: Inputs = Inputs(null, "")
 
     private fun onInputsUpdate(newInputs: Inputs) {
         inputs = newInputs
@@ -110,7 +108,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 identifier = 1
                 selectable = false
                 onClick { _ ->
-                    userExpandJobs(false)
+                    userTryToggleExpandJobs(false)
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_playlist_play
@@ -123,7 +121,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 identifier = 2
                 selectable = false
                 onClick { _ ->
-                    userExpandJobs(true)
+                    userTryToggleExpandJobs(true)
                     false
                 }
                 iicon = CommunityMaterial.Icon.cmd_calendar_clock
@@ -245,17 +243,18 @@ class MainActivity : CyaneaAppCompatActivity() {
         cyanea.tinter.tint(drawer.stickyFooter)
     }
 
-    private fun userExpandJobs(isScheduledJobs: Boolean) {
+    private fun userTryToggleExpandJobs(isScheduledJobs: Boolean) {
         val sectionId = if (isScheduledJobs) 2L else 1L
         val isExpandable = drawer.getDrawerItem(sectionId).subItems.isNotEmpty()
         if (!isExpandable) {
             return
         }
         val isExpanded = drawer.getDrawerItem(sectionId).isExpanded
-        onInputsUpdate(if (isScheduledJobs) {
-            inputs.copy(scheduledJobsExpanded = isExpanded)
+        val oldSettings = IntegrityCore.settingsRepository.get()
+        IntegrityCore.settingsRepository.set(this, if (isScheduledJobs) {
+            oldSettings.copy(menuExpandJobsScheduled = isExpanded)
         } else {
-            inputs.copy(runningJobsExpanded = isExpanded)
+            oldSettings.copy(menuExpandJobsRunning = isExpanded)
         })
     }
 
@@ -530,15 +529,15 @@ class MainActivity : CyaneaAppCompatActivity() {
         IntegrityCore.metadataRepository.addChangesListener(this) {
             refreshSnapshotList(inputs.filteredArtifactId)
         }
-        IntegrityCore.subscribeToScheduledJobListing(this) {
-            updateJobsInDrawer(it.map { getScheduledJobDrawerItem(it.first) },
-                    2L, "Up next", "No scheduled jobs",
-                    inputs.scheduledJobsExpanded)
-        }
         IntegrityCore.subscribeToRunningJobListing(this) {
             updateJobsInDrawer(it.map { getRunningJobDrawerItem(it.first, it.second) },
                     1L, "Running now", "No running jobs",
-                    inputs.runningJobsExpanded)
+                    IntegrityCore.settingsRepository.get().menuExpandJobsRunning)
+        }
+        IntegrityCore.subscribeToScheduledJobListing(this) {
+            updateJobsInDrawer(it.map { getScheduledJobDrawerItem(it.first) },
+                    2L, "Up next", "No scheduled jobs",
+                    IntegrityCore.settingsRepository.get().menuExpandJobsScheduled)
         }
         updateErrorViewsOnDrawer(IntegrityCore.logRepository.getUnreadErrors().count())
     }

@@ -15,13 +15,15 @@
         <CheckBoxPreference
             app:key="behavior_drawer_expand_running"
             app:title="Expand running job list"
-            app:summary="Shows running job list if there are any"
+            app:summaryOn="Show running job list"
+            app:summaryOff="Running job list stays collapsed"
             />
 
         <CheckBoxPreference
             app:key="behavior_drawer_expand_scheduled"
             app:title="Expand scheduled job list"
-            app:summary="Shows scheduled job list if there are any"
+            app:summaryOn="Show scheduled job list"
+            app:summaryOff="Scheduled job list stays collapsed"
             />
 
     </PreferenceCategory>

@@ -10,7 +10,9 @@ import android.app.Application
 import com.alexvt.integrity.core.*
 import android.app.ActivityManager
 import android.content.Context
+import com.alexvt.integrity.lib.Log
 import com.jaredrummler.cyanea.Cyanea
+import java.lang.RuntimeException
 
 
 class App : Application() {
@@ -19,11 +21,43 @@ class App : Application() {
         super.onCreate()
 
         if (isRecoveryProcess(this)) {
+            if (checkRecoveryInLoop(this)) {
+                throw RuntimeException("Too frequent attempts to recover crashed Integrity app")
+            }
             return // recovery process is only used to restart the main one, doesn't init anything
         }
 
         Cyanea.init(this, resources)
-        IntegrityCore.init(this)
+        try {
+            IntegrityCore.init(this)
+        } catch (throwable: Throwable) {
+            Log(this, "Failed to start Integrity app").logError(throwable)
+            throw throwable
+        }
+
+        handleUncaughtExceptions(this)
+    }
+
+    private fun checkRecoveryInLoop(context: Context): Boolean {
+        val minTimeBetweenRecoveryAttempts = 10000
+        val name = "recovery_time"
+        val key = "last_recovery_time"
+        val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
+
+        val lastTimeRecovered = prefs?.getLong(key, 0) ?: 0
+        val currentTime = System.currentTimeMillis()
+        prefs.edit().putLong(key, currentTime).apply()
+
+        return (lastTimeRecovered + minTimeBetweenRecoveryAttempts > currentTime)
+    }
+
+    private fun handleUncaughtExceptions(context: Context) {
+        Thread.setDefaultUncaughtExceptionHandler {
+            thread, throwable ->
+            Log(context, throwable.message ?: "Uncaught exception (null message)")
+                    .thread(thread).logCrash(throwable)
+            Runtime.getRuntime().exit(1)
+        }
     }
 
     private fun isRecoveryProcess(context: Context): Boolean {

@@ -7,12 +7,10 @@
 package com.alexvt.integrity.type.github
 
 import android.app.Application
-import com.alexvt.integrity.lib.IntegrityEx
 
 class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        IntegrityEx.handleUncaughtExceptions(this)
     }
 }

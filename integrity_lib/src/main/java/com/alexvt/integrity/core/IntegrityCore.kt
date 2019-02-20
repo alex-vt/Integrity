@@ -61,37 +61,26 @@ object IntegrityCore {
      * This setup prevents "boot loops": as early as initialization fails, the app isn't recovered.
      */
     fun init(context: Context) {
-        try {
-            IntegrityCore.context = context
-            logRepository = SimplePersistableLogRepository // todo replace with database
-            logRepository.init(context)
-            settingsRepository = SimplePersistableSettingsRepository
-            settingsRepository.init(context)
-            metadataRepository = SimplePersistableMetadataRepository // todo replace with database
-            metadataRepository.init(context)
-            folderLocationRepository = SettingsFolderLocationRepository
-            folderLocationRepository.init(context)
-            tagRepository = SettingsTagRepository
-            tagRepository.init(context)
-            searchIndexRepository = SimplePersistableSearchIndexRepository // todo replace with database
-            searchIndexRepository.init(context)
+        IntegrityCore.context = context
+        logRepository = SimplePersistableLogRepository // todo replace with database
+        logRepository.init(context)
+        settingsRepository = SimplePersistableSettingsRepository
+        settingsRepository.init(context)
+        metadataRepository = SimplePersistableMetadataRepository // todo replace with database
+        metadataRepository.init(context)
+        folderLocationRepository = SettingsFolderLocationRepository
+        folderLocationRepository.init(context)
+        tagRepository = SettingsTagRepository
+        tagRepository.init(context)
+        searchIndexRepository = SimplePersistableSearchIndexRepository // todo replace with database
+        searchIndexRepository.init(context)
 
-            resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
-            ScheduledJobManager.updateSchedule(context)
+        resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
+        ScheduledJobManager.updateSchedule(context)
 
-            notifyAboutUnreadErrors(context)
-            IntegrityEx.handleUncaughtExceptions(context)
+        notifyAboutUnreadErrors(context)
 
-            Log(context, "IntegrityCore initialized").log()
-        } catch (t: Throwable) {
-            try {
-                Log(context, "Failed to start Integrity app").logError(t) // using logger
-            } catch (t: Throwable) {
-                val errorText = "Failed to start Integrity app (and its logs)"
-                LoggingUtil.logErrorInLogcat(errorText, t)
-                ErrorNotifier.notifyAboutFailure(context, errorText)
-            }
-        }
+        Log(context, "IntegrityCore initialized").log()
     }
 
     private fun resetInProgressSnapshotStatuses() {

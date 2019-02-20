@@ -48,19 +48,6 @@ object ErrorNotifier {
         }
     }
 
-    fun notifyAboutFailure(context: Context, text: String) {
-        val mBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.notification_icon_error)
-                .setContentTitle("Failure happened - Integrity")
-                .setContentText(text)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-
-        with(NotificationManagerCompat.from(context)) {
-            notify(NOTIFICATION_ID, mBuilder.build())
-        }
-    }
-
     private fun getNotificationText(errorLogEntries: List<LogEntry>): String {
         val firstErrorText = errorLogEntries[0].text
         val timeStampSuffix = if (errorLogEntries[0].time.isNotBlank()) {

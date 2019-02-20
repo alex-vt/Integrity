@@ -20,15 +20,6 @@ import com.alexvt.integrity.lib.util.IntentUtil
  */
 object IntegrityEx {
 
-    fun handleUncaughtExceptions(context: Context) {
-        Thread.setDefaultUncaughtExceptionHandler {
-            thread, throwable -> Log(context, throwable.message ?: "Uncaught exception (null message)")
-                .thread(thread)
-                .logCrash(throwable)
-            Runtime.getRuntime().exit(0) // the faulty process terminates
-        }
-    }
-
     fun isSnapshotDownloadRunning(artifactId: Long, date: String)
             = RunningJobManager.isRunning(artifactId, date)
 

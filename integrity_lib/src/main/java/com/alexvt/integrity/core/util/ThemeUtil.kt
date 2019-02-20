@@ -10,6 +10,8 @@ import android.content.Context
 import android.graphics.Color
 import androidx.core.graphics.ColorUtils
 import com.alexvt.integrity.core.IntegrityCore
+import com.jaredrummler.cyanea.Cyanea
+import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 
 object ThemeUtil { // todo keep parsed colors until color settings change
 
@@ -54,6 +56,18 @@ object ThemeUtil { // todo keep parsed colors until color settings change
         IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
                 colorBackground = getHexColor(intColor))
         )
+    }
+
+    fun applyThemeAndRecreate(activity: CyaneaAppCompatActivity) {
+        activity.cyanea.edit {
+            primary(ThemeUtil.getColorPrimary())
+            primaryDark(ThemeUtil.getColorPrimaryDark())
+            accent(ThemeUtil.getColorAccent())
+            shouldTintNavBar(true)
+            shouldTintStatusBar(true)
+            navigationBar(ThemeUtil.getColorPrimaryDark())
+            background(ThemeUtil.getColorBackground())
+        }.recreate(activity)
     }
 
     fun saveColorPrimary(context: Context, intColor: Int) {

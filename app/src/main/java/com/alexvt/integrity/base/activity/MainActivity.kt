@@ -48,6 +48,7 @@ import co.zsmb.materialdrawerkt.draweritems.badge
 import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
+import com.alexvt.integrity.settings.SettingsActivity
 import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil

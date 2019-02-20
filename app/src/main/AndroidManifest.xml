@@ -84,7 +84,7 @@
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.base.activity.SettingsActivity"
+            android:name="com.alexvt.integrity.settings.SettingsActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 

@@ -40,10 +40,7 @@
             app:title="Font"
             app:summary="Default"/>
 
-        <Preference
-            app:key="appearance_text_size"
-            app:title="Text size"
-            app:summary="Normal"/>
+        <!-- todo add time format settings -->
 
     </PreferenceCategory>
 

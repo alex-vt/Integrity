@@ -48,6 +48,7 @@ import co.zsmb.materialdrawerkt.draweritems.badge
 import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
+import com.alexvt.integrity.recovery.RecoveryActivity
 import com.alexvt.integrity.settings.SettingsActivity
 import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
@@ -177,9 +178,8 @@ class MainActivity : CyaneaAppCompatActivity() {
             primaryItem("Restore...") {
                 identifier = 9
                 selectable = false
-                enabled = false
                 onClick { _ ->
-                    // todo show options for snapshots (including app settings) recovery from archives
+                    viewRecovery()
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_history
@@ -612,6 +612,10 @@ class MainActivity : CyaneaAppCompatActivity() {
     private fun viewSettings(viewExtensions: Boolean = false) {
         startActivityForResult(IntentUtil.putViewExtensions(
                 Intent(this, SettingsActivity::class.java), viewExtensions), 0)
+    }
+
+    private fun viewRecovery() {
+        startActivity(Intent(this, RecoveryActivity::class.java))
     }
 
     fun filterArtifact(artifactId: Long?) {

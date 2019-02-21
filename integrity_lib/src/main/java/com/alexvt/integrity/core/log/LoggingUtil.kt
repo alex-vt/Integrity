@@ -24,7 +24,7 @@ object LoggingUtil {
     fun registerLogEvent(context: Context, logEntry: LogEntry) {
         showLogEntryInLogcat(logEntry)
         if (canLogDirectly(context, logEntry)) {
-            receiveLogEntry(context, logEntry)
+            acceptLogEntry(context, logEntry)
         } else {
             sendLogEntryBroadcast(context, logEntry, isProcessFailed(logEntry))
         }
@@ -59,9 +59,9 @@ object LoggingUtil {
     }
 
     private fun sendLogEntryBroadcast(context: Context, logEntry: LogEntry,
-                                      useRecoveryProcess: Boolean) {
+                                      attemptRestartingProcess: Boolean) {
         context.applicationContext.sendBroadcast(IntentUtil.withLogEntry(logEntry).apply {
-            action = if (useRecoveryProcess) {
+            action = if (attemptRestartingProcess) {
                 "com.alexvt.integrity.CRASH_RECOVERY"
             } else {
                 "com.alexvt.integrity.LOG_ENTRY_ADDED"
@@ -69,7 +69,7 @@ object LoggingUtil {
         })
     }
 
-    private fun receiveLogEntry(context: Context, logEntry: LogEntry) {
+    private fun acceptLogEntry(context: Context, logEntry: LogEntry) {
         IntegrityCore.logRepository.addEntry(context, logEntry)
         IntegrityCore.notifyAboutUnreadErrors(context)
     }
@@ -77,17 +77,17 @@ object LoggingUtil {
     // Broadcast receiver for receiving status updates from the IntentService.
     class LogEntryReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            receiveLogEntry(context, IntentUtil.getLogEntry(intent))
+            acceptLogEntry(context, IntentUtil.getLogEntry(intent))
         }
     }
 
     // Using a broadcast receiver in a temporary separate recovery process
     // to receive crash log entry from the faulty process (which then is terminated)
     // and sending it to the main process (starts again if it was terminated or not running).
-    class CrashRecoveryReceiver : BroadcastReceiver() {
+    class LogEntryRecoveryReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             android.util.Log.e(LoggingUtil::class.java.simpleName,
-                    "CrashRecoveryReceiver in the recovery process is re-broadcasting " +
+                    "LogEntryRecoveryReceiver in the recovery process is re-broadcasting " +
                             "crash log entry to the (newly created if needed) main app process...")
             sendLogEntryBroadcast(context, IntentUtil.getLogEntry(intent), false)
             Runtime.getRuntime().exit(0) // recovery process not needed anymore

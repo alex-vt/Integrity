@@ -7,6 +7,7 @@
 package com.alexvt.integrity.core.search
 
 import android.content.Context
+import com.alexvt.integrity.core.util.Initializable
 import com.alexvt.integrity.lib.Tag
 
 /**
@@ -14,11 +15,7 @@ import com.alexvt.integrity.lib.Tag
  *
  * A crude unified search index for heterogeneous data. // todo replace with efficient index
  */
-interface SearchIndexRepository {
-    /**
-     * Prepares database for use
-     */
-    fun init(context: Context, clear: Boolean = false)
+interface SearchIndexRepository : Initializable {
 
     /**
      * Adds data chunks

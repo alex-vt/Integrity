@@ -20,9 +20,9 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        if (isRecoveryProcess(this)) {
-            if (checkRecoveryInLoop(this)) {
-                throw RuntimeException("Too frequent attempts to recover crashed Integrity app")
+        if (isRestartProcess(this)) {
+            if (checkRestartingInLoop(this)) {
+                throw RuntimeException("Too frequent attempts to restart Integrity app")
             }
             return // recovery process is only used to restart the main one, doesn't init anything
         }
@@ -38,17 +38,17 @@ class App : Application() {
         handleUncaughtExceptions(this)
     }
 
-    private fun checkRecoveryInLoop(context: Context): Boolean {
-        val minTimeBetweenRecoveryAttempts = 10000
-        val name = "recovery_time"
-        val key = "last_recovery_time"
+    private fun checkRestartingInLoop(context: Context): Boolean {
+        val minTimeBetweenRestartAttempts = 10000
+        val name = "last_restart_time"
+        val key = "last_restart_time"
         val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
 
-        val lastTimeRecovered = prefs?.getLong(key, 0) ?: 0
+        val lastTimeRestarted = prefs?.getLong(key, 0) ?: 0
         val currentTime = System.currentTimeMillis()
         prefs.edit().putLong(key, currentTime).apply()
 
-        return (lastTimeRecovered + minTimeBetweenRecoveryAttempts > currentTime)
+        return (lastTimeRestarted + minTimeBetweenRestartAttempts > currentTime)
     }
 
     private fun handleUncaughtExceptions(context: Context) {
@@ -60,13 +60,15 @@ class App : Application() {
         }
     }
 
-    private fun isRecoveryProcess(context: Context): Boolean {
+    private fun isRestartProcess(context: Context): Boolean {
         val currentPid = android.os.Process.myPid()
         val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val runningProcesses = manager.runningAppProcesses
         if (runningProcesses != null) {
             for (processInfo in runningProcesses) {
-                if (processInfo.pid == currentPid && processInfo.processName.endsWith(":recovery")) {
+                if (processInfo.pid == currentPid &&
+                        (processInfo.processName.endsWith(":recovery")
+                                || processInfo.processName.endsWith(":restart"))) {
                     return true
                 }
             }

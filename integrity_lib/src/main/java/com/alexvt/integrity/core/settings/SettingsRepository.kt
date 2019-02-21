@@ -7,18 +7,14 @@
 package com.alexvt.integrity.core.settings
 
 import android.content.Context
+import com.alexvt.integrity.core.util.Initializable
 import com.alexvt.integrity.lib.FolderLocation
 import com.alexvt.integrity.lib.Tag
 
 /**
  * Manager of repository of app settings (singleton).
  */
-interface SettingsRepository {
-
-    /**
-     * Prepares database for use.
-     */
-    fun init(context: Context, clear: Boolean = false)
+interface SettingsRepository : Initializable {
 
     /**
      * Setter.

@@ -88,6 +88,11 @@
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
+        <activity
+            android:name="com.alexvt.integrity.recovery.RecoveryActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+
         <receiver android:name="com.alexvt.integrity.core.util.SnapshotSavingUtil$SnapshotProgressReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.SNAPSHOT_DOWNLOAD_PROGRESS" />
@@ -100,7 +105,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.core.log.LoggingUtil$CrashRecoveryReceiver"
+        <receiver android:name="com.alexvt.integrity.core.log.LoggingUtil$LogEntryRecoveryReceiver"
             android:process=":recovery"
             >
             <intent-filter>
@@ -111,6 +116,20 @@
         <receiver android:name="com.alexvt.integrity.core.log.LoggingUtil$LogReadReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.LOG_READ" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".recovery.AppOpenReceiver" >
+            <intent-filter>
+                <action android:name="com.alexvt.integrity.APP_OPEN" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".recovery.AppReopenReceiver"
+            android:process=":restart"
+            >
+            <intent-filter>
+                <action android:name="com.alexvt.integrity.APP_REOPEN" />
             </intent-filter>
         </receiver>
 

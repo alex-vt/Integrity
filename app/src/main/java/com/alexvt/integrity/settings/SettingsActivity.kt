@@ -6,6 +6,7 @@
 
 package com.alexvt.integrity.settings
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.*
@@ -15,6 +16,7 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.lib.util.IntentUtil
+import com.alexvt.integrity.recovery.RecoveryActivity
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import kotlinx.android.synthetic.main.activity_settings.*
 import com.mikepenz.iconics.IconicsDrawable
@@ -108,10 +110,14 @@ class SettingsActivity : CyaneaAppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_restore -> {
-            // todo
+            viewRecovery()
             true
         }
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun viewRecovery() {
+        startActivity(Intent(this, RecoveryActivity::class.java))
     }
 
     override fun onSupportNavigateUp(): Boolean {

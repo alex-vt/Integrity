@@ -26,6 +26,7 @@ object IntentUtil {
     private const val selectMode = "selectMode"
     private const val logEntry = "logEntry"
     private const val viewExtensions = "viewExtensions"
+    private const val issueDescription = "issueDescription"
 
     fun withRecreate(downloaded: Boolean): Intent {
         val intent = Intent()
@@ -107,4 +108,14 @@ object IntentUtil {
 
     fun getViewExtensions(intent: Intent?) = intent?.getBooleanExtra(viewExtensions, false)
             ?: false
+
+
+    fun withIssueDescription(issueDescription: String): Intent {
+        val intent = Intent()
+        intent.putExtra(IntentUtil.issueDescription, issueDescription)
+        return intent
+    }
+
+    fun getIssueDescription(intent: Intent?) = intent?.getStringExtra(issueDescription) ?: ""
+
 }

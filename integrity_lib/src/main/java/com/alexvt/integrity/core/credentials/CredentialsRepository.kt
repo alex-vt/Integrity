@@ -4,20 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.alexvt.integrity.core.credentials
 
 import android.content.Context
+import com.alexvt.integrity.core.util.Initializable
 import com.alexvt.integrity.lib.FolderLocation
 import com.alexvt.integrity.lib.Credentials
 
 /**
  * Manager of repository of credentials
  */
-interface CredentialsRepository {
-    /**
-     * Prepares database for use
-     */
-    fun init(context: Context, clear: Boolean = false)
+interface CredentialsRepository : Initializable {
 
     /**
      * Adds credentials which are stored separately.

@@ -7,16 +7,12 @@
 package com.alexvt.integrity.core.log
 
 import android.content.Context
+import com.alexvt.integrity.core.util.Initializable
 
 /**
  * Manager of repository of app log entries.
  */
-interface LogRepository {
-
-    /**
-     * Prepares database for use.
-     */
-    fun init(context: Context, clear: Boolean = false)
+interface LogRepository : Initializable {
 
     /**
      * Registers database contents changes listener with a tag.

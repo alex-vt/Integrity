@@ -7,6 +7,7 @@
 package com.alexvt.integrity.core.database
 
 import android.content.Context
+import com.alexvt.integrity.core.util.Initializable
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.MetadataCollection
 
@@ -15,11 +16,7 @@ import com.alexvt.integrity.lib.MetadataCollection
  *
  * Note: Corresponding data in storage is not managed here.
  */
-interface MetadataRepository {
-    /**
-     * Prepares database for use
-     */
-    fun init(context: Context, clear: Boolean = false)
+interface MetadataRepository : Initializable {
 
     /**
      * Registers database contents changes listener with a tag.

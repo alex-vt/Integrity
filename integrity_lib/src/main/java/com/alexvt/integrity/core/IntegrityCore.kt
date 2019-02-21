@@ -41,12 +41,12 @@ import com.alexvt.integrity.lib.util.IntentUtil
  * The entry point of business logic, actions on data and metadata in the Integrity app
  */
 object IntegrityCore {
-
-    lateinit var metadataRepository: MetadataRepository
-    lateinit var credentialsRepository: CredentialsRepository
-    lateinit var searchIndexRepository: SearchIndexRepository
-    lateinit var logRepository: LogRepository
-    lateinit var settingsRepository: SettingsRepository
+    // todo replace early implementations
+    val metadataRepository: MetadataRepository = SimplePersistableMetadataRepository
+    val credentialsRepository: CredentialsRepository = SimplePersistableCredentialsRepository
+    val searchIndexRepository: SearchIndexRepository = SimplePersistableSearchIndexRepository
+    val logRepository: LogRepository = SimplePersistableLogRepository
+    val settingsRepository: SettingsRepository = SimplePersistableSettingsRepository
 
     lateinit var context: Context
 
@@ -59,15 +59,10 @@ object IntegrityCore {
      */
     fun init(context: Context) {
         IntegrityCore.context = context
-        logRepository = SimplePersistableLogRepository // todo replace with database
         logRepository.init(context)
-        settingsRepository = SimplePersistableSettingsRepository
         settingsRepository.init(context)
-        metadataRepository = SimplePersistableMetadataRepository // todo replace with database
         metadataRepository.init(context)
-        credentialsRepository = SimplePersistableCredentialsRepository  // todo secure
         credentialsRepository.init(context)
-        searchIndexRepository = SimplePersistableSearchIndexRepository // todo replace with database
         searchIndexRepository.init(context)
 
         resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue

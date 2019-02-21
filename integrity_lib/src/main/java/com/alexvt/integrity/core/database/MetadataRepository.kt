@@ -19,7 +19,7 @@ interface MetadataRepository {
     /**
      * Prepares database for use
      */
-    fun init(context: Context)
+    fun init(context: Context, clear: Boolean = false)
 
     /**
      * Registers database contents changes listener with a tag.
@@ -44,21 +44,21 @@ interface MetadataRepository {
      * Corresponding data in storage is not managed here.
      * Please make sure to write or update snapshot with correct data path.
      */
-    fun addSnapshotMetadata(snapshot: Snapshot)
+    fun addSnapshotMetadata(context: Context, snapshot: Snapshot)
 
     /**
      * Removes all snapshots metadata of artifact specified by artifactId.
      *
      * Corresponding data in storage is not affected.
      */
-    fun removeArtifactMetadata(artifactId: Long)
+    fun removeArtifactMetadata(context: Context, artifactId: Long)
 
     /**
      * Removes snapshot metadata of snapshot specified by artifactId and date.
      *
      * Corresponding data in storage is not affected.
      */
-    fun removeSnapshotMetadata(artifactId: Long, date: String)
+    fun removeSnapshotMetadata(context: Context, artifactId: Long, date: String)
 
     /**
      * Returns list of all snapshots of metadata stored in database, for all artifacts.
@@ -92,10 +92,10 @@ interface MetadataRepository {
     /**
      * Removes snapshot metadata marked as blueprints for a given artifact.
      */
-    fun cleanupArtifactBlueprints(artifactId: Long)
+    fun cleanupArtifactBlueprints(context: Context, artifactId: Long)
 
     /**
      * Deletes all metadata from database
      */
-    fun clear()
+    fun clear(context: Context)
 }

@@ -14,8 +14,8 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.core.database.MetadataRepository
 import com.alexvt.integrity.core.database.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
-import com.alexvt.integrity.core.filesystem.FolderLocationRepository
-import com.alexvt.integrity.core.filesystem.SettingsFolderLocationRepository
+import com.alexvt.integrity.core.credentials.CredentialsRepository
+import com.alexvt.integrity.core.credentials.SimplePersistableCredentialsRepository
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.job.ScheduledJobManager
@@ -29,8 +29,6 @@ import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.search.SimplePersistableSearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.core.settings.SimplePersistableSettingsRepository
-import com.alexvt.integrity.core.tags.SettingsTagRepository
-import com.alexvt.integrity.core.tags.TagRepository
 import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.util.*
 import com.alexvt.integrity.lib.*
@@ -45,8 +43,7 @@ import com.alexvt.integrity.lib.util.IntentUtil
 object IntegrityCore {
 
     lateinit var metadataRepository: MetadataRepository
-    lateinit var folderLocationRepository: FolderLocationRepository
-    lateinit var tagRepository: TagRepository
+    lateinit var credentialsRepository: CredentialsRepository
     lateinit var searchIndexRepository: SearchIndexRepository
     lateinit var logRepository: LogRepository
     lateinit var settingsRepository: SettingsRepository
@@ -68,10 +65,8 @@ object IntegrityCore {
         settingsRepository.init(context)
         metadataRepository = SimplePersistableMetadataRepository // todo replace with database
         metadataRepository.init(context)
-        folderLocationRepository = SettingsFolderLocationRepository
-        folderLocationRepository.init(context)
-        tagRepository = SettingsTagRepository
-        tagRepository.init(context)
+        credentialsRepository = SimplePersistableCredentialsRepository  // todo secure
+        credentialsRepository.init(context)
         searchIndexRepository = SimplePersistableSearchIndexRepository // todo replace with database
         searchIndexRepository.init(context)
 
@@ -87,8 +82,9 @@ object IntegrityCore {
         metadataRepository.getAllArtifactMetadata().snapshots
                 .filter { it.status == SnapshotStatus.IN_PROGRESS }
                 .forEach {
-                    metadataRepository.removeSnapshotMetadata(it.artifactId, it.date)
-                    metadataRepository.addSnapshotMetadata(it.copy(status = SnapshotStatus.INCOMPLETE))
+                    metadataRepository.removeSnapshotMetadata(context, it.artifactId, it.date)
+                    metadataRepository.addSnapshotMetadata(context,
+                            it.copy(status = SnapshotStatus.INCOMPLETE))
                 }
     }
 
@@ -107,7 +103,7 @@ object IntegrityCore {
 
     fun markErrorsRead(context: Context) {
         android.util.Log.v("IntegrityCore", "Errors marked read")
-        IntegrityCore.logRepository.markAllRead()
+        IntegrityCore.logRepository.markAllRead(context)
         ErrorNotifier.removeNotification(context)
     }
 
@@ -216,9 +212,9 @@ object IntegrityCore {
 
         // Updating snapshot status as incomplete in database.
         val incompleteMetadata = snapshotInProgress.copy(status = SnapshotStatus.INCOMPLETE)
-        metadataRepository.removeSnapshotMetadata(incompleteMetadata.artifactId,
+        metadataRepository.removeSnapshotMetadata(context, incompleteMetadata.artifactId,
                 incompleteMetadata.date)
-        metadataRepository.addSnapshotMetadata(incompleteMetadata)
+        metadataRepository.addSnapshotMetadata(context, incompleteMetadata)
         ScheduledJobManager.updateSchedule(context)
     }
 
@@ -226,7 +222,7 @@ object IntegrityCore {
      * Returns intent for editing archive location defined by title.
      */
     fun getFolderLocationEditIntent(title: String): Intent {
-        val folderLocation = folderLocationRepository.getAllFolderLocations()
+        val folderLocation = settingsRepository.getAllFolderLocations()
                 .first { it.title == title }
         val typeViewCreateIntent = Intent()
         typeViewCreateIntent.component = getFileLocationUtil(folderLocation.javaClass)
@@ -240,8 +236,8 @@ object IntegrityCore {
      * Optionally removes snapshot data as well.
      */
     fun removeArtifact(artifactId: Long, alsoRemoveData: Boolean) {
-        metadataRepository.removeArtifactMetadata(artifactId)
-        searchIndexRepository.removeForArtifact(artifactId)
+        metadataRepository.removeArtifactMetadata(context, artifactId)
+        searchIndexRepository.removeForArtifact(context, artifactId)
         DataCacheFolderUtil.clear(context, artifactId)
         // todo alsoRemoveData if needed
     }
@@ -251,8 +247,8 @@ object IntegrityCore {
      * Optionally removes snapshot data as well.
      */
     fun removeSnapshot(artifactId: Long, date: String, alsoRemoveData: Boolean) {
-        metadataRepository.removeSnapshotMetadata(artifactId, date)
-        searchIndexRepository.removeForSnapshot(artifactId, date)
+        metadataRepository.removeSnapshotMetadata(context, artifactId, date)
+        searchIndexRepository.removeForSnapshot(context, artifactId, date)
         DataCacheFolderUtil.clear(context, artifactId, date)
         // todo alsoRemoveData if needed
     }
@@ -262,8 +258,8 @@ object IntegrityCore {
      * Optionally removes snapshot data as well.
      */
     fun removeAll(alsoRemoveData: Boolean) {
-        metadataRepository.clear()
-        searchIndexRepository.clear()
+        metadataRepository.clear(context)
+        searchIndexRepository.clear(context)
         DataCacheFolderUtil.clear(context)
         // todo alsoRemoveData if needed
     }

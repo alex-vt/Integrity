@@ -16,7 +16,7 @@ interface LogRepository {
     /**
      * Prepares database for use.
      */
-    fun init(context: Context)
+    fun init(context: Context, clear: Boolean = false)
 
     /**
      * Registers database contents changes listener with a tag.
@@ -32,7 +32,7 @@ interface LogRepository {
     /**
      * Adds the entry to the log.
      */
-    fun addEntry(logEntry: LogEntry)
+    fun addEntry(context: Context, logEntry: LogEntry)
 
     /**
      * Gets log entries ordered by time descending.
@@ -47,10 +47,10 @@ interface LogRepository {
     /**
      * Sets all log entries read.
      */
-    fun markAllRead()
+    fun markAllRead(context: Context)
 
     /**
      * Deletes all log entries from database
      */
-    fun clear()
+    fun clear(context: Context)
 }

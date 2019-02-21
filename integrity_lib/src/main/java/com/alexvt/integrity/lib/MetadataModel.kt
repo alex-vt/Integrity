@@ -117,17 +117,16 @@ abstract class FolderLocation {
 }
 
 /**
- * Archive location credentials are stored separately from location, but with the same title.
- * Not stored in data archives.
+ * General type credentials
  */
-abstract class FolderLocationCredentials {
+abstract class Credentials {
     abstract val title: String
 }
 
 /**
  * Credentials placeholder
  */
-data class EmptyLocationCredentials(override val title: String = ""): FolderLocationCredentials()
+data class EmptyCredentials(override val title: String = ""): Credentials()
 
 /**
  * Content type specific part of metadata, describes the corresponding data.

@@ -77,8 +77,8 @@ object SnapshotSavingUtil {
      */
     private fun saveSnapshotBlueprint(context: Context, snapshot: Snapshot): String {
         val date = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(System.currentTimeMillis())
-        IntegrityCore.metadataRepository.cleanupArtifactBlueprints(snapshot.artifactId) // no old ones
-        IntegrityCore.metadataRepository.addSnapshotMetadata(snapshot.copy(
+        IntegrityCore.metadataRepository.cleanupArtifactBlueprints(context, snapshot.artifactId) // no old ones
+        IntegrityCore.metadataRepository.addSnapshotMetadata(context, snapshot.copy(
                 date = date,
                 status = SnapshotStatus.BLUEPRINT
         ))
@@ -101,9 +101,9 @@ object SnapshotSavingUtil {
     private fun downloadFromBlueprint(context: Context, blueprintSnapshot: Snapshot) {
         // overwriting the previous snapshot state in database with In Progress
         val snapshotInProgress = blueprintSnapshot.copy(status = SnapshotStatus.IN_PROGRESS)
-        IntegrityCore.metadataRepository.removeSnapshotMetadata(snapshotInProgress.artifactId,
-                snapshotInProgress.date)
-        IntegrityCore.metadataRepository.addSnapshotMetadata(snapshotInProgress)
+        IntegrityCore.metadataRepository.removeSnapshotMetadata(context,
+                snapshotInProgress.artifactId, snapshotInProgress.date)
+        IntegrityCore.metadataRepository.addSnapshotMetadata(context, snapshotInProgress)
 
         // starting download
         RunningJobManager.putJob(snapshotInProgress)
@@ -177,9 +177,9 @@ object SnapshotSavingUtil {
 
         postSnapshotDownloadProgress(context, completeSnapshot, "Saving metadata to database")
         // finally replacing incomplete metadata with complete one in database
-        IntegrityCore.metadataRepository.removeSnapshotMetadata(snapshotInProgress.artifactId,
-                snapshotInProgress.date)
-        IntegrityCore.metadataRepository.addSnapshotMetadata(completeSnapshot)
+        IntegrityCore.metadataRepository.removeSnapshotMetadata(context,
+                snapshotInProgress.artifactId, snapshotInProgress.date)
+        IntegrityCore.metadataRepository.addSnapshotMetadata(context, completeSnapshot)
         DataCacheFolderUtil.clearFiles(context) // folders remain
         if (!RunningJobManager.isRunning(completeSnapshot)) {
             return
@@ -193,7 +193,7 @@ object SnapshotSavingUtil {
                     completeSnapshot.artifactId, completeSnapshot.date))
             val dataChunks = JsonSerializerUtil.fromJson("{\"chunks\": [$dataChunkListJson]}",
                     DataChunks::class.java).chunks // todo make clean, ensure no duplicates
-            IntegrityCore.searchIndexRepository.add(dataChunks)
+            IntegrityCore.searchIndexRepository.add(context, dataChunks)
         }
 
         if (RunningJobManager.isRunning(completeSnapshot)) {

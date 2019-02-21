@@ -65,7 +65,7 @@ class LogViewActivity : AppCompatActivity() {
         MaterialDialog(this)
                 .title(text = "Clear log?")
                 .positiveButton(text = "Yes") {
-                    IntegrityCore.logRepository.clear()
+                    IntegrityCore.logRepository.clear(this)
                 }
                 .negativeButton(text = "Cancel")
                 .show()

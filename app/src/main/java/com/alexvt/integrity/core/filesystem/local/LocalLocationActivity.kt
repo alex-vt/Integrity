@@ -30,7 +30,7 @@ class LocalLocationActivity : AppCompatActivity() {
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         if (editMode(intent)) {
-            folderLocation = IntegrityCore.folderLocationRepository.getAllFolderLocations()
+            folderLocation = IntegrityCore.settingsRepository.getAllFolderLocations()
                     .first { it.title == getTitleFromIntent(intent) } as LocalFolderLocation
 
         } else {
@@ -75,7 +75,7 @@ class LocalLocationActivity : AppCompatActivity() {
             return
         }
         // when creating new location, it must have unique title
-        val titleAlreadyExists = IntegrityCore.folderLocationRepository.getAllFolderLocations()
+        val titleAlreadyExists = IntegrityCore.settingsRepository.getAllFolderLocations()
                 .any { it.title == folderLocation.title }
         if (!editMode(intent) && titleAlreadyExists) {
             Toast.makeText(this, "Location with this title already exists",
@@ -83,8 +83,8 @@ class LocalLocationActivity : AppCompatActivity() {
             return
         }
         // the old one is removed first
-        IntegrityCore.folderLocationRepository.removeFolderLocationAndCredentials(folderLocation.title)
-        IntegrityCore.folderLocationRepository.addFolderLocation(folderLocation)
+        IntegrityCore.settingsRepository.removeFolderLocation(this, folderLocation.title)
+        IntegrityCore.settingsRepository.addFolderLocation(this, folderLocation)
         finish()
     }
 

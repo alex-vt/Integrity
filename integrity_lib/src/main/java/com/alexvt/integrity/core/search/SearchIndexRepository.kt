@@ -18,22 +18,22 @@ interface SearchIndexRepository {
     /**
      * Prepares database for use
      */
-    fun init(context: Context)
+    fun init(context: Context, clear: Boolean = false)
 
     /**
      * Adds data chunks
      */
-    fun add(dataChunks: List<DataChunk>)
+    fun add(context: Context, dataChunks: List<DataChunk>)
 
     /**
      * Removes data chunks for artifact
      */
-    fun removeForArtifact(artifactId: Long)
+    fun removeForArtifact(context: Context, artifactId: Long)
 
     /**
      * Removes data chunks for snapshot
      */
-    fun removeForSnapshot(artifactId: Long, date: String)
+    fun removeForSnapshot(context: Context, artifactId: Long, date: String)
 
     /**
      * Gets all data chunks text of which which contain the given text
@@ -48,5 +48,5 @@ interface SearchIndexRepository {
     /**
      * Deletes all tags from database
      */
-    fun clear()
+    fun clear(context: Context)
 }

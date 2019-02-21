@@ -7,9 +7,7 @@
 package com.alexvt.integrity.core.log
 
 import android.content.Context
-import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.JsonSerializerUtil
-import com.alexvt.integrity.core.util.PreferencesUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -26,13 +24,16 @@ object SimplePersistableLogRepository : LogRepository {
     /**
      * Prepares database for use.
      */
-    override fun init(context: Context) {
-        val logJson = PreferencesUtil.getLogJson(context)
-        if (logJson != null) {
-            log = JsonSerializerUtil.fromJson(logJson, Log::class.java)
+    override fun init(context: Context, clear: Boolean) {
+        if (!clear) {
+            val logJson = readJsonFromStorage(context)
+            if (logJson != null) {
+                log = JsonSerializerUtil.fromJson(logJson, Log::class.java)
+            }
         }
-        if (!::log.isInitialized) {
+        if (clear || !::log.isInitialized) {
             log = Log()
+            saveChanges(context)
         }
     }
 
@@ -64,9 +65,9 @@ object SimplePersistableLogRepository : LogRepository {
     /**
      * Adds the entry to the log.
      */
-    override fun addEntry(logEntry: LogEntry) {
+    override fun addEntry(context: Context, logEntry: LogEntry) {
         log.entries.add(logEntry)
-        saveChanges()
+        saveChanges(context)
     }
 
     /**
@@ -91,19 +92,19 @@ object SimplePersistableLogRepository : LogRepository {
     /**
      * Sets all log entries read.
      */
-    override fun markAllRead() {
+    override fun markAllRead(context: Context) {
         val unreadEntries = log.entries.filter { !it.read }
         log.entries.removeAll(unreadEntries)
         log.entries.addAll(unreadEntries.map { it.copy(read = true) })
-        saveChanges()
+        saveChanges(context)
     }
 
     /**
      * Deletes all log entries from database
      */
-    override fun clear() {
+    override fun clear(context: Context) {
         log.entries.clear()
-        saveChanges()
+        saveChanges(context)
     }
 
     /**
@@ -111,9 +112,26 @@ object SimplePersistableLogRepository : LogRepository {
      *
      * Should be called after every metadata modification.
      */
-    @Synchronized private fun saveChanges() {
+    @Synchronized private fun saveChanges(context: Context) {
         invokeChangesListeners()
         val logJson = JsonSerializerUtil.toJson(log)
-        PreferencesUtil.setLogJson(IntegrityCore.context, logJson)
+        persistJsonToStorage(context, logJson)
     }
+
+
+    // Storage for the JSON string in SharedPreferences
+
+    private const val TAG = "log"
+
+    private const val preferencesName = "persisted_$TAG"
+    private const val preferenceKey = "${TAG}_json"
+
+    private fun readJsonFromStorage(context: Context)
+            = getSharedPreferences(context).getString(preferenceKey, null)
+
+    private fun persistJsonToStorage(context: Context, value: String)
+            = getSharedPreferences(context).edit().putString(preferenceKey, value).commit()
+
+    private fun getSharedPreferences(context: Context) =
+            context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
 }

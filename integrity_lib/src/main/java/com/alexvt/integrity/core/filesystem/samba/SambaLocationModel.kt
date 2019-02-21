@@ -7,7 +7,7 @@
 package com.alexvt.integrity.core.filesystem.samba
 
 import com.alexvt.integrity.lib.FolderLocation
-import com.alexvt.integrity.lib.FolderLocationCredentials
+import com.alexvt.integrity.lib.Credentials
 
 /**
  * A location in Samba filesystem, defined by path, user name and password
@@ -27,4 +27,4 @@ data class SambaFolderLocationCredentials(
         override val title: String = "",
         val user: String = "",
         val password: String = ""
-): FolderLocationCredentials()
+): Credentials()

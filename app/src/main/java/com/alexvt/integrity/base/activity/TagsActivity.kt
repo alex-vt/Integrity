@@ -61,7 +61,7 @@ class TagsActivity : AppCompatActivity() {
     }
 
     private fun getItemSelection()
-            = IntegrityCore.tagRepository.getAllTags().map {
+            = IntegrityCore.settingsRepository.getAllTags().map {
                 Pair(it, selectedTags.contains(it))
             }
 
@@ -108,7 +108,7 @@ class TagsActivity : AppCompatActivity() {
             return
         }
         // tag must not have name like any existing tag except itself before the change
-        if (IntegrityCore.tagRepository.getAllTags()
+        if (IntegrityCore.settingsRepository.getAllTags()
                         .map { it.text }
                         .minus(oldText)
                         .contains(tag.text)) {
@@ -117,9 +117,9 @@ class TagsActivity : AppCompatActivity() {
         }
         if (oldText != null) {
             // old tag needs to be replaced
-            IntegrityCore.tagRepository.removeTag(oldText)
+            IntegrityCore.settingsRepository.removeTag(this, oldText)
         }
-        IntegrityCore.tagRepository.addTag(tag)
+        IntegrityCore.settingsRepository.addTag(this, tag)
         refreshTagList()
     }
 
@@ -137,7 +137,7 @@ class TagsActivity : AppCompatActivity() {
                 .title(text = "Delete tag?")
                 .positiveButton(text = "Delete") {
                     dialog ->
-                    IntegrityCore.tagRepository.removeTag(tag.text)
+                    IntegrityCore.settingsRepository.removeTag(this, tag.text)
                     refreshTagList()
                 }
                 .negativeButton(text = "Cancel")

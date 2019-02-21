@@ -67,7 +67,7 @@ class FolderLocationsActivity : AppCompatActivity() {
     }
 
     private fun getItemSelection()
-            = IntegrityCore.folderLocationRepository.getAllFolderLocations().map {
+            = IntegrityCore.settingsRepository.getAllFolderLocations().map {
                 Pair(it, selectedFolderLocations.contains(it))
             }
 
@@ -89,7 +89,8 @@ class FolderLocationsActivity : AppCompatActivity() {
                 .title(text = "Delete folder location?\nSome artifacts may fail to save there.")
                 .positiveButton(text = "Delete") {
                     dialog ->
-                    IntegrityCore.folderLocationRepository.removeFolderLocationAndCredentials(title)
+                    IntegrityCore.settingsRepository.removeFolderLocation(this, title)
+                    IntegrityCore.credentialsRepository.removeCredentials(this, title)
                     refreshFolderLocationList()
                 }
                 .negativeButton(text = "Cancel")

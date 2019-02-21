@@ -70,7 +70,7 @@ object LoggingUtil {
     }
 
     private fun receiveLogEntry(context: Context, logEntry: LogEntry) {
-        IntegrityCore.logRepository.addEntry(logEntry)
+        IntegrityCore.logRepository.addEntry(context, logEntry)
         IntegrityCore.notifyAboutUnreadErrors(context)
     }
 

@@ -7,10 +7,8 @@
 package com.alexvt.integrity.core.database
 
 import android.content.Context
-import com.alexvt.integrity.core.*
 import com.alexvt.integrity.core.util.HashUtil
 import com.alexvt.integrity.core.util.JsonSerializerUtil
-import com.alexvt.integrity.core.util.PreferencesUtil
 import com.alexvt.integrity.lib.MetadataCollection
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.SnapshotCompareUtil
@@ -30,15 +28,18 @@ object SimplePersistableMetadataRepository: MetadataRepository {
     /**
      * Reads metadata from JSON string to Java objects
      */
-    override fun init(context: Context) {
-        val fullMetadataJson = PreferencesUtil.getFullMetadataJson(IntegrityCore.context)
-        if (fullMetadataJson != null) {
-            allMetadata = JsonSerializerUtil.fromJson(fullMetadataJson, MetadataCollection::class.java)
+    override fun init(context: Context, clear: Boolean) {
+        if (!clear) {
+            val fullMetadataJson = readJsonFromStorage(context)
+            if (fullMetadataJson != null) {
+                allMetadata = JsonSerializerUtil.fromJson(fullMetadataJson, MetadataCollection::class.java)
+            }
         }
-        if (!::allMetadata.isInitialized) {
+        if (clear || !::allMetadata.isInitialized) {
             val snapshotMetadataList = arrayListOf<Snapshot>()
             allMetadata = MetadataCollection(snapshotMetadataList,
                     HashUtil.getHash(snapshotMetadataList))
+            saveChanges(context)
         }
     }
 
@@ -67,22 +68,22 @@ object SimplePersistableMetadataRepository: MetadataRepository {
         }
     }
 
-    override fun addSnapshotMetadata(snapshot: Snapshot) {
+    override fun addSnapshotMetadata(context: Context, snapshot: Snapshot) {
         allMetadata.snapshots.add(snapshot)
         allMetadata = HashUtil.updateHash(allMetadata)
-        saveChanges()
+        saveChanges(context)
     }
 
-    override fun removeArtifactMetadata(artifactId: Long) {
+    override fun removeArtifactMetadata(context: Context, artifactId: Long) {
         allMetadata.snapshots.removeIf { it.artifactId == artifactId }
         allMetadata = HashUtil.updateHash(allMetadata)
-        saveChanges()
+        saveChanges(context)
     }
 
-    override fun removeSnapshotMetadata(artifactId: Long, date: String) {
+    override fun removeSnapshotMetadata(context: Context, artifactId: Long, date: String) {
         allMetadata.snapshots.removeIf { it.artifactId == artifactId && it.date == date }
         allMetadata = HashUtil.updateHash(allMetadata)
-        saveChanges()
+        saveChanges(context)
     }
 
     override fun getAllArtifactMetadata(): MetadataCollection {
@@ -125,17 +126,17 @@ object SimplePersistableMetadataRepository: MetadataRepository {
                 .first { it.artifactId == artifactId && it.date == date }
     }
 
-    override fun clear() {
+    override fun clear(context: Context) {
         allMetadata.snapshots.clear()
         allMetadata = HashUtil.updateHash(allMetadata)
-        saveChanges()
+        saveChanges(context)
     }
 
-    override fun cleanupArtifactBlueprints(artifactId: Long) {
+    override fun cleanupArtifactBlueprints(context: Context, artifactId: Long) {
         allMetadata.snapshots.removeIf { it.artifactId == artifactId
                 && it.status == SnapshotStatus.BLUEPRINT }
         allMetadata = HashUtil.updateHash(allMetadata)
-        saveChanges()
+        saveChanges(context)
     }
 
     /**
@@ -143,10 +144,26 @@ object SimplePersistableMetadataRepository: MetadataRepository {
      *
      * Should be called after every metadata modification.
      */
-    @Synchronized private fun saveChanges() {
+    @Synchronized private fun saveChanges(context: Context) {
         invokeChangesListeners()
         val fullMetadataJson = JsonSerializerUtil.toJson(allMetadata)
-        PreferencesUtil.setFullMetadataJson(IntegrityCore.context, fullMetadataJson)
+        persistJsonToStorage(context, fullMetadataJson)
     }
 
+
+    // Storage for the JSON string in SharedPreferences
+
+    private const val TAG = "snapshots_metadata"
+
+    private const val preferencesName = "persisted_$TAG"
+    private const val preferenceKey = "${TAG}_json"
+
+    private fun readJsonFromStorage(context: Context)
+            = getSharedPreferences(context).getString(preferenceKey, null)
+
+    private fun persistJsonToStorage(context: Context, value: String)
+            = getSharedPreferences(context).edit().putString(preferenceKey, value).commit()
+
+    private fun getSharedPreferences(context: Context) =
+            context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
 }

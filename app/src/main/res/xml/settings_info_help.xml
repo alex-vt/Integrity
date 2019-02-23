@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<androidx.preference.PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+
+    <Preference
+        app:key="help_project"
+        app:title="App project web page"
+        app:summary="View app project info, source code, etc."
+        />
+
+    <Preference
+        app:key="help_restore"
+        app:title="Restore data or app state"
+        app:summary="Options to recover the previous state of the app or data, or clear data"
+        />
+
+    <Preference
+        app:key="help_settings"
+        app:title="Settings"
+        app:summary="View all preferences of the app"
+        />
+
+    <Preference
+        app:key="help_legal"
+        app:title="Legal info"
+        app:summary="Terms and conditions, privacy policy, etc."
+        />
+
+    <Preference
+        app:key="help_version"
+        app:title="Version info"
+        />
+
+</androidx.preference.PreferenceScreen>

@@ -1,0 +1,12 @@
+Integrity app Privacy Policy
+============================
+
+1. This app (the App) may collect data from the device it is running on, or from third party sources or apps, on the User's command or according to the schedule the User specifies in the App.
+
+2. The collected data is stored on the device the App is running on, or on the remote destinations the User specifies in the App. 
+
+3. The App may collect data about events in the App and store the collected data on the device the App is running on.
+
+4. The App has no intention, and no server or other destination to transfer data collected by the App to, except to the destionations the User specifies in the App.
+
+5. The User may remove data collected by the App, using the App. If any third party sources, destinations, apps or software components collect, alter, use or remove the User's or the App's data, then they are fully liable for those actions.

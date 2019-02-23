@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<androidx.preference.PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+
+    <Preference
+        app:key="legal_terms"
+        app:title="Term &amp; Conditions"
+        app:summary="Mozilla Public License v. 2.0, a free and open source software license"
+        />
+
+    <Preference
+        app:key="legal_privacy"
+        app:title="Privacy Policy"
+        app:summary="See how this app collects, transfers and stores information"
+        />
+
+</androidx.preference.PreferenceScreen>

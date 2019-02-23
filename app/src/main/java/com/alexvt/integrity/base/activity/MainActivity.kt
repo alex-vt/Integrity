@@ -49,6 +49,8 @@ import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.info.HelpInfoActivity
+import com.alexvt.integrity.info.LegalInfoActivity
 import com.alexvt.integrity.recovery.RecoveryActivity
 import com.alexvt.integrity.settings.SettingsActivity
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
@@ -179,7 +181,7 @@ class MainActivity : ThemedActivity() {
                 identifier = 9
                 selectable = false
                 onClick { _ ->
-                    viewRecovery()
+                    viewRestore()
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_history
@@ -214,7 +216,7 @@ class MainActivity : ThemedActivity() {
                 primaryItem("Help") {
                     selectable = false
                     onClick { _ ->
-                        // todo
+                        viewHelp()
                         false
                     }
                     badge("version ${BuildConfig.VERSION_NAME}") {
@@ -227,7 +229,7 @@ class MainActivity : ThemedActivity() {
                 primaryItem("Legal") {
                     selectable = false
                     onClick { _ ->
-                        // todo
+                        viewLegal()
                         false
                     }
                     textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
@@ -606,8 +608,16 @@ class MainActivity : ThemedActivity() {
                 Intent(this, SettingsActivity::class.java), viewExtensions), 0)
     }
 
-    private fun viewRecovery() {
+    private fun viewRestore() {
         startActivity(Intent(this, RecoveryActivity::class.java))
+    }
+
+    private fun viewHelp() {
+        startActivity(Intent(this, HelpInfoActivity::class.java))
+    }
+
+    private fun viewLegal() {
+        startActivity(Intent(this, LegalInfoActivity::class.java))
     }
 
     fun filterArtifact(artifactId: Long?) {

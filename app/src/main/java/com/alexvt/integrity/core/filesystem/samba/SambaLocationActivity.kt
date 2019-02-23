@@ -9,13 +9,13 @@ package com.alexvt.integrity.core.filesystem.samba
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.util.ThemedActivity
 import kotlinx.android.synthetic.main.activity_samba_location.*
 
 
-class SambaLocationActivity : AppCompatActivity() {
+class SambaLocationActivity : ThemedActivity() {
 
     private val TAG = SambaLocationActivity::class.java.simpleName
 

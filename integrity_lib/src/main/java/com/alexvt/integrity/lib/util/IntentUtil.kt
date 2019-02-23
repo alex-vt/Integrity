@@ -27,6 +27,11 @@ object IntentUtil {
     private const val logEntry = "logEntry"
     private const val viewExtensions = "viewExtensions"
     private const val issueDescription = "issueDescription"
+    private const val fontName = "fontName"
+    private const val colorBackground = "colorBackground"
+    private const val colorPrimary = "colorPrimary"
+    private const val colorAccent = "colorAccent"
+
 
     fun withRecreate(downloaded: Boolean): Intent {
         val intent = Intent()
@@ -118,4 +123,32 @@ object IntentUtil {
 
     fun getIssueDescription(intent: Intent?) = intent?.getStringExtra(issueDescription) ?: ""
 
+
+    fun putFontName(intent: Intent?, value: String): Intent {
+        intent!!.putExtra(IntentUtil.fontName, value)
+        return intent
+    }
+
+    fun getFontName(intent: Intent?) = intent!!.getStringExtra(fontName)!!
+
+    fun putColorBackground(intent: Intent?, value: String): Intent {
+        intent!!.putExtra(IntentUtil.colorBackground, value)
+        return intent
+    }
+
+    fun getColorBackground(intent: Intent?) = intent!!.getStringExtra(colorBackground)!!
+
+    fun putColorPrimary(intent: Intent?, value: String): Intent {
+        intent!!.putExtra(IntentUtil.colorPrimary, value)
+        return intent
+    }
+
+    fun getColorPrimary(intent: Intent?) = intent!!.getStringExtra(colorPrimary)!!
+
+    fun putColorAccent(intent: Intent?, value: String): Intent {
+        intent!!.putExtra(IntentUtil.colorAccent, value)
+        return intent
+    }
+
+    fun getColorAccent(intent: Intent?) = intent!!.getStringExtra(colorAccent)!!
 }

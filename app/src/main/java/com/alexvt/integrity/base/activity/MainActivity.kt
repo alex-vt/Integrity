@@ -48,15 +48,15 @@ import co.zsmb.materialdrawerkt.draweritems.badge
 import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
+import com.alexvt.integrity.core.util.ThemedActivity
 import com.alexvt.integrity.recovery.RecoveryActivity
 import com.alexvt.integrity.settings.SettingsActivity
-import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import com.jakewharton.rxbinding3.appcompat.queryTextChanges
 
 
-class MainActivity : CyaneaAppCompatActivity() {
+class MainActivity : ThemedActivity() {
 
     data class Inputs(val filteredArtifactId: Long?,
                       val searchText: String)
@@ -88,7 +88,7 @@ class MainActivity : CyaneaAppCompatActivity() {
 
         onInputsUpdate(inputs)
 
-        FontUtil.setFont(this)
+        FontUtil.setFont(this, IntegrityCore.getFont())
     }
 
     override fun onAttachedToWindow() {
@@ -96,7 +96,7 @@ class MainActivity : CyaneaAppCompatActivity() {
         // todo fix and remove
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = ThemeUtil.getColorPrimaryDark()
+        window.statusBarColor = ThemeUtil.getColorPrimaryDark(IntegrityCore.getColors())
     }
 
     private fun bindDrawer() {
@@ -114,9 +114,9 @@ class MainActivity : CyaneaAppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon2.cmd_playlist_play
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary().toLong()
-                iconColor = ThemeUtil.getTextColorSecondary().toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity)
+                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
+                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
             } // updatable
             expandableItem("Up next") {
                 identifier = 2
@@ -127,9 +127,9 @@ class MainActivity : CyaneaAppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon.cmd_calendar_clock
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary().toLong()
-                iconColor = ThemeUtil.getTextColorSecondary().toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity)
+                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
+                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
             } // updatable
             divider { identifier = 3 }
             primaryItem("Archives & Storage") {
@@ -141,9 +141,9 @@ class MainActivity : CyaneaAppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon.cmd_archive
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary().toLong()
-                iconColor = ThemeUtil.getTextColorSecondary().toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity)
+                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
+                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
             }
             primaryItem("Tags") {
                 identifier = 5
@@ -154,9 +154,9 @@ class MainActivity : CyaneaAppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon2.cmd_tag_multiple
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary().toLong()
-                iconColor = ThemeUtil.getTextColorSecondary().toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity)
+                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
+                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
             }
             primaryItem("Log") {
                 identifier = 6
@@ -170,9 +170,9 @@ class MainActivity : CyaneaAppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon2.cmd_puzzle
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary().toLong()
-                iconColor = ThemeUtil.getTextColorSecondary().toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity)
+                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
+                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
             }
             divider { identifier = 8 }
             primaryItem("Restore...") {
@@ -184,11 +184,11 @@ class MainActivity : CyaneaAppCompatActivity() {
                 }
                 iicon = CommunityMaterial.Icon2.cmd_history
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary().toLong()
-                iconColor = ThemeUtil.getTextColorSecondary().toLong()
-                disabledTextColor = ThemeUtil.getTextColorSecondary().toLong()
-                disabledIconColor = ThemeUtil.getTextColorSecondary().toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity)
+                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
+                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                disabledTextColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                disabledIconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
             }
             footer {
                 toggleItem("Offline mode") {
@@ -197,10 +197,10 @@ class MainActivity : CyaneaAppCompatActivity() {
                     onToggled {
                         // todo (also show notification)
                     }
-                    textColor = ThemeUtil.getTextColorPrimary().toLong()
-                    iconColor = ThemeUtil.getTextColorSecondary().toLong()
-                    disabledTextColor = ThemeUtil.getTextColorSecondary().toLong()
-                    disabledIconColor = ThemeUtil.getTextColorSecondary().toLong()
+                    textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
+                    iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                    disabledTextColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                    disabledIconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
                 }
                 divider {}
                 primaryItem("Settings") {
@@ -209,7 +209,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                         viewSettings()
                         false
                     }
-                    textColor = ThemeUtil.getTextColorPrimary().toLong()
+                    textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
                 }
                 primaryItem("Help") {
                     selectable = false
@@ -218,10 +218,10 @@ class MainActivity : CyaneaAppCompatActivity() {
                         false
                     }
                     badge("version ${BuildConfig.VERSION_NAME}") {
-                        textColor = ThemeUtil.getTextColorSecondary().toLong()
+                        textColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
                         colorRes = R.color.colorNone
                     }
-                    textColor = ThemeUtil.getTextColorPrimary().toLong()
+                    textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
                 }
                 divider {}
                 primaryItem("Legal") {
@@ -230,17 +230,17 @@ class MainActivity : CyaneaAppCompatActivity() {
                         // todo
                         false
                     }
-                    textColor = ThemeUtil.getTextColorPrimary().toLong()
+                    textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
                 }
             }
             actionBarDrawerToggleAnimated = true
             actionBarDrawerToggleEnabled = true
         }
         drawer.recyclerView.scrollBarDefaultDelayBeforeFade = 3000 // todo don't show when updating but keeping size
-        drawer.slider.setBackgroundColor(ThemeUtil.getColorBackground())
-        drawer.stickyFooter.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary())
-        cyanea.tinter.tint(drawer.slider)
-        cyanea.tinter.tint(drawer.stickyFooter)
+        drawer.slider.setBackgroundColor(ThemeUtil.getColorBackground(IntegrityCore.getColors()))
+        drawer.stickyFooter.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(IntegrityCore.getColors()))
+        ThemeUtil.applyToView(drawer.slider)
+        ThemeUtil.applyToView(drawer.stickyFooter)
     }
 
     private fun userTryToggleExpandJobs(isScheduledJobs: Boolean) {
@@ -262,7 +262,7 @@ class MainActivity : CyaneaAppCompatActivity() {
         // Header
         val headerBinding: DrawerHeaderBinding = DataBindingUtil.inflate(LayoutInflater.from(
                 this@MainActivity), R.layout.drawer_header, null, false)
-        FontUtil.setFont(this, headerBinding.rlView)
+        FontUtil.setFont(this, headerBinding.rlView, IntegrityCore.getFont())
         headerBinding.tvTitle.text = if (unreadErrorCount == 0) {
             "App is working normally"
         } else {
@@ -274,14 +274,14 @@ class MainActivity : CyaneaAppCompatActivity() {
             drawer.closeDrawer()
         }
         drawer.header = headerBinding.rlView
-        headerBinding.rlView.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary())
-        headerBinding.tvTitle.setTextColor(ThemeUtil.getTextColorPrimary())
-        headerBinding.bViewLog.setTextColor(ThemeUtil.getTextColorSecondary())
+        headerBinding.rlView.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(IntegrityCore.getColors()))
+        headerBinding.tvTitle.setTextColor(ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()))
+        headerBinding.bViewLog.setTextColor(ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()))
 
         // Log with error badge
         val badgeText = if (unreadErrorCount == 0) "" else "Errors: $unreadErrorCount"
         val badgeColor = if (unreadErrorCount == 0) {
-            ThemeUtil.getColorBackground()
+            ThemeUtil.getColorBackground(IntegrityCore.getColors())
         } else {
             getColor(R.color.colorError)
         }
@@ -293,11 +293,11 @@ class MainActivity : CyaneaAppCompatActivity() {
                     viewLog()
                     false
                 } }
-                .withTextColor(ThemeUtil.getTextColorPrimary())
-                .withIconColor(ThemeUtil.getTextColorSecondary())
+                .withTextColor(ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()))
+                .withIconColor(ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()))
                 .withIcon(CommunityMaterial.Icon2.cmd_text)
                 .withIconTintingEnabled(true)
-                .withTypeface(FontUtil.getTypeface(this))
+                .withTypeface(FontUtil.getTypeface(this, IntegrityCore.getFont()))
                 .withBadge(badgeText)
                 .withBadgeStyle(BadgeStyle()
                         .withColor(badgeColor)
@@ -318,9 +318,9 @@ class MainActivity : CyaneaAppCompatActivity() {
         val countSuffix = if (jobListItems.isEmpty()) "" else "(${jobListItems.size})"
         val visibleTitle = if (jobListItems.isEmpty()) titlePlaceholder else "$title $countSuffix"
         val arrowColor = if (jobListItems.isEmpty()) {
-            ThemeUtil.getColorBackground()
+            ThemeUtil.getColorBackground(IntegrityCore.getColors())
         } else {
-            ThemeUtil.getColorAccent()
+            ThemeUtil.getColorAccent(IntegrityCore.getColors())
         }
 
         val jobsExpandableItem = drawer.getDrawerItem(sectionId) as ExpandableDrawerItem
@@ -358,9 +358,9 @@ class MainActivity : CyaneaAppCompatActivity() {
                 .withIdentifier(artifactId)
                 .withLevel(2)
                 .withSelectable(false)
-                .withTextColor(ThemeUtil.getTextColorSecondary())
-                .withDescriptionTextColor(ThemeUtil.getTextColorSecondary())
-                .withTypeface(FontUtil.getTypeface(this))
+                .withTextColor(ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()))
+                .withDescriptionTextColor(ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()))
+                .withTypeface(FontUtil.getTypeface(this, IntegrityCore.getFont()))
                 .withOnDrawerItemClickListener { _, _, _ ->
                     IntegrityCore.openCreateNewSnapshot(this, snapshot.artifactId)
                     false
@@ -375,7 +375,7 @@ class MainActivity : CyaneaAppCompatActivity() {
                 .withIdentifier(artifactId - 1_000_000_000L) // todo distinguish better
                 .withLevel(2)
                 .withSelectable(false)
-                .withTypeface(FontUtil.getTypeface(this))
+                .withTypeface(FontUtil.getTypeface(this, IntegrityCore.getFont()))
                 .withOnDrawerItemClickListener { _, _, _ ->
                     IntegrityCore.openViewSnapshotOrShowProgress(this, snapshot.artifactId,
                             snapshot.date)
@@ -394,13 +394,10 @@ class MainActivity : CyaneaAppCompatActivity() {
     private fun updateAddButton(artifactId: Long?) {
         sdAdd.clearActionItems()
         if (artifactId != null) {
-            sdAdd.addActionItem(SpeedDialActionItem.Builder(0, android.R.drawable.ic_input_add)
-                    .setLabel("Create another snapshot")
-                    .setFabBackgroundColor(ThemeUtil.getColorAccent())
-                    .setFabImageTintColor(getColor(R.color.colorWhite))
-                    .setLabelBackgroundColor(ThemeUtil.getTextColorSecondary())
-                    .setLabelColor(ThemeUtil.getColorBackground())
-                    .create())
+            sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
+                    SpeedDialActionItem.Builder(0, android.R.drawable.ic_input_add)
+                            .setLabel("Create another snapshot"), IntegrityCore.getColors()
+            ).create())
             sdAdd.setOnActionSelectedListener { speedDialActionItem ->
                 addSnapshot(artifactId)
                 false
@@ -410,14 +407,9 @@ class MainActivity : CyaneaAppCompatActivity() {
                 // todo names from resources
                 it.className.substringAfterLast(".").removeSuffix("TypeActivity")
             }.forEachIndexed {
-                index, name -> sdAdd.addActionItem(SpeedDialActionItem
-                    .Builder(index, android.R.drawable.ic_input_add)
-                    .setLabel(name)
-                    .setFabBackgroundColor(ThemeUtil.getColorAccent())
-                    .setFabImageTintColor(getColor(R.color.colorWhite))
-                    .setLabelBackgroundColor(ThemeUtil.getTextColorSecondary())
-                    .setLabelColor(ThemeUtil.getColorBackground())
-                    .create())
+                index, name -> sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
+                        SpeedDialActionItem.Builder(index, android.R.drawable.ic_input_add)
+                                .setLabel(name), IntegrityCore.getColors()).create())
             }
             sdAdd.setOnActionSelectedListener { speedDialActionItem ->
                 val typeName = IntegrityCore.getTypeNames().toList()[speedDialActionItem.id]
@@ -425,13 +417,13 @@ class MainActivity : CyaneaAppCompatActivity() {
                 false
             }
         }
-        FontUtil.setFont(this, sdAdd)
+        FontUtil.setFont(this, sdAdd, IntegrityCore.getFont())
     }
 
     private fun bindFilter() {
         ivUnFilterArtifact.setOnClickListener { removeArtifactFilter() }
-        llBottomSheet.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary())
-        svMain.background.setColorFilter(ThemeUtil.getColorBackgroundBleached(),
+        llBottomSheet.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(IntegrityCore.getColors()))
+        svMain.background.setColorFilter(ThemeUtil.getColorBackgroundBleached(IntegrityCore.getColors()),
                 PorterDuff.Mode.DARKEN)
     }
 

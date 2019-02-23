@@ -9,14 +9,14 @@ package com.alexvt.integrity.base.activity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.adapter.LogRecyclerAdapter
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.util.ThemedActivity
 import kotlinx.android.synthetic.main.activity_log_view.*
 
-class LogViewActivity : AppCompatActivity() {
+class LogViewActivity : ThemedActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

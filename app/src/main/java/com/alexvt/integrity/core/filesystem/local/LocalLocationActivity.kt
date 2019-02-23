@@ -9,13 +9,13 @@ package com.alexvt.integrity.core.filesystem.local
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.util.ThemedActivity
 import kotlinx.android.synthetic.main.activity_local_location.*
 
 
-class LocalLocationActivity : AppCompatActivity() {
+class LocalLocationActivity : ThemedActivity() {
 
     private val TAG = LocalLocationActivity::class.java.simpleName
 

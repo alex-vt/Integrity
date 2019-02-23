@@ -13,7 +13,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import android.widget.ToggleButton
-import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
@@ -25,9 +24,10 @@ import com.alexvt.integrity.lib.Tag
 import com.alexvt.integrity.lib.util.IntentUtil
 import kotlinx.android.synthetic.main.activity_tags.*
 import android.widget.RadioGroup
+import com.alexvt.integrity.core.util.ThemedActivity
 
 
-class TagsActivity : AppCompatActivity() {
+class TagsActivity : ThemedActivity() {
 
     var selectedTags: List<Tag> = emptyList()
 

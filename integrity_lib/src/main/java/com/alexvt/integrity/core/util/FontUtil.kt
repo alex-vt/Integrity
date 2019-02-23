@@ -13,7 +13,6 @@ import android.view.ViewGroup
 import android.graphics.Typeface
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
-import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.R
 
 
@@ -26,15 +25,9 @@ object FontUtil {
 
     fun getNames() = fontNameMap.map { it.key }
 
-    fun saveFont(context: Context, fontName: String) {
-        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
-                textFont = fontName)
-        )
-    }
-
     // todo keep typeface until it changes in settings
-    fun getTypeface(context: Context): Typeface {
-        val fontRes = getFontResOrNull()
+    fun getTypeface(context: Context, fontName: String): Typeface {
+        val fontRes = getFontResOrNull(fontName)
         return if (fontRes != null) {
             ResourcesCompat.getFont(context, fontRes) ?: Typeface.DEFAULT
         } else {
@@ -42,16 +35,15 @@ object FontUtil {
         }
     }
 
-    fun setFont(activity: Activity) {
-        setFont(activity, activity.findViewById(android.R.id.content))
+    fun setFont(activity: Activity, fontName: String) {
+        setFont(activity, activity.findViewById(android.R.id.content), fontName)
     }
 
-    fun setFont(context: Context, view: View) {
-        setFontRecursiveInView(view, getTypeface(context))
+    fun setFont(context: Context, view: View, fontName: String) {
+        setFontRecursiveInView(view, getTypeface(context, fontName))
     }
 
-    private fun getFontResOrNull(): Int? {
-        val fontName = IntegrityCore.settingsRepository.get().textFont
+    private fun getFontResOrNull(fontName: String): Int? {
         return if (fontNameMap.containsKey(fontName)) fontNameMap[fontName] else null
     }
 

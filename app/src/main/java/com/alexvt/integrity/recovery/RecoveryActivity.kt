@@ -13,12 +13,12 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.Initializable
+import com.alexvt.integrity.core.util.ThemedActivity
 import com.alexvt.integrity.lib.util.IntentUtil
-import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 import kotlinx.android.synthetic.main.activity_recovery.*
 
 
-class RecoveryActivity : CyaneaAppCompatActivity() {
+class RecoveryActivity : ThemedActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,7 +26,7 @@ class RecoveryActivity : CyaneaAppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
-        FontUtil.setFont(this)
+        FontUtil.setFont(this, IntegrityCore.getFont())
 
         val issueDescription = IntentUtil.getIssueDescription(intent)
         tvIssueDescription.text = if (issueDescription.isNotBlank()) {

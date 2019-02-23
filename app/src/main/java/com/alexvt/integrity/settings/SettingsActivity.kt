@@ -13,21 +13,22 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.alexvt.integrity.R
+import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
+import com.alexvt.integrity.core.util.ThemedActivity
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.recovery.RecoveryActivity
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import kotlinx.android.synthetic.main.activity_settings.*
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
-import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 
-class SettingsActivity : CyaneaAppCompatActivity() {
+class SettingsActivity : ThemedActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +41,7 @@ class SettingsActivity : CyaneaAppCompatActivity() {
 
         bindBottomNavigation()
 
-        FontUtil.setFont(this)
+        FontUtil.setFont(this, IntegrityCore.getFont())
     }
 
     private fun setBottomNavigationIcons() {
@@ -77,7 +78,8 @@ class SettingsActivity : CyaneaAppCompatActivity() {
                         super.onFragmentResumed(fm, f)
                         GlobalScope.launch(Dispatchers.Main) {
                             if (f.view != null) {
-                                FontUtil.setFont(this@SettingsActivity, f.view!!)
+                                FontUtil.setFont(this@SettingsActivity, f.view!!,
+                                        IntegrityCore.getFont())
                             }
                         }
                     }

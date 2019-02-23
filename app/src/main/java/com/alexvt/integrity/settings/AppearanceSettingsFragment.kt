@@ -7,6 +7,7 @@
 package com.alexvt.integrity.settings
 
 import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -16,10 +17,10 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
+import com.alexvt.integrity.core.util.ThemedActivity
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
-import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 
 class AppearanceSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -34,13 +35,12 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
             val dialog = ColorPickerDialog.newBuilder()
                     .setAllowCustom(false)
                     .setShowColorShades(false)
-                    .setColor(ThemeUtil.getColorBackground())
+                    .setColor(ThemeUtil.getColorBackground(IntegrityCore.getColors()))
                     .setPresets(resources.getIntArray(R.array.colorsBackground))
                     .create()
             dialog.setColorPickerDialogListener(object : ColorPickerDialogListener {
                 override fun onColorSelected(dialogId: Int, color: Int) {
-                    ThemeUtil.saveColorBackground(context!!, color)
-                    ThemeUtil.applyThemeAndRecreate(activity as CyaneaAppCompatActivity)
+                    saveAndApplyColorBackground(context!!, color)
                 }
 
                 override fun onDialogDismissed(dialogId: Int) { }
@@ -52,13 +52,12 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
             val dialog = ColorPickerDialog.newBuilder()
                     .setAllowCustom(false)
                     .setShowColorShades(false)
-                    .setColor(ThemeUtil.getColorPrimary())
+                    .setColor(ThemeUtil.getColorPrimary(IntegrityCore.getColors()))
                     .setPresets(resources.getIntArray(R.array.colorsPrimary))
                     .create()
             dialog.setColorPickerDialogListener(object : ColorPickerDialogListener {
                 override fun onColorSelected(dialogId: Int, color: Int) {
-                    ThemeUtil.saveColorPrimary(context!!, color)
-                    ThemeUtil.applyThemeAndRecreate(activity as CyaneaAppCompatActivity)
+                    saveAndApplyColorPrimary(context!!, color)
                 }
 
                 override fun onDialogDismissed(dialogId: Int) { }
@@ -70,13 +69,12 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
             val dialog = ColorPickerDialog.newBuilder()
                     .setAllowCustom(false)
                     .setShowColorShades(false)
-                    .setColor(ThemeUtil.getColorAccent())
+                    .setColor(ThemeUtil.getColorAccent(IntegrityCore.getColors()))
                     .setPresets(resources.getIntArray(R.array.colorsPrimary))
                     .create()
             dialog.setColorPickerDialogListener(object : ColorPickerDialogListener {
                 override fun onColorSelected(dialogId: Int, color: Int) {
-                    ThemeUtil.saveColorAccent(context!!, color)
-                    ThemeUtil.applyThemeAndRecreate(activity as CyaneaAppCompatActivity)
+                    saveAndApplyColorAccent(context!!, color)
                 }
 
                 override fun onDialogDismissed(dialogId: Int) { }
@@ -97,13 +95,46 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
                             initialSelection = currentFontIndex) { dialog, index, text ->
                         val selectedFontName = fontNames[index]
                         if (selectedFontName != currentFontName) {
-                            FontUtil.saveFont(context!!, selectedFontName)
+                            saveFont(context!!, selectedFontName)
                             prefTextFont.summary = selectedFontName
-                            FontUtil.setFont(activity!!)
+                            FontUtil.setFont(activity!!, IntegrityCore.getFont())
                             activity!!.setResult(Activity.RESULT_OK, IntentUtil.withRecreate(true))
                         }
                     }.show()
             true
         }
+    }
+
+
+
+    fun saveAndApplyColorBackground(context: Context, intColor: Int) {
+        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
+                colorBackground = ThemeUtil.getHexColor(intColor))
+        )
+        applyColors()
+    }
+
+    fun saveAndApplyColorPrimary(context: Context, intColor: Int) {
+        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
+                colorPrimary = ThemeUtil.getHexColor(intColor))
+        )
+        applyColors()
+    }
+
+    fun saveAndApplyColorAccent(context: Context, intColor: Int) {
+        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
+                colorAccent = ThemeUtil.getHexColor(intColor))
+        )
+        applyColors()
+    }
+
+    private fun applyColors() {
+        ThemeUtil.applyThemeAndRecreate(activity as ThemedActivity, IntegrityCore.getColors())
+    }
+
+    fun saveFont(context: Context, fontName: String) {
+        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
+                textFont = fontName)
+        )
     }
 }

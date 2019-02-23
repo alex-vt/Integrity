@@ -116,6 +116,7 @@ object IntegrityCore {
         if (snapshot.status == SnapshotStatus.COMPLETE) {
             IntentUtil.putDates(intent, getCompleteSnapshotDates(artifactId))
         }
+        putUiSettings(intent)
         activity.startActivityForResult(intent, 0)
     }
 
@@ -125,6 +126,7 @@ object IntegrityCore {
         val intent = Intent()
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot.copy(status = SnapshotStatus.BLUEPRINT)) // as blueprint
+        putUiSettings(intent)
         activity.startActivityForResult(intent, 0)
     }
 
@@ -141,8 +143,29 @@ object IntegrityCore {
     fun openCreateNewArtifact(activity: Activity, componentName: ComponentName) {
         val intent = Intent()
         intent.component = componentName
+        putUiSettings(intent)
         activity.startActivityForResult(intent, 0)
     }
+
+    fun getColors() = with(settingsRepository.get()) {
+        ThemeColors(colorBackground, colorPrimary, colorAccent)
+    }
+
+    private fun putUiSettings(intent: Intent): Intent {
+        IntentUtil.putFontName(intent, getFont())
+        IntentUtil.putColorBackground(intent, getColorBackground())
+        IntentUtil.putColorPrimary(intent, getColorPrimary())
+        IntentUtil.putColorAccent(intent, getColorAccent())
+        return intent
+    }
+
+    fun getFont() = settingsRepository.get().textFont
+
+    fun getColorBackground() = settingsRepository.get().colorBackground
+
+    fun getColorPrimary() = settingsRepository.get().colorPrimary
+
+    fun getColorAccent() = settingsRepository.get().colorAccent
 
     /**
      * Saves snapshot data and/or metadata blueprint according to its status.

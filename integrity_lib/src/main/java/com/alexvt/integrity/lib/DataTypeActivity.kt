@@ -15,15 +15,14 @@ import android.view.*
 import android.widget.RadioGroup
 import android.widget.Toast
 import android.widget.ToggleButton
-import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.list.listItems
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.util.*
 import com.alexvt.integrity.lib.util.DataCacheFolderUtil
-import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.lib.databinding.ActivityDataTypeBinding
 import com.alexvt.integrity.lib.databinding.ViewColorEditBinding
@@ -35,7 +34,7 @@ import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
 
 
-abstract class DataTypeActivity : AppCompatActivity() {
+abstract class DataTypeActivity : ThemedActivity() {
 
     private val TAG = DataTypeActivity::class.java.simpleName
     private lateinit var binding : ActivityDataTypeBinding
@@ -107,15 +106,30 @@ abstract class DataTypeActivity : AppCompatActivity() {
         }
     }
 
+
+
+    // UI control API methods
+
     protected fun closeFilterDrawer() {
         binding.dlAllContent.closeDrawers()
     }
+
+    protected fun getColors() = with(IntentUtil) {
+        ThemeColors(getColorBackground(intent), getColorPrimary(intent), getColorAccent(intent))
+    }
+
 
 
     // activity lifecycle (not exposed)
 
     final override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // todo receive broadcast before launching this activity and apply theme there instead
+        if (!ThemeUtil.isThemeApplied(getColors())) {
+            ThemeUtil.applyTheme(getColors())
+        }
+
         binding = DataBindingUtil.setContentView(this, R.layout.activity_data_type)
 
         setSupportActionBar(binding.toolbar)
@@ -123,7 +137,9 @@ abstract class DataTypeActivity : AppCompatActivity() {
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         binding.content.addView(inflateContentView(this).root, 0)
+
         binding.controls.addView(inflateControlsView(this).root)
+
         binding.filter.addView(inflateFilterView(this).root)
 
         if (isSnapshotViewMode()) {
@@ -156,6 +172,12 @@ abstract class DataTypeActivity : AppCompatActivity() {
             fillInCommonOptions(snapshot, isEditable = true)
             fillInTypeOptions(snapshot, isEditable = true)
         }
+
+        FontUtil.setFont(this, IntentUtil.getFontName(intent))
+        val colors = getColors()
+        binding.content.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(colors))
+        binding.llBottomSheet.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(colors))
+        binding.nvFilter.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(colors))
     }
 
     final override fun onCreateOptionsMenu(menu: Menu): Boolean {

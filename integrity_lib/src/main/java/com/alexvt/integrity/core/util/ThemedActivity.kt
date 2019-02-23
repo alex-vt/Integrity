@@ -4,15 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.type.github
+package com.alexvt.integrity.core.util
 
-import android.app.Application
+import com.alexvt.integrity.core.util.ThemeColors
 import com.alexvt.integrity.core.util.ThemeUtil
+import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 
-class App : Application() {
+abstract class ThemedActivity : CyaneaAppCompatActivity() {
 
-    override fun onCreate() {
-        super.onCreate()
-        ThemeUtil.initThemeSupport(this)
-    }
 }

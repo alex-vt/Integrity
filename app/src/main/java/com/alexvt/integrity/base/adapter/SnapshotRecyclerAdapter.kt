@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.activity.MainActivity
+import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.Snapshot
@@ -40,7 +41,7 @@ class SnapshotRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Int>>,
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SnapshotViewHolder {
         val view = LayoutInflater.from(mainActivity).inflate(R.layout.snapshot_list_item, parent,
                 false)
-        FontUtil.setFont(mainActivity, view)
+        FontUtil.setFont(mainActivity, view, IntegrityCore.getFont())
         return SnapshotViewHolder(view)
     }
 

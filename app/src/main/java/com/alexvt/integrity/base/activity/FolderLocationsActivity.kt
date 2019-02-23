@@ -10,17 +10,19 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.adapter.FolderLocationRecyclerAdapter
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.util.FontUtil
+import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.lib.FolderLocation
+import com.alexvt.integrity.core.util.ThemedActivity
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import kotlinx.android.synthetic.main.activity_folder_locations.*
 
-class FolderLocationsActivity : AppCompatActivity() {
+class FolderLocationsActivity : ThemedActivity() {
 
     var selectedFolderLocations: List<FolderLocation> = emptyList()
 
@@ -38,10 +40,9 @@ class FolderLocationsActivity : AppCompatActivity() {
         // Float Action Button action items for each available folder location type
         // Folder location type map is sorted by key, so the value will be obtained by index of clicked action
         IntegrityCore.getNamedFileLocationCreateIntentMap().keys
-                .forEachIndexed { index, key ->
-                    sdAdd.addActionItem(SpeedDialActionItem.Builder(index, android.R.drawable.ic_input_add)
-                            .setLabel(key)
-                            .create())
+                .forEachIndexed { index, key -> sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
+                            SpeedDialActionItem.Builder(index, android.R.drawable.ic_input_add)
+                                    .setLabel(key), IntegrityCore.getColors()).create())
                 }
         sdAdd.setOnActionSelectedListener { speedDialActionItem ->
             val typeViewIntent = IntegrityCore.getNamedFileLocationCreateIntentMap().values
@@ -49,6 +50,7 @@ class FolderLocationsActivity : AppCompatActivity() {
             startActivity(typeViewIntent)
             false
         }
+        FontUtil.setFont(this, sdAdd, IntegrityCore.getFont())
         rvFolderLocationList.adapter = FolderLocationRecyclerAdapter(ArrayList(), this)
 
         bDone.visibility = if (isSelectMode()) View.VISIBLE else View.GONE

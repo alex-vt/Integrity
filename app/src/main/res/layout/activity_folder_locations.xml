@@ -61,6 +61,8 @@
                 android:layout_alignBottom="@id/rvFolderLocationList"
                 android:layout_alignParentRight="true"
                 android:layout_margin="@dimen/fab_margin"
+                app:sdMainFabOpenedBackgroundColor="?attr/colorAccent"
+                app:sdMainFabClosedBackgroundColor="?attr/colorAccent"
                 app:sdMainFabClosedSrc="@android:drawable/ic_input_add"
                 app:sdMainFabOpenedSrc="@android:drawable/ic_menu_close_clear_cancel"
                 />

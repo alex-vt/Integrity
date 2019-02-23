@@ -6,19 +6,26 @@
 
 package com.alexvt.integrity.core.util
 
-import android.content.Context
+import android.app.Application
 import android.graphics.Color
+import android.view.View
 import androidx.core.graphics.ColorUtils
-import com.alexvt.integrity.core.IntegrityCore
 import com.jaredrummler.cyanea.Cyanea
 import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
+import com.leinardi.android.speeddial.SpeedDialActionItem
 
-object ThemeUtil { // todo keep parsed colors until color settings change
+data class ThemeColors(
+        val colorBackground: String,
+        val colorPrimary: String,
+        val colorAccent: String
+)
 
-    fun getColorBackground() = Color.parseColor(IntegrityCore.settingsRepository.get().colorBackground)
+object ThemeUtil { // todo use parsed colors
 
-    fun getColorBackgroundSecondary(): Int {
-        val colorBackground = getColorBackground()
+    fun getColorBackground(colors: ThemeColors) = Color.parseColor(colors.colorBackground)
+
+    fun getColorBackgroundSecondary(colors: ThemeColors): Int {
+        val colorBackground = getColorBackground(colors)
         return if (ColorUtils.calculateLuminance(colorBackground) < 0.5) {
             lighten(colorBackground, 0.2f)
         } else {
@@ -26,8 +33,8 @@ object ThemeUtil { // todo keep parsed colors until color settings change
         }
     }
 
-    fun getColorBackgroundBleached(): Int {
-        val colorBackground = getColorBackground()
+    fun getColorBackgroundBleached(colors: ThemeColors): Int {
+        val colorBackground = getColorBackground(colors)
         return if (ColorUtils.calculateLuminance(colorBackground) < 0.5) {
             colorBackground
         } else {
@@ -35,16 +42,16 @@ object ThemeUtil { // todo keep parsed colors until color settings change
         }
     }
 
-    fun getColorPrimary() = Color.parseColor(IntegrityCore.settingsRepository.get().colorPrimary)
+    fun getColorPrimary(colors: ThemeColors) = Color.parseColor(colors.colorPrimary)
 
-    fun getColorPrimaryDark() = darken(getColorPrimary(), 0.2f)
+    fun getColorPrimaryDark(colors: ThemeColors) = darken(getColorPrimary(colors), 0.2f)
 
-    fun getColorAccent() = Color.parseColor(IntegrityCore.settingsRepository.get().colorAccent)
+    fun getColorAccent(colors: ThemeColors) = Color.parseColor(colors.colorAccent)
 
-    fun getTextColorPrimary() = softInvertGray(getColorBackground())
+    fun getTextColorPrimary(colors: ThemeColors) = softInvertGray(getColorBackground(colors))
 
-    fun getTextColorSecondary(): Int {
-        val textColorPrimary = getTextColorPrimary()
+    fun getTextColorSecondary(colors: ThemeColors): Int {
+        val textColorPrimary = getTextColorPrimary(colors)
         return if (ColorUtils.calculateLuminance(textColorPrimary) < 0.5) {
             lighten(textColorPrimary, 0.3f)
         } else {
@@ -52,34 +59,41 @@ object ThemeUtil { // todo keep parsed colors until color settings change
         }
     }
 
-    fun saveColorBackground(context: Context, intColor: Int) {
-        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
-                colorBackground = getHexColor(intColor))
-        )
+    fun applyToSpeedDial(actionBuilder: SpeedDialActionItem.Builder, colors: ThemeColors)
+            = actionBuilder
+            .setFabBackgroundColor(getColorAccent(colors))
+            .setFabImageTintColor(Color.WHITE)
+            .setLabelBackgroundColor(getTextColorSecondary(colors))
+            .setLabelColor(getColorBackground(colors))!!
+
+    fun applyToView(view: View) = Cyanea.instance.tinter.tint(view)
+
+    fun applyThemeAndRecreate(activity: CyaneaAppCompatActivity, colors: ThemeColors) {
+        applyTheme(colors).recreate(activity)
     }
 
-    fun applyThemeAndRecreate(activity: CyaneaAppCompatActivity) {
-        activity.cyanea.edit {
-            primary(ThemeUtil.getColorPrimary())
-            primaryDark(ThemeUtil.getColorPrimaryDark())
-            accent(ThemeUtil.getColorAccent())
-            shouldTintNavBar(true)
-            shouldTintStatusBar(true)
-            navigationBar(ThemeUtil.getColorPrimaryDark())
-            background(ThemeUtil.getColorBackground())
-        }.recreate(activity)
+    fun initThemeSupport(application: Application) {
+        Cyanea.init(application, application.resources)
     }
 
-    fun saveColorPrimary(context: Context, intColor: Int) {
-        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
-                colorPrimary = getHexColor(intColor))
-        )
+    fun isThemeApplied(colors: ThemeColors) = with(Cyanea.instance) {
+        primary == getColorPrimary(colors)
+                && primaryDark == getColorPrimaryDark(colors)
+                && accent == getColorAccent(colors)
+                && shouldTintNavBar
+                && shouldTintStatusBar
+                && navigationBar == getColorPrimaryDark(colors)
+                && backgroundColor == getColorBackground(colors)
     }
 
-    fun saveColorAccent(context: Context, intColor: Int) {
-        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
-                colorAccent = getHexColor(intColor))
-        )
+    fun applyTheme(colors: ThemeColors): Cyanea.Recreator = Cyanea.instance.edit {
+        primary(getColorPrimary(colors))
+        primaryDark(getColorPrimaryDark(colors))
+        accent(getColorAccent(colors))
+        shouldTintNavBar(true)
+        shouldTintStatusBar(true)
+        navigationBar(getColorPrimaryDark(colors))
+        background(getColorBackground(colors))
     }
 
     private fun darken(colorInt: Int, strength: Float)
@@ -109,5 +123,5 @@ object ThemeUtil { // todo keep parsed colors until color settings change
         return Color.argb(255, targetLuminanceInt, targetLuminanceInt, targetLuminanceInt)
     }
 
-    private fun getHexColor(intColor: Int) = String.format("#%06X", (0xFFFFFF and intColor))
+    fun getHexColor(intColor: Int) = String.format("#%06X", (0xFFFFFF and intColor))
 }

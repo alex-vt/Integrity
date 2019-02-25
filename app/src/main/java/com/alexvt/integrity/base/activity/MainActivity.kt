@@ -40,13 +40,10 @@ import com.alexvt.integrity.util.SpeedDialCompatUtil
 import com.mikepenz.iconics.context.IconicsLayoutInflater2
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.holder.BadgeStyle
-import com.mikepenz.materialdrawer.model.ExpandableDrawerItem
-import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
-import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
 import java.util.*
 import co.zsmb.materialdrawerkt.draweritems.badge
+import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
 import com.alexvt.integrity.BuildConfig
-import com.alexvt.integrity.core.job.ScheduledJobManager
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.core.util.ThemedActivity
@@ -57,6 +54,7 @@ import com.alexvt.integrity.settings.SettingsActivity
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import com.jakewharton.rxbinding3.appcompat.queryTextChanges
+import com.mikepenz.materialdrawer.model.*
 
 
 class MainActivity : ThemedActivity() {
@@ -189,21 +187,12 @@ class MainActivity : ThemedActivity() {
                 iconTintingEnabled = true
                 textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
                 iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
-                disabledTextColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
-                disabledIconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
                 typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
             }
             footer {
-                toggleItem("Scheduled jobs") {
-                    selectable = false
-                    checked = IntegrityCore.scheduledJobsEnabled()
-                    onToggled {
-                        IntegrityCore.updateScheduledJobsOptions(this@MainActivity, checked)
-                    }
-                    textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
-                    iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
-                    disabledTextColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
-                    disabledIconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                switchItem("Scheduled jobs") {
+                    // updatable
+                    typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
                 }
                 divider {}
                 primaryItem("Settings") {
@@ -261,13 +250,17 @@ class MainActivity : ThemedActivity() {
         })
     }
 
-    private fun updateErrorViewsOnDrawer(unreadErrorCount: Int) {
-        // Header
+    private fun updateStatusHeader() {
         val headerBinding: DrawerHeaderBinding = DataBindingUtil.inflate(LayoutInflater.from(
-                this@MainActivity), R.layout.drawer_header, null, false)
+                this), R.layout.drawer_header, null, false)
         FontUtil.setFont(this, headerBinding.rlView, IntegrityCore.getFont())
+        val unreadErrorCount = IntegrityCore.logRepository.getUnreadErrors().count()
         headerBinding.tvTitle.text = if (unreadErrorCount == 0) {
-            "App is working normally"
+            if (IntegrityCore.scheduledJobsEnabled()) {
+                "App is working normally"
+            } else {
+                "Scheduled jobs are disabled"
+            }
         } else {
             "There are errors."
         }
@@ -280,8 +273,10 @@ class MainActivity : ThemedActivity() {
         headerBinding.rlView.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(IntegrityCore.getColors()))
         headerBinding.tvTitle.setTextColor(ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()))
         headerBinding.bViewLog.setTextColor(ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()))
+    }
 
-        // Log with error badge
+    private fun updateLogBadgeErrorCount() {
+        val unreadErrorCount = IntegrityCore.logRepository.getUnreadErrors().count()
         val badgeText = if (unreadErrorCount == 0) "" else "Errors: $unreadErrorCount"
         val badgeColor = if (unreadErrorCount == 0) {
             ThemeUtil.getColorBackground(IntegrityCore.getColors())
@@ -308,6 +303,20 @@ class MainActivity : ThemedActivity() {
                         .withPaddingLeftRightDp(8)
                         .withCornersDp(12)
                 ))
+    }
+
+    private fun updateScheduledJobsSwitch() {
+        drawer.updateStickyFooterItemAtPosition(SwitchDrawerItem()
+                .withName("Scheduled jobs")
+                .withSelectable(false)
+                .withChecked(IntegrityCore.scheduledJobsEnabled())
+                .withOnCheckedChangeListener { _, _, isChecked ->
+                    IntegrityCore.updateScheduledJobsOptions(this, isChecked)
+                    updateStatusHeader()
+                }
+                .withTextColor(ThemeUtil.getTextColorPrimary(IntegrityCore.getColors())),
+                0)
+        FontUtil.setFont(this, drawer.stickyFooter, IntegrityCore.getFont())
     }
 
     /**
@@ -534,8 +543,10 @@ class MainActivity : ThemedActivity() {
                     2L, "Up next", "No scheduled jobs",
                     IntegrityCore.settingsRepository.get().jobsExpandScheduled)
         }
-        updateErrorViewsOnDrawer(IntegrityCore.logRepository.getUnreadErrors().count())
-        // todo update the rest of the drawer
+        // todo update using settings changes listener
+        updateStatusHeader()
+        updateLogBadgeErrorCount()
+        updateScheduledJobsSwitch()
     }
 
     override fun onStop() {

@@ -24,6 +24,7 @@ import android.content.pm.ActivityInfo
 import com.alexvt.integrity.core.filesystem.local.LocalFolderLocation
 import com.alexvt.integrity.core.filesystem.samba.SambaFolderLocation
 import com.alexvt.integrity.core.log.*
+import com.alexvt.integrity.core.notification.DisabledScheduledJobsNotifier
 import com.alexvt.integrity.core.notification.ErrorNotifier
 import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.search.SimplePersistableSearchIndexRepository
@@ -52,10 +53,6 @@ object IntegrityCore {
 
     /**
      * Should be called before using any other functions.
-     *
-     * Initialization exceptions are caught and, if possible (log exists), logged.
-     * After successful initialization uncaught exceptions will be logged (and app recovered).
-     * This setup prevents "boot loops": as early as initialization fails, the app isn't recovered.
      */
     fun init(context: Context) {
         IntegrityCore.context = context
@@ -66,9 +63,11 @@ object IntegrityCore {
         searchIndexRepository.init(context)
 
         resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
-        ScheduledJobManager.updateSchedule(context)
 
+        notifyAboutDisabledScheduledJobs(context)
         notifyAboutUnreadErrors(context)
+
+        ScheduledJobManager.updateSchedule(context)
 
         Log(context, "IntegrityCore initialized").log()
     }
@@ -101,6 +100,25 @@ object IntegrityCore {
         IntegrityCore.logRepository.markAllRead(context)
         ErrorNotifier.removeNotification(context)
     }
+
+    fun updateScheduledJobsOptions(context: Context, jobsEnabled: Boolean) {
+        settingsRepository.set(context, settingsRepository.get()
+                .copy(jobsEnableScheduled = jobsEnabled))
+        ScheduledJobManager.updateSchedule(context)
+        IntegrityCore.notifyAboutDisabledScheduledJobs(context)
+    }
+
+    fun notifyAboutDisabledScheduledJobs(context: Context) {
+        val showDisabledScheduledJobsNotification = !scheduledJobsEnabled()
+                && settingsRepository.get().notificationShowDisabledScheduled
+        if (showDisabledScheduledJobsNotification) {
+            DisabledScheduledJobsNotifier.showNotification(context)
+        } else {
+            DisabledScheduledJobsNotifier.removeNotification(context)
+        }
+    }
+
+    fun scheduledJobsEnabled() = settingsRepository.get().jobsEnableScheduled
 
     fun openViewSnapshotOrShowProgress(activity: Activity, artifactId: Long, date: String) {
         val snapshot = metadataRepository.getSnapshotMetadata(artifactId, date)

@@ -21,11 +21,12 @@ data class IntegrityAppSettings(
         val colorPrimary: String = "#008577",
         val colorAccent: String = "#EE0077",
         val textFont: String = "",
-        val textScalePercent: Float = 100f,
-        val menuExpandJobsRunning: Boolean = true,
-        val menuExpandJobsScheduled: Boolean = true,
+        val jobsEnableScheduled: Boolean = true,
+        val jobsExpandRunning: Boolean = true,
+        val jobsExpandScheduled: Boolean = true,
         val dataFolderPath: String = "Integrity",
         val dataTags: ArrayList<Tag> = arrayListOf(),
         val dataFolderLocations: ArrayList<FolderLocation> = arrayListOf(),
-        val notificationShowErrors: Boolean = true
+        val notificationShowErrors: Boolean = true,
+        val notificationShowDisabledScheduled: Boolean = true
 ) : Serializable

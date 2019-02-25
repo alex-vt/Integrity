@@ -46,6 +46,7 @@ import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
 import java.util.*
 import co.zsmb.materialdrawerkt.draweritems.badge
 import com.alexvt.integrity.BuildConfig
+import com.alexvt.integrity.core.job.ScheduledJobManager
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.core.util.ThemedActivity
@@ -193,11 +194,11 @@ class MainActivity : ThemedActivity() {
                 typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
             }
             footer {
-                toggleItem("Offline mode") {
+                toggleItem("Scheduled jobs") {
                     selectable = false
-                    enabled = false
+                    checked = IntegrityCore.scheduledJobsEnabled()
                     onToggled {
-                        // todo (also show notification)
+                        IntegrityCore.updateScheduledJobsOptions(this@MainActivity, checked)
                     }
                     textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
                     iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
@@ -254,9 +255,9 @@ class MainActivity : ThemedActivity() {
         val isExpanded = drawer.getDrawerItem(sectionId).isExpanded
         val oldSettings = IntegrityCore.settingsRepository.get()
         IntegrityCore.settingsRepository.set(this, if (isScheduledJobs) {
-            oldSettings.copy(menuExpandJobsScheduled = isExpanded)
+            oldSettings.copy(jobsExpandScheduled = isExpanded)
         } else {
-            oldSettings.copy(menuExpandJobsRunning = isExpanded)
+            oldSettings.copy(jobsExpandRunning = isExpanded)
         })
     }
 
@@ -526,14 +527,15 @@ class MainActivity : ThemedActivity() {
         IntegrityCore.subscribeToRunningJobListing(this) {
             updateJobsInDrawer(it.map { getRunningJobDrawerItem(it.first, it.second) },
                     1L, "Running now", "No running jobs",
-                    IntegrityCore.settingsRepository.get().menuExpandJobsRunning)
+                    IntegrityCore.settingsRepository.get().jobsExpandRunning)
         }
         IntegrityCore.subscribeToScheduledJobListing(this) {
             updateJobsInDrawer(it.map { getScheduledJobDrawerItem(it.first) },
                     2L, "Up next", "No scheduled jobs",
-                    IntegrityCore.settingsRepository.get().menuExpandJobsScheduled)
+                    IntegrityCore.settingsRepository.get().jobsExpandScheduled)
         }
         updateErrorViewsOnDrawer(IntegrityCore.logRepository.getUnreadErrors().count())
+        // todo update the rest of the drawer
     }
 
     override fun onStop() {

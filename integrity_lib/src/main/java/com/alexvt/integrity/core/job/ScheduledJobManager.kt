@@ -78,11 +78,14 @@ object ScheduledJobManager {
      *
      * Sorted by time remaining until job starts.
      */
-    private fun getScheduledJobs()
-            = IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(false)
-            .snapshots
-            .filter { it.downloadSchedule.periodSeconds > 0L } // todo also resume jobs interrupted not by user
-            .sortedBy { getNextRunTimestamp(it) }
+    private fun getScheduledJobs() = if (IntegrityCore.scheduledJobsEnabled()) {
+        IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(false)
+                .snapshots
+                .filter { it.downloadSchedule.periodSeconds > 0L } // todo also resume jobs interrupted not by user
+                .sortedBy { getNextRunTimestamp(it) }
+    } else {
+        emptyList()
+    }
 
     fun getNextRunTimestamp(snapshot: Snapshot)
             = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").parse(snapshot.date).time +
@@ -115,7 +118,8 @@ object ScheduledJobManager {
             WorkManager.getInstance().enqueue(workList)
         }
         invokeListenersWithCurrentData()
-        Log(context, "Updated future jobs schedule: ${workList.size} jobs scheduled").log()
+        Log(context, "Updated future jobs schedule: enabled = " +
+                "${IntegrityCore.scheduledJobsEnabled()}, ${workList.size} jobs scheduled").log()
     }
 
 }

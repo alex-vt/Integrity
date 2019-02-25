@@ -23,5 +23,18 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory
+        app:title="App status"
+        >
+
+        <SwitchPreferenceCompat
+            app:key="notifications_scheduled_jobs_disabled"
+            app:title="Notify when scheduled jobs are disabled"
+            app:summaryOn="Show notification"
+            app:summaryOff="Don\'t show notification"
+            />
+
+    </PreferenceCategory>
+
 
 </androidx.preference.PreferenceScreen>

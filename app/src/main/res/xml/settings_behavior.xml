@@ -9,18 +9,25 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
-        app:title="Side menu"
+        app:title="Jobs"
         >
 
+        <SwitchPreferenceCompat
+            app:key="behavior_jobs_enable_scheduled"
+            app:title="Enable scheduled jobs"
+            app:summaryOn="Enabled"
+            app:summaryOff="Disabled. Will ignore schedule settings in snapshots"
+            />
+
         <CheckBoxPreference
-            app:key="behavior_drawer_expand_running"
+            app:key="behavior_jobs_expand_running"
             app:title="Expand running job list"
             app:summaryOn="Show running job list"
             app:summaryOff="Running job list stays collapsed"
             />
 
         <CheckBoxPreference
-            app:key="behavior_drawer_expand_scheduled"
+            app:key="behavior_jobs_expand_scheduled"
             app:title="Expand scheduled job list"
             app:summaryOn="Show scheduled job list"
             app:summaryOff="Scheduled job list stays collapsed"

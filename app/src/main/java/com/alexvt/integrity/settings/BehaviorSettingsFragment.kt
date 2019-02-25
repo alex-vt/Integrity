@@ -10,6 +10,7 @@ import android.os.Bundle
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreferenceCompat
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
 
@@ -18,41 +19,57 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         setPreferencesFromResource(R.xml.settings_behavior, rootKey)
 
         // todo replace error prone implementation
+        bindEnableScheduled()
         bindExpandRunning()
         bindExpandScheduled()
     }
 
+    private fun bindEnableScheduled() {
+        val prefEnableScheduled: SwitchPreferenceCompat = findPreference("behavior_jobs_enable_scheduled")
+        updateEnableScheduled(prefEnableScheduled)
+        prefEnableScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            val enableScheduled = IntegrityCore.scheduledJobsEnabled()
+            IntegrityCore.updateScheduledJobsOptions(context!!, !enableScheduled)
+            updateEnableScheduled(prefEnableScheduled)
+            true
+        }
+    }
+
     private fun bindExpandRunning() {
-        val prefExpandRunning: CheckBoxPreference = findPreference("behavior_drawer_expand_running")
+        val prefExpandRunning: CheckBoxPreference = findPreference("behavior_jobs_expand_running")
         updateExpandRunning(prefExpandRunning)
         prefExpandRunning.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val expandRunning = IntegrityCore.settingsRepository.get().menuExpandJobsRunning
+            val expandRunning = IntegrityCore.settingsRepository.get().jobsExpandRunning
             IntegrityCore.settingsRepository.set(context!!, IntegrityCore.settingsRepository.get()
-                    .copy(menuExpandJobsRunning = !expandRunning))
+                    .copy(jobsExpandRunning = !expandRunning))
             updateExpandRunning(prefExpandRunning)
             true
         }
     }
 
     private fun bindExpandScheduled() {
-        val prefExpandScheduled: CheckBoxPreference = findPreference("behavior_drawer_expand_scheduled")
+        val prefExpandScheduled: CheckBoxPreference = findPreference("behavior_jobs_expand_scheduled")
         updateExpandScheduled(prefExpandScheduled)
         prefExpandScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val expandScheduled = IntegrityCore.settingsRepository.get().menuExpandJobsScheduled
+            val expandScheduled = IntegrityCore.settingsRepository.get().jobsExpandScheduled
             IntegrityCore.settingsRepository.set(context!!, IntegrityCore.settingsRepository.get()
-                    .copy(menuExpandJobsScheduled = !expandScheduled))
+                    .copy(jobsExpandScheduled = !expandScheduled))
             updateExpandScheduled(prefExpandScheduled)
             true
         }
     }
 
+    private fun updateEnableScheduled(prefEnableScheduled: SwitchPreferenceCompat) {
+        prefEnableScheduled.isChecked = IntegrityCore.scheduledJobsEnabled()
+    }
+
     private fun updateExpandScheduled(prefExpandScheduled: CheckBoxPreference) {
         prefExpandScheduled.isChecked = IntegrityCore.settingsRepository.get()
-                .menuExpandJobsScheduled
+                .jobsExpandScheduled
     }
 
     private fun updateExpandRunning(prefExpandRunning: CheckBoxPreference) {
         prefExpandRunning.isChecked = IntegrityCore.settingsRepository.get()
-                .menuExpandJobsRunning
+                .jobsExpandRunning
     }
 }

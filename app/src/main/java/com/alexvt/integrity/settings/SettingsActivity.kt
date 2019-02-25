@@ -103,6 +103,7 @@ class SettingsActivity : ThemedActivity() {
             IntentUtil.getViewExtensions(intent) -> R.id.action_extensions
             else -> R.id.action_appearance
         }
+        // todo refresh on settings change
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

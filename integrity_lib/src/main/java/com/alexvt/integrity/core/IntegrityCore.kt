@@ -120,6 +120,8 @@ object IntegrityCore {
 
     fun scheduledJobsEnabled() = settingsRepository.get().jobsEnableScheduled
 
+    fun getDataFolderName() = settingsRepository.get().dataFolderPath
+
     fun openViewSnapshotOrShowProgress(activity: Activity, artifactId: Long, date: String) {
         val snapshot = metadataRepository.getSnapshotMetadata(artifactId, date)
         if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
@@ -135,6 +137,7 @@ object IntegrityCore {
             IntentUtil.putDates(intent, getCompleteSnapshotDates(artifactId))
         }
         putUiSettings(intent)
+        IntentUtil.putDataFolderName(intent, getDataFolderName())
         activity.startActivityForResult(intent, 0)
     }
 
@@ -145,6 +148,7 @@ object IntegrityCore {
         intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
         IntentUtil.putSnapshot(intent, snapshot.copy(status = SnapshotStatus.BLUEPRINT)) // as blueprint
         putUiSettings(intent)
+        IntentUtil.putDataFolderName(intent, getDataFolderName())
         activity.startActivityForResult(intent, 0)
     }
 
@@ -162,6 +166,7 @@ object IntegrityCore {
         val intent = Intent()
         intent.component = componentName
         putUiSettings(intent)
+        IntentUtil.putDataFolderName(intent, getDataFolderName())
         activity.startActivityForResult(intent, 0)
     }
 
@@ -244,7 +249,7 @@ object IntegrityCore {
      */
     fun cancelSnapshotCreation(artifactId: Long, date: String) {
         val snapshotInProgress = metadataRepository.getSnapshotMetadata(artifactId, date)
-        SnapshotDownloadCancelRequest().send(context, snapshotInProgress)
+        SnapshotDownloadCancelRequest().send(context, getDataFolderName(), snapshotInProgress)
 
         // Updating snapshot status as incomplete in database.
         val incompleteMetadata = snapshotInProgress.copy(status = SnapshotStatus.INCOMPLETE)
@@ -274,7 +279,7 @@ object IntegrityCore {
     fun removeArtifact(artifactId: Long, alsoRemoveData: Boolean) {
         metadataRepository.removeArtifactMetadata(context, artifactId)
         searchIndexRepository.removeForArtifact(context, artifactId)
-        DataCacheFolderUtil.clear(context, artifactId)
+        DataCacheFolderUtil.clear(context, getDataFolderName(), artifactId)
         // todo alsoRemoveData if needed
     }
 
@@ -285,7 +290,7 @@ object IntegrityCore {
     fun removeSnapshot(artifactId: Long, date: String, alsoRemoveData: Boolean) {
         metadataRepository.removeSnapshotMetadata(context, artifactId, date)
         searchIndexRepository.removeForSnapshot(context, artifactId, date)
-        DataCacheFolderUtil.clear(context, artifactId, date)
+        DataCacheFolderUtil.clear(context, getDataFolderName(), artifactId, date)
         // todo alsoRemoveData if needed
     }
 
@@ -296,7 +301,7 @@ object IntegrityCore {
     fun removeAll(alsoRemoveData: Boolean) {
         metadataRepository.clear(context)
         searchIndexRepository.clear(context)
-        DataCacheFolderUtil.clear(context)
+        DataCacheFolderUtil.clear(context, getDataFolderName())
         // todo alsoRemoveData if needed
     }
 

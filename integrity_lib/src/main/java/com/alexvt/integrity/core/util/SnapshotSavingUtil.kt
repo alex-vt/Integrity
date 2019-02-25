@@ -109,9 +109,10 @@ object SnapshotSavingUtil {
         RunningJobManager.putJob(snapshotInProgress)
         postSnapshotDownloadProgress(context, snapshotInProgress, "Downloading data")
 
-        DataCacheFolderUtil.ensureSnapshotFolder(context, snapshotInProgress.artifactId,
-                snapshotInProgress.date)
-        SnapshotDownloadStartRequest().send(context, snapshotInProgress)
+        DataCacheFolderUtil.ensureSnapshotFolder(context, IntegrityCore.getDataFolderName(),
+                snapshotInProgress.artifactId, snapshotInProgress.date)
+        SnapshotDownloadStartRequest().send(context, IntegrityCore.getDataFolderName(),
+                snapshotInProgress)
         // Download of snapshot data files will start in a separate service
         // and will finish with the final response SnapshotProgressReceiver invocation.
     }
@@ -142,7 +143,9 @@ object SnapshotSavingUtil {
         }
 
         // Packing downloaded snapshot
-        val dataFolderPath = DataCacheFolderUtil.ensureSnapshotFolder(context, snapshotInProgress.artifactId,
+        val dataFolderName = IntegrityCore.getDataFolderName()
+        val dataFolderPath = DataCacheFolderUtil.ensureSnapshotFolder(context,
+                dataFolderName, snapshotInProgress.artifactId,
                 snapshotInProgress.date)
         postSnapshotDownloadProgress(context, snapshotInProgress, "Compressing data")
         val archivePath = ArchiveUtil.packSnapshot(dataFolderPath)
@@ -180,16 +183,16 @@ object SnapshotSavingUtil {
         IntegrityCore.metadataRepository.removeSnapshotMetadata(context,
                 snapshotInProgress.artifactId, snapshotInProgress.date)
         IntegrityCore.metadataRepository.addSnapshotMetadata(context, completeSnapshot)
-        DataCacheFolderUtil.clearFiles(context) // folders remain
+        DataCacheFolderUtil.clearFiles(context, dataFolderName) // folders remain
         if (!RunningJobManager.isRunning(completeSnapshot)) {
             return
         }
 
         if (DataCacheFolderUtil.fileExists(context, IntegrityEx.getSnapshotDataChunksPath(context,
-                        completeSnapshot.artifactId, completeSnapshot.date))) {
+                        dataFolderName, completeSnapshot.artifactId, completeSnapshot.date))) {
             postSnapshotDownloadProgress(context, completeSnapshot, "Updating search index")
             val dataChunkListJson = DataCacheFolderUtil.getTextFromFile(context,
-                    IntegrityEx.getSnapshotDataChunksPath(context,
+                    IntegrityEx.getSnapshotDataChunksPath(context, dataFolderName,
                     completeSnapshot.artifactId, completeSnapshot.date))
             val dataChunks = JsonSerializerUtil.fromJson("{\"chunks\": [$dataChunkListJson]}",
                     DataChunks::class.java).chunks // todo make clean, ensure no duplicates

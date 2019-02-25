@@ -27,8 +27,8 @@ object LocalLocationUtil : ArchiveLocationUtil<LocalFolderLocation> {
                               archiveFolderLocation: LocalFolderLocation) {
         val storage = Storage(context)
         storage.createDirectory(archiveFolderLocation.folderPath)
-        val destinationArtifactFolderPath = archiveFolderLocation.folderPath + File.separator +
-                artifactAlias + "_" + artifactId
+        val destinationArtifactFolderPath = storage.externalStorageDirectory + File.separator +
+                archiveFolderLocation.folderPath + File.separator + artifactAlias + "_" + artifactId
         storage.createDirectory(destinationArtifactFolderPath)
 
         val destinationArchivePath = destinationArtifactFolderPath + File.separator +

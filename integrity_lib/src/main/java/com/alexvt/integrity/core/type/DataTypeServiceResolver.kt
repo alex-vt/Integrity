@@ -19,12 +19,13 @@ import com.alexvt.integrity.lib.util.IntentUtil
  */
 object DataTypeServiceResolver {
 
-    fun startDownloadService(context: Context, snapshot: Snapshot) {
+    fun startDownloadService(context: Context, dataFolderName: String, snapshot: Snapshot) {
         val serviceInfo = getDataTypeServiceInfo(context, snapshot.dataTypePackageName)
         val componentName = ComponentName(serviceInfo.packageName, serviceInfo.name)
 
         var intent = Intent()
         intent = IntentUtil.putSnapshot(intent, snapshot)
+        intent = IntentUtil.putDataFolderName(intent, dataFolderName)
         intent.component = componentName
 
         JobIntentService.enqueueWork(context, componentName, 100, intent)

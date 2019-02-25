@@ -48,7 +48,7 @@ internal abstract class CommonPaginationHelper {
                         "Indexing page text " + (linkIndex + 1) + " of "
                                 + linksToArchive.size + "\n"
                                 + getPaginationProgressText(currentPageLink, dl))
-                IntegrityEx.addDataForSearchIndex(dl.context, dl.artifactId, dl.date,
+                IntegrityEx.addDataForSearchIndex(dl.context, dl.dataFolderName, dl.artifactId, dl.date,
                         LinkUtil.getVisibleTextWithLinks(pageHtml), "${pageIndex}_$linkIndex",
                         "Page archive" to "file://$webArchivePath")
             }

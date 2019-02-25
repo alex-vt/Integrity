@@ -106,6 +106,8 @@ abstract class DataTypeActivity : ThemedActivity() {
         }
     }
 
+    protected fun getDataFolderName() = IntentUtil.getDataFolderName(intent)
+
 
 
     // UI control API methods
@@ -244,7 +246,7 @@ abstract class DataTypeActivity : ThemedActivity() {
     private fun showPreview(snapshot: SnapshotMetadata) {
         binding.ivPreview.visibility = View.VISIBLE
         val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(applicationContext,
-                snapshot.artifactId, snapshot.date)
+                getDataFolderName(), snapshot.artifactId, snapshot.date)
         if (!DataCacheFolderUtil.fileExists(this, snapshotPreviewPath)) {
             return
         }
@@ -262,7 +264,7 @@ abstract class DataTypeActivity : ThemedActivity() {
         binding.hpDates.selectedItem = dates.indexOf(snapshot.date)
         binding.hpDates.setOnItemSelectedListener {
             val snapshotFolderName = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
-                    snapshot.artifactId, dates[it])
+                    getDataFolderName(), snapshot.artifactId, dates[it])
             val snapshotJson = DataCacheFolderUtil.getTextFromFile(this,
                     "$snapshotFolderName/_metadata.json.txt")
             snapshot = JsonSerializerUtil.fromJson(snapshotJson, SnapshotMetadata::class.java)

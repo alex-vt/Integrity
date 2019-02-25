@@ -25,7 +25,8 @@ class SnapshotDownloadStartRequest : InterPackageOperation {
         override fun onReceive(context: Context, intent: Intent) {
             android.util.Log.v("SnapshotDownloadStartReceiver", "onReceive")
             // todo check presence of service before sending broadcast
-            DataTypeServiceResolver.startDownloadService(context, IntentUtil.getSnapshot(intent)!!)
+            DataTypeServiceResolver.startDownloadService(context,
+                    IntentUtil.getDataFolderName(intent), IntentUtil.getSnapshot(intent)!!)
         }
     }
 }
@@ -52,7 +53,7 @@ class SnapshotDownloadCancelRequest : InterPackageOperation {
 interface InterPackageOperation {
     fun getAction(): String
 
-    fun send(context: Context, snapshot: Snapshot) {
-        BroadcastUtil.sendBroadcast(context, snapshot, getAction())
+    fun send(context: Context, dataFolderName: String, snapshot: Snapshot) {
+        BroadcastUtil.sendBroadcast(context, dataFolderName, snapshot, getAction())
     }
 }

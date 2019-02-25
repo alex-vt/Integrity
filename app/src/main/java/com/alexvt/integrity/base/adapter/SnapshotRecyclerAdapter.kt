@@ -75,7 +75,7 @@ class SnapshotRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Int>>,
         }
 
         val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(mainActivity,
-                snapshot.artifactId, snapshot.date)
+                IntegrityCore.getDataFolderName(), snapshot.artifactId, snapshot.date)
         if (!DataCacheFolderUtil.fileExists(mainActivity, snapshotPreviewPath)) {
             holder.view.ivPreview.setImageDrawable(IconicsDrawable(mainActivity)
                     .icon(CommunityMaterial.Icon2.cmd_view_grid)

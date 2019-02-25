@@ -21,16 +21,18 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
     override fun getViewingActivityClass() = BlogTypeActivity::class.java
 
 
-    override fun downloadData(artifactId: Long, date: String,
+    override fun downloadData(dataFolderName: String, artifactId: Long, date: String,
                               typeMetadata: BlogTypeMetadata): String {
-        val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
+        val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, dataFolderName,
+                artifactId, date)
 
         val dl = BlogMetadataDownload(
                 context = applicationContext,
+                dataFolderName = dataFolderName,
                 artifactId = artifactId,
                 date = date,
                 metadata = typeMetadata,
-                snapshotPath = snapshotPath
+                snapshotPath = snapshotPath // todo remove as calculable
         )
 
         if (!LinkedPaginationHelper().downloadPages(dl)) {
@@ -43,11 +45,14 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
     /**
      * Gets first saved page screenshot.
      */
-    override fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: BlogTypeMetadata) {
-        val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
+    override fun generateOfflinePreview(dataFolderName: String, artifactId: Long, date: String,
+                                        typeMetadata: BlogTypeMetadata) {
+        val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, dataFolderName,
+                artifactId, date)
         val firstPageArchiveLink = WebArchiveFilesUtil.getPageIndexArchiveLinks(applicationContext,
                 snapshotPath).first()
-        val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(applicationContext, artifactId, date)
+        val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(this, dataFolderName,
+                artifactId, date)
 
         WebPageLoader().getHtmlAndSaveScreenshot(applicationContext,
                 "file://$snapshotPath/$firstPageArchiveLink", typeMetadata.loadImages,
@@ -62,6 +67,7 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
  */
 internal data class BlogMetadataDownload(
         val context: Context,
+        val dataFolderName: String,
         val artifactId: Long,
         val date: String,
         val metadata: BlogTypeMetadata,

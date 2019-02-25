@@ -23,25 +23,32 @@ object IntegrityEx {
     fun isSnapshotDownloadRunning(artifactId: Long, date: String)
             = RunningJobManager.isRunning(artifactId, date)
 
-    fun getSnapshotDataFolderPath(context: Context, artifactId: Long, date: String): String {
-        return DataCacheFolderUtil.getSnapshotFolderPath(context, artifactId, date)
+    fun getSnapshotDataFolderPath(context: Context, dataFolderName: String, artifactId: Long,
+                                  date: String): String {
+        return DataCacheFolderUtil.getSnapshotFolderPath(context, dataFolderName, artifactId, date)
     }
 
-    fun getSnapshotPreviewPath(context: Context, artifactId: Long, date: String): String {
-        return DataCacheFolderUtil.getSnapshotFolderPath(context, artifactId, date) + "/_preview.png"
+    fun getSnapshotPreviewPath(context: Context, dataFolderName: String, artifactId: Long,
+                               date: String): String {
+        return DataCacheFolderUtil.getSnapshotFolderPath(context, dataFolderName, artifactId, date) +
+                "/_preview.png"
     }
 
-    fun getSnapshotDataChunksPath(context: Context, artifactId: Long, date: String): String {
-        return DataCacheFolderUtil.getSnapshotFolderPath(context, artifactId, date) + "/_text.txt"
+    fun getSnapshotDataChunksPath(context: Context, dataFolderName: String, artifactId: Long,
+                                  date: String): String {
+        return DataCacheFolderUtil.getSnapshotFolderPath(context, dataFolderName, artifactId, date) +
+                "/_text.txt"
     }
 
-    fun addDataForSearchIndex(context: Context, artifactId: Long, date: String, text: String,
-                              index: String, vararg links: Pair<String, String>) {
+    fun addDataForSearchIndex(context: Context, dataFolderName: String, artifactId: Long,
+                              date: String, text: String, index: String,
+                              vararg links: Pair<String, String>) {
         val dataChunk = DataChunk(artifactId, date, text, index,
                 ArrayList(links.map { NamedLink(it.first, it.second) }))
         val dataChunkJson = JsonSerializerUtil.toJson(dataChunk)
 
-        val textSearchIndexPath = getSnapshotDataChunksPath(context, artifactId, date)
+        val textSearchIndexPath = getSnapshotDataChunksPath(context, dataFolderName, artifactId,
+                date)
 
         // todo prevent duplicates
         val prefix = if (DataCacheFolderUtil.fileExists(context, textSearchIndexPath)) ",\n" else ""
@@ -52,7 +59,8 @@ object IntegrityEx {
      * Shows progress, possibly from a different process than the main Integrity app.
      * Therefore, uses BroadcastReceiver.
      */
-    fun reportSnapshotDownloadProgress(context: Context, artifactId: Long, date: String, message: String) {
+    fun reportSnapshotDownloadProgress(context: Context, artifactId: Long, date: String,
+                                       message: String) {
         sendSnapshotDownloadProgressBroadcast(context, artifactId, date,
                 IntentUtil.withMessage(message))
     }

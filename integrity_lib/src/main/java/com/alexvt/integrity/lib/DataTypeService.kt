@@ -50,29 +50,31 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
     /**
      * Downloads type specific data described by given data type specific metadata.
      */
-    abstract fun downloadData(artifactId: Long, date: String, typeMetadata: T): String
+    abstract fun downloadData(dataFolderName: String, artifactId: Long, date: String,
+                              typeMetadata: T): String
 
     /**
      * Generates snapshot preview image using downloaded snapshot data.
      */
-    abstract fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: T)
+    abstract fun generateOfflinePreview(dataFolderName: String, artifactId: Long, date: String,
+                                        typeMetadata: T)
 
     /**
      * Starts service job execution according to intent extras.
      */
     final override fun onHandleWork(intent: Intent) {
-        createSnapshotFiles(IntentUtil.getSnapshot(intent)!!)
+        createSnapshotFiles(IntentUtil.getDataFolderName(intent), IntentUtil.getSnapshot(intent)!!)
     }
 
     /**
      * Downloads snapshot data and creates corresponding files and a metadata file.
      */
-    private fun createSnapshotFiles(snapshot: Snapshot) {
+    private fun createSnapshotFiles(dataFolderName: String, snapshot: Snapshot) {
         IntegrityEx.reportSnapshotDownloadProgress(applicationContext, snapshot.artifactId,
                 snapshot.date, "Saving snapshot")
         RunningJobManager.putJob(snapshot)
 
-        val dataFolderPath = downloadData(snapshot.artifactId, snapshot.date,
+        val dataFolderPath = downloadData(dataFolderName, snapshot.artifactId, snapshot.date,
                 getTypeMetadata(snapshot))
         writeMetadataFile(dataFolderPath, snapshot)
 
@@ -81,7 +83,8 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
         }
         IntegrityEx.reportSnapshotDownloadProgress(applicationContext, snapshot.artifactId,
                 snapshot.date, "Saving preview")
-        generateOfflinePreview(snapshot.artifactId, snapshot.date, getTypeMetadata(snapshot))
+        generateOfflinePreview(dataFolderName, snapshot.artifactId, snapshot.date,
+                getTypeMetadata(snapshot))
 
         // RunningJobManager job shouldn't be removed because job may continue in same process.
         IntegrityEx.reportSnapshotDownloaded(applicationContext, snapshot.artifactId, snapshot.date)
@@ -98,11 +101,5 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
         val snapshotMetadata = IntegrityCore.toTypeSpecificMetadata(snapshot)
         DataCacheFolderUtil.writeTextToFile(applicationContext,
                 JsonSerializerUtil.toJson(snapshotMetadata), metadataFilePath)
-    }
-
-    private fun writePreviewScreenshotFile(artifactId: Long, date: String,
-                                           previewScreenshot: Bitmap) {
-        DataCacheFolderUtil.writeImageToFile(applicationContext, previewScreenshot,
-                IntegrityEx.getSnapshotPreviewPath(applicationContext, artifactId, date))
     }
 }

@@ -17,44 +17,52 @@ import java.io.File
  */
 object DataCacheFolderUtil {
 
-    fun getSnapshotFolderPath(context: Context, artifactId: Long, date: String): String {
-        return getDataCacheDirectory(context) + File.separator + "artifact_" + artifactId +
-                "_snapshot_" + date
+    fun getSnapshotFolderPath(context: Context, dataFolderName: String, artifactId: Long,
+                              date: String): String {
+        return getDataCacheDirectory(context, dataFolderName) + File.separator +
+                "artifact_" + artifactId + "_snapshot_" + date
     }
 
-    fun getSnapshotFileSimpleNames(context: Context, artifactId: Long, date: String): Set<String> {
-        return getStorage(context).getFiles(getSnapshotFolderPath(context, artifactId, date))
+    fun getSnapshotFileSimpleNames(context: Context, dataFolderName: String, artifactId: Long,
+                                   date: String): Set<String> {
+        return getStorage(context).getFiles(getSnapshotFolderPath(context, dataFolderName,
+                artifactId, date))
                 .filter { it.isFile }
                 .map { it.nameWithoutExtension }
                 .toSet()
     }
 
-    fun ensureSnapshotFolder(context: Context, artifactId: Long, date: String): String {
-        val snapshotDataDirectory = getSnapshotFolderPath(context, artifactId, date)
+    fun ensureSnapshotFolder(context: Context, dataFolderName: String, artifactId: Long,
+                             date: String): String {
+        val snapshotDataDirectory = getSnapshotFolderPath(context, dataFolderName, artifactId, date)
         getStorage(context).createDirectory(snapshotDataDirectory, false)
         return snapshotDataDirectory
     }
 
-    fun clearFiles(context: Context) {
-        deleteFiles(context, getStorage(context).getFiles(getDataCacheDirectory(context))
+    fun clearFiles(context: Context, dataFolderName: String) {
+        deleteFiles(context, getStorage(context).getFiles(getDataCacheDirectory(context,
+                dataFolderName))
                 .filter { it.isFile })
     }
 
-    fun clear(context: Context, artifactId: Long, date: String) {
-        deleteFiles(context, getStorage(context).getFiles(getDataCacheDirectory(context))
+    fun clear(context: Context, dataFolderName: String, artifactId: Long, date: String) {
+        deleteFiles(context, getStorage(context).getFiles(getDataCacheDirectory(context,
+                dataFolderName))
                 .filter {
                     it.name.contains("artifact_" + artifactId)
                             && it.name.contains(date)
                 })
     }
 
-    fun clear(context: Context, artifactId: Long) {
-        deleteFiles(context, getStorage(context).getFiles(getDataCacheDirectory(context))
+    fun clear(context: Context, dataFolderName: String, artifactId: Long) {
+        deleteFiles(context, getStorage(context).getFiles(getDataCacheDirectory(context,
+                dataFolderName))
                 .filter { it.name.contains("artifact_" + artifactId) })
     }
 
-    fun clear(context: Context) {
-        deleteFiles(context, getStorage(context).getFiles(getDataCacheDirectory(context)))
+    fun clear(context: Context, dataFolderName: String) {
+        deleteFiles(context, getStorage(context).getFiles(getDataCacheDirectory(context,
+                dataFolderName)))
     }
 
     fun getTextFromFile(context: Context, path: String)
@@ -93,8 +101,8 @@ object DataCacheFolderUtil {
         }
     }
 
-    private fun getDataCacheDirectory(context: Context): String {
-        val integrityDirectory = getStorage(context).externalStorageDirectory + File.separator + "Integrity"
+    private fun getDataCacheDirectory(context: Context, dataFolderName: String): String {
+        val integrityDirectory = getStorage(context).externalStorageDirectory + File.separator + dataFolderName
         getStorage(context).createDirectory(integrityDirectory)
 
         val dataDirectory = integrityDirectory + File.separator + "_DataCache"

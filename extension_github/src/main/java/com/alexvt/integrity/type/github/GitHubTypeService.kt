@@ -6,12 +6,8 @@
 
 package com.alexvt.integrity.type.github
 
-import android.graphics.Bitmap
 import com.alexvt.integrity.lib.DataTypeService
 import com.alexvt.integrity.lib.IntegrityEx
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 
 class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
 
@@ -22,9 +18,10 @@ class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
     override fun getViewingActivityClass() = GitHubTypeActivity::class.java
 
 
-    override fun downloadData(artifactId: Long, date: String,
+    override fun downloadData(dataFolderName: String, artifactId: Long, date: String,
                               typeMetadata: GitHubTypeMetadata): String {
-        val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, artifactId, date)
+        val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, dataFolderName,
+                artifactId, date)
 
         // todo implement
 
@@ -34,7 +31,8 @@ class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
     /**
      * Gets saved user page screenshot.
      */
-    override fun generateOfflinePreview(artifactId: Long, date: String, typeMetadata: GitHubTypeMetadata) {
+    override fun generateOfflinePreview(dataFolderName: String, artifactId: Long, date: String,
+                                        typeMetadata: GitHubTypeMetadata) {
         // todo implement
     }
 

@@ -174,7 +174,7 @@ class BlogTypeActivity : DataTypeActivity() {
         GlobalScope.launch (Dispatchers.Main) {
             content.webView.stopLoading()
             val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
-                    snapshot.artifactId, snapshot.date)
+                    getDataFolderName(), snapshot.artifactId, snapshot.date)
             val linkToArchivePathRedirectMap = WebArchiveFilesUtil
                     .getPageIndexLinkToArchivePathMap(applicationContext, snapshotPath,
                             "file://$snapshotPath/")

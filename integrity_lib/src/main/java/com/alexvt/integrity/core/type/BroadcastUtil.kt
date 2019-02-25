@@ -18,12 +18,13 @@ import com.alexvt.integrity.lib.util.IntentUtil
  */
 object BroadcastUtil {
 
-    fun sendBroadcast(context: Context, snapshot: Snapshot, action: String) {
+    fun sendBroadcast(context: Context, dataFolderName: String, snapshot: Snapshot, action: String) {
         val broadcastInfo = getBroadcastReceiverInfo(context, action, snapshot.dataTypePackageName)
         val componentName = ComponentName(broadcastInfo.activityInfo.packageName,
                 broadcastInfo.activityInfo.name)
 
         val intent = Intent(action).apply {
+            IntentUtil.putDataFolderName(this, dataFolderName)
             IntentUtil.putSnapshot(this, snapshot)
             component = componentName
         }

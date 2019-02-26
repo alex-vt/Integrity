@@ -105,6 +105,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.10.3'
 
     implementation 'com.afollestad.material-dialogs:core:2.0.0-beta4'
+    implementation 'com.afollestad.material-dialogs:input:2.0.0-beta4'
     implementation 'com.leinardi.android:speed-dial:2.0.0'
     implementation 'co.zsmb:materialdrawer-kt:2.0.1'
 

@@ -6,12 +6,65 @@
 
 package com.alexvt.integrity.settings
 
+import android.content.Intent
 import android.os.Bundle
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.input.input
 import com.alexvt.integrity.R
+import com.alexvt.integrity.base.activity.FolderLocationsActivity
+import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.info.LegalInfoActivity
+import com.alexvt.integrity.lib.Log
+import com.alexvt.integrity.lib.util.DataCacheFolderUtil
+import com.alexvt.integrity.recovery.RecoveryActivity
 
 class DataSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.settings_data, rootKey)
+
+        val prefDownloadsLocation: Preference = findPreference("data_downloads_location")
+        val prefClear: Preference = findPreference("data_manage_clear")
+        val prefArchives: Preference = findPreference("data_manage_archives")
+        val prefLegal: Preference = findPreference("data_legal")
+
+        showDownloadLocationSummary(prefDownloadsLocation)
+        prefDownloadsLocation.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            // todo path picker, change/move confirmation
+            MaterialDialog(context!!).show {
+                title(text = "Snapshots downloads folder path")
+                input(hint = "Enter path on device storage",
+                        prefill = IntegrityCore.getDataFolderName()) { _, text ->
+                    val oldFolderName = IntegrityCore.getDataFolderName()
+                    val newFolderName = text.trim().toString()
+                    DataCacheFolderUtil.moveDataCacheFolder(context, oldFolderName, newFolderName)
+                    IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get()
+                            .copy(dataFolderPath = newFolderName))
+                    Log(context, "Moved data downloads folder from $oldFolderName to $newFolderName")
+                            .log()
+                    showDownloadLocationSummary(prefDownloadsLocation)
+                }
+                positiveButton(text = "Change")
+            }
+            true
+        }
+
+        prefClear.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            startActivity(Intent(context!!, RecoveryActivity::class.java))
+            true
+        }
+        prefArchives.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            startActivity(Intent(context!!, FolderLocationsActivity::class.java))
+            true
+        }
+        prefLegal.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            startActivity(Intent(context!!, LegalInfoActivity::class.java))
+            true
+        }
+    }
+
+    private fun showDownloadLocationSummary(prefDownloadsLocation: Preference) {
+        prefDownloadsLocation.summary = "\uD83D\uDCF1/${IntegrityCore.getDataFolderName()}"
     }
 }

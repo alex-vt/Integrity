@@ -8,101 +8,40 @@
 <androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- todo show data sizes, databases view options -->
+
     <PreferenceCategory
-        app:title="Data downloads folder"
+        app:title="Snapshots downloads folder"
         >
 
         <Preference
             app:key="data_downloads_location"
-            app:title="Data folder path"
+            app:title="Snapshots downloads folder path"
             app:summary="📱/Integrity"
             />
 
-        <Preference
-            app:key="data_downloads_clear"
-            app:title="Clear downloaded data..."
-            app:summary="1000 TB"
-            />
-
     </PreferenceCategory>
 
     <PreferenceCategory
-        app:title="App database"
+        app:title="Manage data"
         >
 
         <Preference
-            app:key="data_database_snapshots"
-            app:title="View snapshot metadata"
-            app:summary="Information about your downloaded data snapshots is stored here"
+            app:key="data_manage_clear"
+            app:title="Clear or restore app data"
+            app:summary="View options for deleting app\'s various data on device or restoring its previous state"
             />
 
         <Preference
-            app:key="data_database_archives"
-            app:title="View archive locations"
-            app:summary="Paths to local, network and cloud folders your downloaded data is archived to"
+            app:key="data_manage_archives"
+            app:title="Archives"
+            app:summary="View destinations to where downloaded snapshot archives are saved"
             />
 
         <Preference
-            app:key="data_database_tags"
-            app:title="View tags"
-            app:summary="Tags which you can create and assign to downloaded data snapshots"
-            />
-
-        <Preference
-            app:key="data_database_log"
-            app:title="View logged data"
-            app:summary="Events recorded and stored in the app for you to check"
-            />
-
-        <Preference
-            app:key="data_database_search_index"
-            app:title="View search index"
-            app:summary="Some text data stored along with snapshots to enable search in them"
-            />
-
-        <Preference
-            app:key="data_database_settings"
-            app:title="View settings"
-            app:summary="These settings as they are stored"
-            />
-
-        <Preference
-            app:key="data_database_clear"
-            app:title="Clear databases..."
-            app:summary="1000 MB"
-            />
-
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        app:title="Archived data"
-        >
-
-        <Preference
-            app:key="data_archives_manage"
-            app:title="Manage archived data..."
-            />
-
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        app:title="Other"
-        >
-
-        <Preference
-            app:key="data_other_clear_cache"
-            app:title="Clear cache"
-            app:summary="1000 MB"
-            />
-
-        <Preference
-            app:key="data_other_restore"
-            app:title="Restore data..."
-            />
-
-        <Preference
-            app:key="data_other_policy"
-            app:title="Privacy policy"
+            app:key="data_legal"
+            app:title="Legal info"
+            app:summary="See how this app collects, transfers and stores information"
             />
 
     </PreferenceCategory>

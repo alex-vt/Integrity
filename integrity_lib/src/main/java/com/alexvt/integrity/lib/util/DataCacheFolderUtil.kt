@@ -10,6 +10,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import com.snatik.storage.Storage
+import org.zeroturnaround.zip.commons.FileUtils
 import java.io.File
 
 /**
@@ -89,6 +90,13 @@ object DataCacheFolderUtil {
         getStorage(context).readTextFile(path)?: ""
     } else {
         ""
+    }
+
+    fun moveDataCacheFolder(context: Context, sourceFolderName: String,
+                            destinationFolderName: String) {
+        val sourcePath = getStorage(context).externalStorageDirectory + File.separator + sourceFolderName
+        val destinationPath = getStorage(context).externalStorageDirectory + File.separator + destinationFolderName
+        FileUtils.moveDirectory(File(sourcePath), File(destinationPath)) // todo replace dependency
     }
 
     private fun deleteFiles(context: Context, filesToDelete: List<File>) {

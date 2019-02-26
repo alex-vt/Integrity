@@ -21,19 +21,13 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        app:title="Integrity for GitHub"
-        app:initialExpandedChildrenCount="0"
+        app:key="extensions"
+        app:title="Extensions (in separate apps)"
         >
 
         <Preference
-            app:key="extensions_github_type"
-            app:title="GitHub type"
-            app:summary="Downloads info about a GitHub user. Experimental."
-            />
-
-        <Preference
-            app:key="extensions_github_info"
-            app:title="About &amp; Options..."
+            app:key="extensions_get"
+            app:title="Get extensions..."
             />
 
     </PreferenceCategory>

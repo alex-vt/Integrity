@@ -138,8 +138,9 @@ Storage destinations:
 
 Stage 1
 
-* Storage manager
-* Main screen
+* Archives manager
+* Main screen: view options
+* Main screen: filtering options
 
 Stage 2
 

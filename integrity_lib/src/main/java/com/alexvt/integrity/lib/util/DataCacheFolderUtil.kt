@@ -66,6 +66,10 @@ object DataCacheFolderUtil {
                 dataFolderName)))
     }
 
+    fun deleteFolder(context: Context, dataFolderName: String) {
+        getStorage(context).deleteDirectory(getDataCacheDirectory(context, dataFolderName))
+    }
+
     fun getTextFromFile(context: Context, path: String)
             = getStorage(context).readTextFile(path)!!
 

@@ -10,11 +10,17 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 
-object LinkViewUtil {
+object ViewExternalUtil {
 
-    fun viewExternal(context: Context, link: String) {
+    fun viewLinkExternal(context: Context, link: String) {
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse(link) // todo security
+        context.startActivity(intent)
+    }
+
+    fun viewAppInfo(context: Context, packageName: String) {
+        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        intent.data = Uri.parse("package:$packageName")
         context.startActivity(intent)
     }
 

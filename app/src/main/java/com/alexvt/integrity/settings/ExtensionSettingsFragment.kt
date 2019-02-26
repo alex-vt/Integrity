@@ -16,6 +16,7 @@ import com.alexvt.integrity.core.IntegrityCore
 import android.content.Intent
 import android.net.Uri
 import com.afollestad.materialdialogs.MaterialDialog
+import com.alexvt.integrity.core.util.ViewExternalUtil
 
 
 class ExtensionSettingsFragment : PreferenceFragmentCompat() {
@@ -47,16 +48,10 @@ class ExtensionSettingsFragment : PreferenceFragmentCompat() {
         prefExtension.summary = "View app info"
 
         prefExtension.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            openAppInfo(typeName.packageName)
+            ViewExternalUtil.viewAppInfo(context!!, typeName.packageName)
             true
         }
 
         category.addPreference(prefExtension)
-    }
-
-    private fun openAppInfo(packageName: String) {
-        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        intent.data = Uri.parse("package:$packageName")
-        startActivity(intent)
     }
 }

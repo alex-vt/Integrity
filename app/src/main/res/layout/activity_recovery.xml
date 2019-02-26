@@ -54,15 +54,31 @@
         <Button
             android:id="@+id/bClearData"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:text="Clear app database..."
             />
 
         <Button
+            android:id="@+id/bClearSnapshots"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:text="Clear downloaded snapshots..."
+            />
+
+        <Button
+            android:id="@+id/bOpenAppInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:text="Show app info (storage, permissions, etc.)"
+            />
+
+        <Button
             android:id="@+id/bRestartApp"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:text="Restart app"
             />

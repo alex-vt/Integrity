@@ -12,7 +12,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.util.LinkViewUtil
+import com.alexvt.integrity.core.util.ViewExternalUtil
 import com.alexvt.integrity.recovery.RecoveryActivity
 import com.alexvt.integrity.settings.SettingsActivity
 
@@ -27,7 +27,7 @@ class HelpInfoSettingsFragment : PreferenceFragmentCompat() {
         val prefVersion: Preference = findPreference("help_version")
 
         prefProject.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            LinkViewUtil.viewExternal(context!!,
+            ViewExternalUtil.viewLinkExternal(context!!,
                     "https://github.com/alex-vt/Integrity/tree/develop") // todo update
             true
         }

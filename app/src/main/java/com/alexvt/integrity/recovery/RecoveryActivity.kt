@@ -14,6 +14,8 @@ import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.Initializable
 import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.core.util.ViewExternalUtil
+import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import kotlinx.android.synthetic.main.activity_recovery.*
 
@@ -36,6 +38,8 @@ class RecoveryActivity : ThemedActivity() {
         }
 
         bClearData.setOnClickListener { askSelectClearData() }
+        bClearSnapshots.setOnClickListener { askClearSnapshots() }
+        bOpenAppInfo.setOnClickListener { ViewExternalUtil.viewAppInfo(this, packageName) }
         bRestartApp.setOnClickListener { AppRestartUtil.restartApp(this) }
     }
 
@@ -64,6 +68,18 @@ class RecoveryActivity : ThemedActivity() {
                 .positiveButton(text = "Clear now") {
                     namedRepositoriesToClear.map { it.first }
                             .forEach { it.init(this, true) }
+                }.show()
+    }
+
+    private fun askClearSnapshots() {
+        val dataFolderName = IntegrityCore.getDataFolderName()
+        MaterialDialog(this)
+                .title(text = "Are you sure?")
+                .message(text = "About to delete folder from storage: \n\uD83D\uDCF1/" +
+                        "$dataFolderName \nwith all downloaded snapshots")
+                .negativeButton(text = "Cancel")
+                .positiveButton(text = "Delete now") {
+                    DataCacheFolderUtil.deleteFolder(this, dataFolderName)
                 }.show()
     }
 

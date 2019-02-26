@@ -7,7 +7,6 @@
 package com.alexvt.integrity.base.adapter
 
 import android.graphics.Color
-import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +15,7 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.base.activity.MainActivity
 import com.alexvt.integrity.core.search.NamedLink
 import com.alexvt.integrity.core.search.SearchResult
-import com.alexvt.integrity.core.util.LinkViewUtil
+import com.alexvt.integrity.core.util.ViewExternalUtil
 import kotlinx.android.synthetic.main.search_result_list_item.view.*
 import android.text.Spannable
 import android.text.style.ForegroundColorSpan
@@ -51,7 +50,7 @@ class SearchResultRecyclerAdapter(val items: ArrayList<SearchResult>, val mainAc
             val relevantLink = searchResult.relevantLinkOrNull as NamedLink
             holder.view.tvRelevantLink.text = relevantLink.title
             holder.view.tvRelevantLink.setOnClickListener {
-                LinkViewUtil.viewExternal(mainActivity, relevantLink.link)
+                ViewExternalUtil.viewLinkExternal(mainActivity, relevantLink.link)
             }
         } else {
             holder.view.tvRelevantLink.visibility = View.GONE

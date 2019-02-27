@@ -8,13 +8,21 @@ package com.alexvt.integrity.core.search
 
 import com.alexvt.integrity.core.settings.SortingMethod
 
-object SortingUtil {
+object SortingUtil { // for UI
 
     private enum class SortingType { DATE, TITLE, RANDOM }
     private enum class SortingDirection { ASCENDING, DESCENDING, RANDOM }
 
-    fun getSortingTypeNames(dateTypeName: String, titleTypeName: String, randomTypeName: String)
-            = listOf(dateTypeName, titleTypeName, randomTypeName)
+    fun getSortingTypeNames()
+            = listOf("By date", "By title", "Random")
+
+    fun getSortingMethodNameMap() = linkedMapOf(
+            SortingMethod.NEW_FIRST to "By date ↓",
+            SortingMethod.OLD_FIRST to "By date ↑",
+            SortingMethod.Z_A to "By title ↓",
+            SortingMethod.A_Z to "By title ↑",
+            SortingMethod.RANDOM to "Random"
+    )
 
     fun getSortingTypeNameIndex(sortingMethod: String) = enumValues<SortingType>()
             .indexOf(getSortingType(sortingMethod))

@@ -35,4 +35,16 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory
+        app:title="Search"
+        >
+
+        <Preference
+            app:key="behavior_filtering_sorting"
+            app:title="Sorting for search &amp; filtered results"
+            app:summary="Random"
+            />
+
+    </PreferenceCategory>
+
 </androidx.preference.PreferenceScreen>

@@ -122,6 +122,8 @@ object IntegrityCore {
 
     fun getDataFolderName() = settingsRepository.get().dataFolderPath
 
+    fun getSortingMethod() = settingsRepository.get().sortingMethod
+
     fun openViewSnapshotOrShowProgress(activity: Activity, artifactId: Long, date: String) {
         val snapshot = metadataRepository.getSnapshotMetadata(artifactId, date)
         if (snapshot.status == SnapshotStatus.IN_PROGRESS) {

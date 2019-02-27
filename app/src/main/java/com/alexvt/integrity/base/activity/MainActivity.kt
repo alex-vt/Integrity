@@ -45,7 +45,6 @@ import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.core.search.SortingUtil
-import com.alexvt.integrity.core.settings.SortingMethod
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.core.util.ThemedActivity
@@ -457,23 +456,22 @@ class MainActivity : ThemedActivity() {
             MaterialDialog(this).show {
                 title(text = "Sorting method")
                 listItemsSingleChoice(
-                        items = SortingUtil.getSortingTypeNames(dateTypeName = "By date",
-                                titleTypeName = "By title", randomTypeName =  "Random"),
-                        initialSelection = SortingUtil.getSortingTypeNameIndex(getSortingMethod())
+                        items = SortingUtil.getSortingTypeNames(),
+                        initialSelection = SortingUtil.getSortingTypeNameIndex(IntegrityCore
+                                .getSortingMethod())
                 ) { _, index, _ ->
-                    setSortingMethod(SortingUtil.changeSortingType(getSortingMethod(), index))
+                    setSortingMethod(SortingUtil.changeSortingType(IntegrityCore.getSortingMethod(),
+                            index))
                     onInputsUpdate(inputs)
                 }
             }
         }
 
         iivSortingDirection.setOnClickListener {
-            setSortingMethod(SortingUtil.revertSortingDirection(getSortingMethod()))
+            setSortingMethod(SortingUtil.revertSortingDirection(IntegrityCore.getSortingMethod()))
             onInputsUpdate(inputs)
         }
     }
-
-    private fun getSortingMethod() = IntegrityCore.settingsRepository.get().sortingMethod
 
     private fun setSortingMethod(sortingMethod: String) {
         IntegrityCore.settingsRepository.set(this, IntegrityCore.settingsRepository.get()
@@ -492,17 +490,19 @@ class MainActivity : ThemedActivity() {
         llSorting.visibility = if (filterArtifact || searching) View.VISIBLE else View.GONE
         llFilteredArtifact.visibility = if (filterArtifact) View.VISIBLE else View.GONE
 
+        val sortingMethod = IntegrityCore.getSortingMethod()
+
         val sortingTypeIcon: IIcon = when {
-            SortingUtil.isByDate(getSortingMethod()) -> CommunityMaterial.Icon.cmd_folder_clock_outline
-            SortingUtil.isByTitle(getSortingMethod()) -> CommunityMaterial.Icon2.cmd_sort_alphabetical
+            SortingUtil.isByDate(sortingMethod) -> CommunityMaterial.Icon.cmd_folder_clock_outline
+            SortingUtil.isByTitle(sortingMethod) -> CommunityMaterial.Icon2.cmd_sort_alphabetical
             else -> CommunityMaterial.Icon2.cmd_shuffle
         }
         iivSortingType.icon = IconicsDrawable(this).icon(sortingTypeIcon)
                 .colorRes(R.color.colorWhite)
 
         val sortingDirectionIcon: IIcon = when {
-            SortingUtil.isDescending(getSortingMethod()) -> CommunityMaterial.Icon2.cmd_sort_descending
-            SortingUtil.isAscending(getSortingMethod()) -> CommunityMaterial.Icon2.cmd_sort_ascending
+            SortingUtil.isDescending(sortingMethod) -> CommunityMaterial.Icon2.cmd_sort_descending
+            SortingUtil.isAscending(sortingMethod) -> CommunityMaterial.Icon2.cmd_sort_ascending
             else -> CommunityMaterial.Icon2.cmd_refresh
         }
         iivSortingDirection.icon = IconicsDrawable(this).icon(sortingDirectionIcon)
@@ -579,13 +579,7 @@ class MainActivity : ThemedActivity() {
             else -> "Recent in all"
         }
         val sortingTitleSuffix = if (isSearching || isArtifactFiltered) {
-            "  · " + mapOf(
-                    SortingMethod.NEW_FIRST to "By date ↓",
-                    SortingMethod.OLD_FIRST to "By date ↑",
-                    SortingMethod.Z_A to "By title ↓",
-                    SortingMethod.A_Z to "By title ↑",
-                    SortingMethod.RANDOM to "Random"
-            )[getSortingMethod()]
+            "  · " + SortingUtil.getSortingMethodNameMap()[IntegrityCore.getSortingMethod()]
         } else {
             "" // sorting not applied for default view
         }
@@ -603,6 +597,9 @@ class MainActivity : ThemedActivity() {
         }
         if (IntentUtil.isRecreate(data)) {
             recreate()
+        }
+        if (IntentUtil.isRefresh(data)) {
+            onInputsUpdate(inputs) // todo settings change listener instead
         }
     }
 

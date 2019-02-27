@@ -6,13 +6,18 @@
 
 package com.alexvt.integrity.settings
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
+import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.search.SortingUtil
+import com.alexvt.integrity.lib.util.IntentUtil
 
 class BehaviorSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -22,6 +27,7 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         bindEnableScheduled()
         bindExpandRunning()
         bindExpandScheduled()
+        bindSorting()
     }
 
     private fun bindEnableScheduled() {
@@ -59,6 +65,28 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
+    private fun bindSorting() {
+        val prefSorting: Preference = findPreference("behavior_filtering_sorting")
+        updateSorting(prefSorting)
+        prefSorting.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            MaterialDialog(context!!).show {
+                title(text = "Sorting method")
+                listItemsSingleChoice(
+                        items = SortingUtil.getSortingMethodNameMap().values.toList(),
+                        initialSelection = SortingUtil.getSortingMethodNameMap().keys.toList()
+                                .indexOf(IntegrityCore.getSortingMethod())
+                ) { _, index, _ ->
+                    val sortingMethod = SortingUtil.getSortingMethodNameMap().keys.toList()[index]
+                    IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository
+                            .get().copy(sortingMethod = sortingMethod))
+                    updateSorting(prefSorting)
+                    activity!!.setResult(Activity.RESULT_OK, IntentUtil.withRefresh(true))
+                }
+            }
+            true
+        }
+    }
+
     private fun updateEnableScheduled(prefEnableScheduled: SwitchPreferenceCompat) {
         prefEnableScheduled.isChecked = IntegrityCore.scheduledJobsEnabled()
     }
@@ -72,4 +100,10 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         prefExpandRunning.isChecked = IntegrityCore.settingsRepository.get()
                 .jobsExpandRunning
     }
+
+    private fun updateSorting(prefSorting: Preference) {
+        prefSorting.summary = SortingUtil.getSortingMethodNameMap()[IntegrityCore
+                .settingsRepository.get().sortingMethod]
+    }
+
 }

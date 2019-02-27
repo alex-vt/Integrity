@@ -70,7 +70,7 @@
         app:layout_insetEdge="bottom"
         app:layout_dodgeInsetEdges="bottom"
         android:layout_marginRight="@dimen/fab_margin"
-        android:layout_marginBottom="-35dp"
+        android:layout_marginBottom="-37dp"
         app:sdExpansionMode="top"
         app:sdMainFabOpenedBackgroundColor="?attr/colorAccent"
         app:sdMainFabClosedBackgroundColor="?attr/colorAccent"

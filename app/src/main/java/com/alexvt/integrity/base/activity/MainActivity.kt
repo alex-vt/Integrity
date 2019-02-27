@@ -9,6 +9,7 @@ package com.alexvt.integrity.base.activity
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.PorterDuff
 import android.os.Bundle
 import com.afollestad.materialdialogs.MaterialDialog
@@ -54,6 +55,8 @@ import com.alexvt.integrity.settings.SettingsActivity
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import com.jakewharton.rxbinding3.appcompat.queryTextChanges
+import com.mikepenz.iconics.IconicsDrawable
+import com.mikepenz.iconics.typeface.IIcon
 import com.mikepenz.materialdrawer.model.*
 
 
@@ -401,13 +404,15 @@ class MainActivity : ThemedActivity() {
 
     private fun bindAddButton() {
         SpeedDialCompatUtil.setStayOnExpand(sdAdd)
+        sdAdd.setMainFabClosedDrawable(getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
+        sdAdd.setMainFabOpenedDrawable(getPaddedIcon(CommunityMaterial.Icon.cmd_close))
     }
 
     private fun updateAddButton(artifactId: Long?) {
         sdAdd.clearActionItems()
         if (artifactId != null) {
             sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
-                    SpeedDialActionItem.Builder(0, android.R.drawable.ic_input_add)
+                    SpeedDialActionItem.Builder(0, getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
                             .setLabel("Create another snapshot"), IntegrityCore.getColors()
             ).create())
             sdAdd.setOnActionSelectedListener { speedDialActionItem ->
@@ -420,7 +425,8 @@ class MainActivity : ThemedActivity() {
                 it.className.substringAfterLast(".").removeSuffix("TypeActivity")
             }.forEachIndexed {
                 index, name -> sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
-                        SpeedDialActionItem.Builder(index, android.R.drawable.ic_input_add)
+                        SpeedDialActionItem.Builder(index,
+                                getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
                                 .setLabel(name), IntegrityCore.getColors()).create())
             }
             sdAdd.setOnActionSelectedListener { speedDialActionItem ->
@@ -431,6 +437,12 @@ class MainActivity : ThemedActivity() {
         }
         FontUtil.setFont(this, sdAdd, IntegrityCore.getFont())
     }
+
+    private fun getPaddedIcon(icon: IIcon) = IconicsDrawable(this)
+            .icon(icon)
+            .colorRes(R.color.colorWhite)
+            .sizeDp(18)
+            .paddingDp(3)
 
     private fun bindFilter() {
         iivUnFilterArtifact.setOnClickListener { removeArtifactFilter() }

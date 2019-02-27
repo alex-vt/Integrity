@@ -5,5 +5,5 @@
   -->
 
 <resources>
-    <dimen name="fab_margin">10dp</dimen>
+    <dimen name="fab_margin">4dp</dimen>
 </resources>

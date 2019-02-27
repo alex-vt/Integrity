@@ -433,7 +433,10 @@ class MainActivity : ThemedActivity() {
     }
 
     private fun bindFilter() {
-        ivUnFilterArtifact.setOnClickListener { removeArtifactFilter() }
+        iivUnFilterArtifact.setOnClickListener { removeArtifactFilter() }
+        llFilteredArtifact.background.setColorFilter(ThemeUtil.getColorPrimary(IntegrityCore.getColors()),
+                PorterDuff.Mode.DARKEN)
+
         llBottomSheet.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(IntegrityCore.getColors()))
         svMain.background.setColorFilter(ThemeUtil.getColorBackgroundBleached(IntegrityCore.getColors()),
                 PorterDuff.Mode.DARKEN)
@@ -441,8 +444,9 @@ class MainActivity : ThemedActivity() {
 
     private fun updateFilterView(artifactId: Long?) {
         if (artifactId != null) {
-            tvFilteredArtifactTitle.text = IntegrityCore.metadataRepository
+            val title = IntegrityCore.metadataRepository
                     .getLatestSnapshotMetadata(artifactId).title
+            tvFilteredArtifactTitle.text = "in: $title"
         }
         llFilteredArtifact.visibility = if (artifactId != null) View.VISIBLE else View.GONE
     }

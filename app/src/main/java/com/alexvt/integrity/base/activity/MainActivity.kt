@@ -9,7 +9,6 @@ package com.alexvt.integrity.base.activity
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.PorterDuff
 import android.os.Bundle
 import com.afollestad.materialdialogs.MaterialDialog
@@ -35,7 +34,6 @@ import co.zsmb.materialdrawerkt.builders.footer
 import co.zsmb.materialdrawerkt.draweritems.badgeable.primaryItem
 import co.zsmb.materialdrawerkt.draweritems.divider
 import co.zsmb.materialdrawerkt.draweritems.expandable.expandableItem
-import co.zsmb.materialdrawerkt.draweritems.toggleable.toggleItem
 import com.alexvt.integrity.databinding.DrawerHeaderBinding
 import com.alexvt.integrity.util.SpeedDialCompatUtil
 import com.mikepenz.iconics.context.IconicsLayoutInflater2
@@ -44,7 +42,10 @@ import com.mikepenz.materialdrawer.holder.BadgeStyle
 import java.util.*
 import co.zsmb.materialdrawerkt.draweritems.badge
 import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
+import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.alexvt.integrity.BuildConfig
+import com.alexvt.integrity.core.search.SortingUtil
+import com.alexvt.integrity.core.settings.SortingMethod
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.core.util.ThemedActivity
@@ -73,6 +74,7 @@ class MainActivity : ThemedActivity() {
         inputs = newInputs
         refreshSnapshotList(inputs.filteredArtifactId)
         search(inputs.searchText, inputs.filteredArtifactId)
+        updateToolbar(inputs.searchText, inputs.filteredArtifactId)
         updateFilterView(inputs.searchText, inputs.filteredArtifactId)
         updateAddButton(inputs.filteredArtifactId)
     }
@@ -450,6 +452,32 @@ class MainActivity : ThemedActivity() {
         llBottomSheet.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(IntegrityCore.getColors()))
         svMain.background.setColorFilter(ThemeUtil.getColorBackgroundBleached(IntegrityCore.getColors()),
                 PorterDuff.Mode.DARKEN)
+
+        iivSortingType.setOnClickListener {
+            MaterialDialog(this).show {
+                title(text = "Sorting method")
+                listItemsSingleChoice(
+                        items = SortingUtil.getSortingTypeNames(dateTypeName = "By date",
+                                titleTypeName = "By title", randomTypeName =  "Random"),
+                        initialSelection = SortingUtil.getSortingTypeNameIndex(getSortingMethod())
+                ) { _, index, _ ->
+                    setSortingMethod(SortingUtil.changeSortingType(getSortingMethod(), index))
+                    onInputsUpdate(inputs)
+                }
+            }
+        }
+
+        iivSortingDirection.setOnClickListener {
+            setSortingMethod(SortingUtil.revertSortingDirection(getSortingMethod()))
+            onInputsUpdate(inputs)
+        }
+    }
+
+    private fun getSortingMethod() = IntegrityCore.settingsRepository.get().sortingMethod
+
+    private fun setSortingMethod(sortingMethod: String) {
+        IntegrityCore.settingsRepository.set(this, IntegrityCore.settingsRepository.get()
+                .copy(sortingMethod = sortingMethod))
     }
 
     private fun updateFilterView(searchText: String, artifactId: Long?) {
@@ -463,6 +491,22 @@ class MainActivity : ThemedActivity() {
         }
         llSorting.visibility = if (filterArtifact || searching) View.VISIBLE else View.GONE
         llFilteredArtifact.visibility = if (filterArtifact) View.VISIBLE else View.GONE
+
+        val sortingTypeIcon: IIcon = when {
+            SortingUtil.isByDate(getSortingMethod()) -> CommunityMaterial.Icon.cmd_folder_clock_outline
+            SortingUtil.isByTitle(getSortingMethod()) -> CommunityMaterial.Icon2.cmd_sort_alphabetical
+            else -> CommunityMaterial.Icon2.cmd_shuffle
+        }
+        iivSortingType.icon = IconicsDrawable(this).icon(sortingTypeIcon)
+                .colorRes(R.color.colorWhite)
+
+        val sortingDirectionIcon: IIcon = when {
+            SortingUtil.isDescending(getSortingMethod()) -> CommunityMaterial.Icon2.cmd_sort_descending
+            SortingUtil.isAscending(getSortingMethod()) -> CommunityMaterial.Icon2.cmd_sort_ascending
+            else -> CommunityMaterial.Icon2.cmd_refresh
+        }
+        iivSortingDirection.icon = IconicsDrawable(this).icon(sortingDirectionIcon)
+                .colorRes(R.color.colorWhite)
     }
 
     private fun bindSearch() {
@@ -508,23 +552,9 @@ class MainActivity : ThemedActivity() {
 
     private fun search(searchedText: String, filteredArtifactId: Long?) {
         svMain.setQuery(searchedText, false)
-        if (searchedText.isBlank()) {
-            toolbar.title = "Snapshots"
-            toolbar.subtitle = when {
-                filteredArtifactId != null -> "of ${IntegrityCore.metadataRepository
-                        .getLatestSnapshotMetadata(filteredArtifactId).title}"
-                else -> "Recent in all"
-            }
-        } else {
-            toolbar.title = "Search"
-            toolbar.subtitle = when {
-                filteredArtifactId != null -> "in ${IntegrityCore.metadataRepository
-                        .getLatestSnapshotMetadata(filteredArtifactId).title}"
-                else -> "In all"
-            }
-        }
         if (searchedText.length >= 3) {
             val searchResults = SearchUtil.searchText(searchedText, filteredArtifactId)
+
             (rvSearchResults.adapter as SearchResultRecyclerAdapter).setItems(searchResults)
             tvNoResults.visibility = if (searchResults.isEmpty()) View.VISIBLE else View.GONE
         } else {
@@ -534,6 +564,36 @@ class MainActivity : ThemedActivity() {
         rvSearchResults.visibility = if (searchedText.isBlank()) View.GONE else View.VISIBLE
         sdAdd.visibility = if (searchedText.isBlank()) View.VISIBLE else View.GONE
     }
+
+    private fun updateToolbar(searchedText: String, filteredArtifactId: Long?) {
+        val isSearching = searchedText.isNotBlank()
+        val isArtifactFiltered = filteredArtifactId != null
+
+        toolbar.title = if (isSearching) "Search" else "Snapshots"
+
+        val scopeTitle = if (isSearching) when {
+            isArtifactFiltered -> "in ${getLatestSnapshotTitle(filteredArtifactId!!)}"
+            else -> "In all"
+        } else when {
+            isArtifactFiltered -> "of ${getLatestSnapshotTitle(filteredArtifactId!!)}"
+            else -> "Recent in all"
+        }
+        val sortingTitleSuffix = if (isSearching || isArtifactFiltered) {
+            "  · " + mapOf(
+                    SortingMethod.NEW_FIRST to "By date ↓",
+                    SortingMethod.OLD_FIRST to "By date ↑",
+                    SortingMethod.Z_A to "By title ↓",
+                    SortingMethod.A_Z to "By title ↑",
+                    SortingMethod.RANDOM to "Random"
+            )[getSortingMethod()]
+        } else {
+            "" // sorting not applied for default view
+        }
+        toolbar.subtitle = "$scopeTitle$sortingTitleSuffix"
+    }
+
+    private fun getLatestSnapshotTitle(filteredArtifactId: Long) = IntegrityCore.metadataRepository
+            .getLatestSnapshotMetadata(filteredArtifactId).title
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

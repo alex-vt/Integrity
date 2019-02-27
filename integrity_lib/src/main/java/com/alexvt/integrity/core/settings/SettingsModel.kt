@@ -24,9 +24,22 @@ data class IntegrityAppSettings(
         val jobsEnableScheduled: Boolean = true,
         val jobsExpandRunning: Boolean = true,
         val jobsExpandScheduled: Boolean = true,
+        val sortingMethod: String = SortingMethod.NEW_FIRST,
         val dataFolderPath: String = "Integrity",
         val dataTags: ArrayList<Tag> = arrayListOf(),
         val dataFolderLocations: ArrayList<FolderLocation> = arrayListOf(),
         val notificationShowErrors: Boolean = true,
         val notificationShowDisabledScheduled: Boolean = true
 ) : Serializable
+
+/**
+ * Sorting method setting can be changed directly, or in dual controls. In the latter case they are:
+ * by time (ascending/descending), by name (ascending/descending), random (shuffle again).
+ */
+object SortingMethod {
+    const val NEW_FIRST = "new_first"
+    const val OLD_FIRST = "old_first"
+    const val A_Z = "a_z"
+    const val Z_A = "z_a"
+    const val RANDOM = "random"
+}

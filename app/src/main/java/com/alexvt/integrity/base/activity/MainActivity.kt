@@ -73,7 +73,7 @@ class MainActivity : ThemedActivity() {
         inputs = newInputs
         refreshSnapshotList(inputs.filteredArtifactId)
         search(inputs.searchText, inputs.filteredArtifactId)
-        updateFilterView(inputs.filteredArtifactId)
+        updateFilterView(inputs.searchText, inputs.filteredArtifactId)
         updateAddButton(inputs.filteredArtifactId)
     }
 
@@ -446,21 +446,23 @@ class MainActivity : ThemedActivity() {
 
     private fun bindFilter() {
         iivUnFilterArtifact.setOnClickListener { removeArtifactFilter() }
-        llFilteredArtifact.background.setColorFilter(ThemeUtil.getColorPrimary(IntegrityCore.getColors()),
-                PorterDuff.Mode.DARKEN)
 
         llBottomSheet.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(IntegrityCore.getColors()))
         svMain.background.setColorFilter(ThemeUtil.getColorBackgroundBleached(IntegrityCore.getColors()),
                 PorterDuff.Mode.DARKEN)
     }
 
-    private fun updateFilterView(artifactId: Long?) {
-        if (artifactId != null) {
+    private fun updateFilterView(searchText: String, artifactId: Long?) {
+        val searching = searchText.isNotBlank()
+        val filterArtifact = artifactId != null
+        if (filterArtifact) {
             val title = IntegrityCore.metadataRepository
-                    .getLatestSnapshotMetadata(artifactId).title
-            tvFilteredArtifactTitle.text = "in: $title"
+                    .getLatestSnapshotMetadata(artifactId!!).title
+            val prefix = if (searching) "in: " else ""
+            tvFilteredArtifactTitle.text = "$prefix$title"
         }
-        llFilteredArtifact.visibility = if (artifactId != null) View.VISIBLE else View.GONE
+        llSorting.visibility = if (filterArtifact || searching) View.VISIBLE else View.GONE
+        llFilteredArtifact.visibility = if (filterArtifact) View.VISIBLE else View.GONE
     }
 
     private fun bindSearch() {

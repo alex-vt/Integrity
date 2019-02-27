@@ -44,7 +44,9 @@ import co.zsmb.materialdrawerkt.draweritems.badge
 import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.alexvt.integrity.BuildConfig
+import com.alexvt.integrity.core.search.SearchResult
 import com.alexvt.integrity.core.search.SortingUtil
+import com.alexvt.integrity.core.settings.SortingMethod
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.core.util.ThemedActivity
@@ -71,8 +73,8 @@ class MainActivity : ThemedActivity() {
 
     private fun onInputsUpdate(newInputs: Inputs) {
         inputs = newInputs
-        refreshSnapshotList(inputs.filteredArtifactId)
-        search(inputs.searchText, inputs.filteredArtifactId)
+        refreshSnapshotList(getSortingMethod(inputs), inputs.filteredArtifactId)
+        search(inputs.searchText, getSortingMethod(inputs), inputs.filteredArtifactId)
         updateToolbar(inputs.searchText, inputs.filteredArtifactId)
         updateFilterView(inputs.searchText, inputs.filteredArtifactId)
         updateAddButton(inputs.filteredArtifactId)
@@ -550,15 +552,17 @@ class MainActivity : ThemedActivity() {
         }
     }
 
-    private fun search(searchedText: String, filteredArtifactId: Long?) {
+    private fun search(searchedText: String, sortingMethod: String, filteredArtifactId: Long?) {
         svMain.setQuery(searchedText, false)
         if (searchedText.length >= 3) {
-            val searchResults = SearchUtil.searchText(searchedText, filteredArtifactId)
+            val searchResults = sortSearchResults(
+                    SearchUtil.searchText(searchedText, filteredArtifactId), sortingMethod)
 
             (rvSearchResults.adapter as SearchResultRecyclerAdapter).setItems(searchResults)
             tvNoResults.visibility = if (searchResults.isEmpty()) View.VISIBLE else View.GONE
         } else {
             tvNoResults.visibility = View.GONE
+            refreshSnapshotList(sortingMethod = sortingMethod, artifactId = filteredArtifactId)
         }
         rvSnapshotList.visibility = if (searchedText.isBlank()) View.VISIBLE else View.GONE
         rvSearchResults.visibility = if (searchedText.isBlank()) View.GONE else View.VISIBLE
@@ -606,7 +610,7 @@ class MainActivity : ThemedActivity() {
     override fun onStart() {
         super.onStart()
         IntegrityCore.metadataRepository.addChangesListener(this) {
-            refreshSnapshotList(inputs.filteredArtifactId)
+            refreshSnapshotList(getSortingMethod(inputs), inputs.filteredArtifactId)
         }
         IntegrityCore.subscribeToRunningJobListing(this) {
             updateJobsInDrawer(it.map { getRunningJobDrawerItem(it.first, it.second) },
@@ -653,14 +657,62 @@ class MainActivity : ThemedActivity() {
 
     fun addSnapshot(artifactId: Long) = IntegrityCore.openCreateNewSnapshot(this, artifactId)
 
-    private fun refreshSnapshotList(artifactId: Long?) {
-        val snapshots = when (artifactId) {
+    private fun refreshSnapshotList(sortingMethod: String, artifactId: Long?) {
+        val snapshots = sortSnapshots(when (artifactId) {
             null -> IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(true)
             else -> IntegrityCore.metadataRepository.getArtifactMetadata(artifactId)
-        }.snapshots
+        }.snapshots, sortingMethod)
         (rvSnapshotList.adapter as SnapshotRecyclerAdapter)
                 .setItems(snapshots.map { Pair(it, getSnapshotCount(it.artifactId)) }.toList(),
                         inputs.filteredArtifactId == null)
+    }
+
+    private fun getSortingMethod(inputs: Inputs): String {
+        val isSearching = inputs.searchText.isNotBlank()
+        val isArtifactFiltered = inputs.filteredArtifactId != null
+        return if (isSearching || isArtifactFiltered) {
+            IntegrityCore.getSortingMethod()
+        } else {
+            SortingMethod.NEW_FIRST
+        }
+    }
+
+    private fun sortSnapshots(snapshots: List<Snapshot>,
+                              sortingMethod: String) = with (snapshots) {
+        if (SortingUtil.isByDate(sortingMethod)) {
+            if (SortingUtil.isAscending(sortingMethod)) {
+                sortedBy { it.date }
+            } else {
+                sortedByDescending { it.date }
+            }
+        } else if (SortingUtil.isByTitle(sortingMethod)) {
+            if (SortingUtil.isAscending(sortingMethod)) {
+                sortedBy { it.title }
+            } else {
+                sortedByDescending { it.title }
+            }
+        } else {
+            shuffled()
+        }
+    }
+
+    private fun sortSearchResults(searchResults: List<SearchResult>,
+                                  sortingMethod: String) = with (searchResults) {
+        if (SortingUtil.isByDate(sortingMethod)) {
+            if (SortingUtil.isAscending(sortingMethod)) {
+                sortedBy { it.date }
+            } else {
+                sortedByDescending { it.date }
+            }
+        } else if (SortingUtil.isByTitle(sortingMethod)) {
+            if (SortingUtil.isAscending(sortingMethod)) {
+                sortedBy { it.snapshotTitle }
+            } else {
+                sortedByDescending { it.snapshotTitle }
+            }
+        } else {
+            shuffled()
+        }
     }
 
     private fun getSnapshotCount(artifactId: Long) = IntegrityCore.metadataRepository

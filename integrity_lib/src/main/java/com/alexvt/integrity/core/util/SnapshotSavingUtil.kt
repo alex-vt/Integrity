@@ -82,7 +82,6 @@ object SnapshotSavingUtil {
                 date = date,
                 status = SnapshotStatus.BLUEPRINT
         ))
-        ScheduledJobManager.updateSchedule(context)
         return date
     }
 
@@ -203,7 +202,6 @@ object SnapshotSavingUtil {
             postSnapshotDownloadProgress(context, completeSnapshot, "Done")
             postSnapshotDownloadResult(context, completeSnapshot)
         }
-        ScheduledJobManager.updateSchedule(context)
     }
 
 

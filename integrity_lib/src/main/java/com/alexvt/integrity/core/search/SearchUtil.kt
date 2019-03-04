@@ -11,8 +11,8 @@ import java.util.regex.Pattern
 
 object SearchUtil {
 
-    fun searchText(searchedText: String, artifactId: Long?) = IntegrityCore.searchIndexRepository
-            .searchText(searchedText)
+    fun searchText(searchedText: String, artifactId: Long?)
+            = searchTextIfBigEnough(searchedText)
             .filter { if (artifactId != null) it.artifactId == artifactId else true }
             .map { chunk -> getLocationsOfSearchedText(chunk.text, searchedText)
                     .map { range -> run {
@@ -23,6 +23,16 @@ object SearchUtil {
                                 getRelevantLinkOrNull(chunk.links, searchedText))
                     } }
             }.flatMap { it.toList() }
+
+    private const val minSearchTextLength = 3
+
+    private fun isBigEnough(searchText: String) = searchText.length >= minSearchTextLength
+
+    private fun searchTextIfBigEnough(searchedText: String) = if (isBigEnough(searchedText)) {
+        IntegrityCore.searchIndexRepository.searchText(searchedText)
+    } else {
+        emptyList()
+    }
 
     private fun getLocationsOfSearchedText(text: String, searchedText: String)
             = Pattern.quote(searchedText).toRegex().findAll(text).map { it.range }

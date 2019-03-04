@@ -51,23 +51,25 @@ object IntentUtil {
 
     fun isRefresh(intent: Intent?) = intent?.getBooleanExtra(refresh, false) ?: false
 
-    fun putArtifactId(intent: Intent?, artifactId: Long): Intent {
-        intent!!.putExtra(IntentUtil.artifactId, artifactId)
-        return intent
+    fun putArtifactId(intent: Intent?, artifactId: Long?): Intent {
+        if (artifactId != null) intent!!.putExtra(IntentUtil.artifactId, artifactId)
+        return intent!!
     }
 
     fun getArtifactId(intent: Intent?) = intent!!.getLongExtra(artifactId, -1)
 
-    fun putDate(intent: Intent?, date: String): Intent {
-        intent!!.putExtra(IntentUtil.date, date)
-        return intent
+    fun putDate(intent: Intent?, date: String?): Intent {
+        if (date != null) intent!!.putExtra(IntentUtil.date, date)
+        return intent!!
     }
 
     fun getDate(intent: Intent?) = intent!!.getStringExtra(date)!!
 
-    fun putDates(intent: Intent?, dates: List<String>): Intent {
-        intent!!.putExtra(IntentUtil.dates, dates.toTypedArray())
-        return intent
+    fun putDates(intent: Intent?, dates: List<String>?): Intent {
+        if (dates != null) {
+            intent!!.putExtra(IntentUtil.dates, dates.toTypedArray())
+        }
+        return intent!!
     }
 
     fun getDates(intent: Intent?) = intent!!.getStringArrayExtra(dates)!!
@@ -89,9 +91,11 @@ object IntentUtil {
 
     fun isDownloaded(intent: Intent?) = intent!!.getBooleanExtra(downloaded, false)
 
-    fun putSnapshot(intent: Intent?, snapshot: Snapshot): Intent {
-        intent!!.putExtra(IntentUtil.snapshot, JsonSerializerUtil.toJson(snapshot))
-        return intent
+    fun putSnapshot(intent: Intent?, snapshot: Snapshot?): Intent {
+        if (snapshot != null) {
+            intent!!.putExtra(IntentUtil.snapshot, JsonSerializerUtil.toJson(snapshot))
+        }
+        return intent!!
     }
 
     fun getSnapshot(intent: Intent?) = if (intent?.hasExtra(snapshot) == true) {
@@ -100,9 +104,9 @@ object IntentUtil {
         null
     }
 
-    fun putSelectMode(intent: Intent?, selectMode: Boolean): Intent {
-        intent!!.putExtra(IntentUtil.selectMode, selectMode)
-        return intent
+    fun putSelectMode(intent: Intent?, selectMode: Boolean?): Intent {
+        if (selectMode != null) intent!!.putExtra(IntentUtil.selectMode, selectMode)
+        return intent!!
     }
 
     fun isSelectMode(intent: Intent?) = intent!!.getBooleanExtra(selectMode, false)
@@ -116,9 +120,9 @@ object IntentUtil {
 
     fun getLogEntry(intent: Intent?) = intent!!.getSerializableExtra(logEntry) as LogEntry
 
-    fun putViewExtensions(intent: Intent?, value: Boolean): Intent {
-        intent!!.putExtra(IntentUtil.viewExtensions, value)
-        return intent
+    fun putViewExtensions(intent: Intent?, value: Boolean?): Intent {
+        if (value != null) intent!!.putExtra(IntentUtil.viewExtensions, value)
+        return intent!!
     }
 
     fun getViewExtensions(intent: Intent?) = intent?.getBooleanExtra(viewExtensions, false)
@@ -134,37 +138,37 @@ object IntentUtil {
     fun getIssueDescription(intent: Intent?) = intent?.getStringExtra(issueDescription) ?: ""
 
 
-    fun putFontName(intent: Intent?, value: String): Intent {
-        intent!!.putExtra(IntentUtil.fontName, value)
-        return intent
+    fun putFontName(intent: Intent?, value: String?): Intent {
+        if (value != null) intent!!.putExtra(IntentUtil.fontName, value)
+        return intent!!
     }
 
     fun getFontName(intent: Intent?) = intent!!.getStringExtra(fontName)!!
 
-    fun putColorBackground(intent: Intent?, value: String): Intent {
-        intent!!.putExtra(IntentUtil.colorBackground, value)
-        return intent
+    fun putColorBackground(intent: Intent?, value: String?): Intent {
+        if (value != null) intent!!.putExtra(IntentUtil.colorBackground, value)
+        return intent!!
     }
 
     fun getColorBackground(intent: Intent?) = intent!!.getStringExtra(colorBackground)!!
 
-    fun putColorPrimary(intent: Intent?, value: String): Intent {
-        intent!!.putExtra(IntentUtil.colorPrimary, value)
-        return intent
+    fun putColorPrimary(intent: Intent?, value: String?): Intent {
+        if (value != null) intent!!.putExtra(IntentUtil.colorPrimary, value)
+        return intent!!
     }
 
     fun getColorPrimary(intent: Intent?) = intent!!.getStringExtra(colorPrimary)!!
 
-    fun putColorAccent(intent: Intent?, value: String): Intent {
-        intent!!.putExtra(IntentUtil.colorAccent, value)
-        return intent
+    fun putColorAccent(intent: Intent?, value: String?): Intent {
+        if (value != null) intent!!.putExtra(IntentUtil.colorAccent, value)
+        return intent!!
     }
 
     fun getColorAccent(intent: Intent?) = intent!!.getStringExtra(colorAccent)!!
 
-    fun putDataFolderName(intent: Intent?, value: String): Intent {
-        intent!!.putExtra(IntentUtil.dataFolderName, value)
-        return intent
+    fun putDataFolderName(intent: Intent?, value: String?): Intent {
+        if (value != null) intent!!.putExtra(IntentUtil.dataFolderName, value)
+        return intent!!
     }
 
     fun getDataFolderName(intent: Intent?) = intent!!.getStringExtra(dataFolderName)!!

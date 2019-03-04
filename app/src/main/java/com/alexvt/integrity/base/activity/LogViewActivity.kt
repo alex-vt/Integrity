@@ -31,13 +31,13 @@ class LogViewActivity : ThemedActivity() {
 
     override fun onStart() {
         super.onStart()
-        IntegrityCore.logRepository.addChangesListener(this) {
+        IntegrityCore.logRepository.addChangesListener(this.toString()) {
             refreshLogList()
         }
     }
 
     override fun onStop() {
-        IntegrityCore.logRepository.removeChangesListener(this)
+        IntegrityCore.logRepository.removeChangesListener(this.toString())
         super.onStop()
     }
 

@@ -7,6 +7,7 @@
 package com.alexvt.integrity.core.search
 
 import com.alexvt.integrity.core.settings.SortingMethod
+import com.alexvt.integrity.lib.Snapshot
 
 object SortingUtil { // for UI
 
@@ -47,6 +48,47 @@ object SortingUtil { // for UI
             sortingType = getSortingType(sortingMethod),
             sortingDirection = getOppositeDirection(getSortingDirection(sortingMethod))
     )
+
+
+
+    fun sortSnapshots(snapshots: List<Snapshot>,
+                              sortingMethod: String) = with (snapshots) {
+        if (SortingUtil.isByDate(sortingMethod)) {
+            if (SortingUtil.isAscending(sortingMethod)) {
+                sortedBy { it.date }
+            } else {
+                sortedByDescending { it.date }
+            }
+        } else if (SortingUtil.isByTitle(sortingMethod)) {
+            if (SortingUtil.isAscending(sortingMethod)) {
+                sortedBy { it.title }
+            } else {
+                sortedByDescending { it.title }
+            }
+        } else {
+            shuffled()
+        }
+    }
+
+    fun sortSearchResults(searchResults: List<SearchResult>,
+                                  sortingMethod: String) = with (searchResults) {
+        if (SortingUtil.isByDate(sortingMethod)) {
+            if (SortingUtil.isAscending(sortingMethod)) {
+                sortedBy { it.date }
+            } else {
+                sortedByDescending { it.date }
+            }
+        } else if (SortingUtil.isByTitle(sortingMethod)) {
+            if (SortingUtil.isAscending(sortingMethod)) {
+                sortedBy { it.snapshotTitle }
+            } else {
+                sortedByDescending { it.snapshotTitle }
+            }
+        } else {
+            shuffled()
+        }
+    }
+
 
 
     private fun getSortingType(sortingMethod: String) = when (sortingMethod) {

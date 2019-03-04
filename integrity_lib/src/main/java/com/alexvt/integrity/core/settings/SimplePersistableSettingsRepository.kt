@@ -11,6 +11,9 @@ import com.alexvt.integrity.core.filesystem.local.LocalFolderLocation
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.lib.FolderLocation
 import com.alexvt.integrity.lib.Tag
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /**
  * In-memory settings storage persisting to SharedPreferences.
@@ -32,6 +35,25 @@ object SimplePersistableSettingsRepository : SettingsRepository {
         if (clear || !::integrityAppSettings.isInitialized) {
             integrityAppSettings = getDefaultSettings()
             saveChanges(context)
+        }
+    }
+
+    private var changesListenerMap: Map<String, ((IntegrityAppSettings) -> Unit)> = mapOf()
+
+    override fun addChangesListener(tag: String, changesListener: (IntegrityAppSettings) -> Unit) {
+        changesListenerMap = changesListenerMap.plus(Pair(tag, changesListener))
+        invokeChangesListeners()
+    }
+
+    override fun removeChangesListener(tag: String) {
+        changesListenerMap = changesListenerMap.minus(tag)
+    }
+
+    private fun invokeChangesListeners() {
+        GlobalScope.launch (Dispatchers.Main) {
+            changesListenerMap.forEach {
+                it.value.invoke(integrityAppSettings)
+            }
         }
     }
 
@@ -113,6 +135,7 @@ object SimplePersistableSettingsRepository : SettingsRepository {
      * Should be called after every metadata modification.
      */
     @Synchronized private fun saveChanges(context: Context) {
+        invokeChangesListeners()
         val settingsJson = JsonSerializerUtil.toJson(integrityAppSettings)
         persistJsonToStorage(context, settingsJson) // todo listener
     }

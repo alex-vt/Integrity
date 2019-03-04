@@ -71,7 +71,6 @@ object LoggingUtil {
 
     private fun acceptLogEntry(context: Context, logEntry: LogEntry) {
         IntegrityCore.logRepository.addEntry(context, logEntry)
-        IntegrityCore.notifyAboutUnreadErrors(context)
     }
 
     // Broadcast receiver for receiving status updates from the IntentService.

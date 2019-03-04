@@ -29,7 +29,6 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
             IntegrityCore.settingsRepository.set(context!!, IntegrityCore.settingsRepository.get()
                     .copy(notificationShowErrors = !showErrors))
             updateShowErrors(prefShowErrors)
-            IntegrityCore.notifyAboutUnreadErrors(context!!)
             true
         }
     }
@@ -47,7 +46,6 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
             IntegrityCore.settingsRepository.set(context!!, IntegrityCore.settingsRepository.get()
                     .copy(notificationShowDisabledScheduled = !show))
             updateShowForDisabledScheduledJobs(prefShowForDisabledScheduled)
-            IntegrityCore.notifyAboutDisabledScheduledJobs(context!!)
             true
         }
     }

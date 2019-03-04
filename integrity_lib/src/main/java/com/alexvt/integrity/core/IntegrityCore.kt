@@ -64,10 +64,14 @@ object IntegrityCore {
 
         resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
 
-        notifyAboutDisabledScheduledJobs(context)
-        notifyAboutUnreadErrors(context)
+        settingsRepository.addChangesListener(this.toString()) {
+            notifyAboutDisabledScheduledJobs(context)
+            ScheduledJobManager.updateSchedule(context)
+        }
 
-        ScheduledJobManager.updateSchedule(context)
+        logRepository.addChangesListener(this.toString()) {
+            notifyAboutUnreadErrors(context)
+        }
 
         Log(context, "IntegrityCore initialized").log()
     }
@@ -82,7 +86,7 @@ object IntegrityCore {
                 }
     }
 
-    fun notifyAboutUnreadErrors(context: Context) {
+    private fun notifyAboutUnreadErrors(context: Context) {
         val unreadErrors = logRepository.getUnreadErrors()
         if (unreadErrors.isNotEmpty()) {
             if (settingsRepository.get().notificationShowErrors) {
@@ -104,11 +108,9 @@ object IntegrityCore {
     fun updateScheduledJobsOptions(context: Context, jobsEnabled: Boolean) {
         settingsRepository.set(context, settingsRepository.get()
                 .copy(jobsEnableScheduled = jobsEnabled))
-        ScheduledJobManager.updateSchedule(context)
-        IntegrityCore.notifyAboutDisabledScheduledJobs(context)
     }
 
-    fun notifyAboutDisabledScheduledJobs(context: Context) {
+    private fun notifyAboutDisabledScheduledJobs(context: Context) {
         val showDisabledScheduledJobsNotification = !scheduledJobsEnabled()
                 && settingsRepository.get().notificationShowDisabledScheduled
         if (showDisabledScheduledJobsNotification) {
@@ -124,64 +126,19 @@ object IntegrityCore {
 
     fun getSortingMethod() = settingsRepository.get().sortingMethod
 
-    fun openViewSnapshotOrShowProgress(activity: Activity, artifactId: Long, date: String) {
-        val snapshot = metadataRepository.getSnapshotMetadata(artifactId, date)
-        if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
-            showRunningJobProgressDialog(activity, artifactId, date)
-            return
-        }
-        // todo ensure snapshot data presence in folder first
-        val activityInfo = getDataTypeActivityInfo(snapshot.dataTypeClassName)
-        val intent = Intent()
-        intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
-        IntentUtil.putSnapshot(intent, snapshot)
-        if (snapshot.status == SnapshotStatus.COMPLETE) {
-            IntentUtil.putDates(intent, getCompleteSnapshotDates(artifactId))
-        }
-        putUiSettings(intent)
-        IntentUtil.putDataFolderName(intent, getDataFolderName())
-        activity.startActivityForResult(intent, 0)
-    }
-
-    fun openCreateNewSnapshot(activity: Activity, artifactId: Long) {
-        val snapshot = metadataRepository.getLatestSnapshotMetadata(artifactId)
-        val activityInfo = getDataTypeActivityInfo(snapshot.dataTypeClassName)
-        val intent = Intent()
-        intent.component = ComponentName(activityInfo.packageName, activityInfo.name)
-        IntentUtil.putSnapshot(intent, snapshot.copy(status = SnapshotStatus.BLUEPRINT)) // as blueprint
-        putUiSettings(intent)
-        IntentUtil.putDataFolderName(intent, getDataFolderName())
-        activity.startActivityForResult(intent, 0)
-    }
-
-    private fun getCompleteSnapshotDates(artifactId: Long) = metadataRepository
+    fun getCompleteSnapshotDatesOrNull(artifactId: Long) = metadataRepository
             .getArtifactMetadata(artifactId).snapshots
             .filter { it.status == SnapshotStatus.COMPLETE }
             .map { it.date }
             .reversed() // in ascending order
+            .ifEmpty { null }
 
     fun getFolderLocationNames(archiveFolderLocations: List<FolderLocation>) = archiveFolderLocations
             .map { IntegrityCore.getFolderLocationName(it) }
             .toTypedArray()
 
-    fun openCreateNewArtifact(activity: Activity, componentName: ComponentName) {
-        val intent = Intent()
-        intent.component = componentName
-        putUiSettings(intent)
-        IntentUtil.putDataFolderName(intent, getDataFolderName())
-        activity.startActivityForResult(intent, 0)
-    }
-
     fun getColors() = with(settingsRepository.get()) {
         ThemeColors(colorBackground, colorPrimary, colorAccent)
-    }
-
-    private fun putUiSettings(intent: Intent): Intent {
-        IntentUtil.putFontName(intent, getFont())
-        IntentUtil.putColorBackground(intent, getColorBackground())
-        IntentUtil.putColorPrimary(intent, getColorPrimary())
-        IntentUtil.putColorAccent(intent, getColorAccent())
-        return intent
     }
 
     fun getFont() = settingsRepository.get().textFont
@@ -197,22 +154,6 @@ object IntegrityCore {
      */
     fun saveSnapshot(context: Context, snapshot: Snapshot) {
         SnapshotSavingUtil.saveSnapshot(context, snapshot)
-    }
-
-    fun subscribeToRunningJobListing(context: Context, jobsListener: (List<Pair<Long, String>>) -> Unit) {
-        RunningJobManager.addJobListListener(context.toString(), jobsListener)
-    }
-
-    fun unsubscribeFromRunningJobListing(context: Context) {
-        RunningJobManager.removeJobListListener(context.toString())
-    }
-
-    fun subscribeToScheduledJobListing(context: Context, jobsListener: (List<Pair<Long, String>>) -> Unit) {
-        ScheduledJobManager.addScheduledJobsListener(context.toString(), jobsListener)
-    }
-
-    fun unsubscribeFromScheduledJobListing(context: Context) {
-        ScheduledJobManager.removeScheduledJobsListener(context.toString())
     }
 
     fun getNextJobRunTimestamp(snapshot: Snapshot)
@@ -258,7 +199,6 @@ object IntegrityCore {
         metadataRepository.removeSnapshotMetadata(context, incompleteMetadata.artifactId,
                 incompleteMetadata.date)
         metadataRepository.addSnapshotMetadata(context, incompleteMetadata)
-        ScheduledJobManager.updateSchedule(context)
     }
 
     /**
@@ -363,7 +303,7 @@ object IntegrityCore {
         return Class.forName(utilClassName).kotlin.objectInstance as ArchiveLocationUtil<F>
     }
 
-    private fun getDataTypeActivityInfo(typeClassName: String): ActivityInfo {
+    fun getDataTypeActivityInfo(typeClassName: String): ActivityInfo {
         val activityInfoList = getDataTypeActivityInfoList()
         return activityInfoList.first {
             typeClassName.substringAfterLast(".").removeSuffix("Metadata") ==

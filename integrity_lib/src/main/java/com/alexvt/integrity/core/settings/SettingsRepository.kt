@@ -17,13 +17,18 @@ import com.alexvt.integrity.lib.Tag
 interface SettingsRepository : Initializable {
 
     /**
-     * Setter.
+     * Registers database contents changes listener with a tag.
+     * todo narrow down to tracking changes of subset of data
      */
-    fun set(context: Context, integrityAppSettings: IntegrityAppSettings)
+    fun addChangesListener(tag: String, changesListener: (IntegrityAppSettings) -> Unit)
 
     /**
-     * Getter.
+     * Removes database contents changes listener by a tag
      */
+    fun removeChangesListener(tag: String)
+
+    fun set(context: Context, integrityAppSettings: IntegrityAppSettings)
+
     fun get(): IntegrityAppSettings
 
     /**

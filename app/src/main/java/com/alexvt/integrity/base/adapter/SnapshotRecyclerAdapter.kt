@@ -6,12 +6,12 @@
 
 package com.alexvt.integrity.base.adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
-import com.alexvt.integrity.base.activity.MainActivity
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.lib.IntegrityEx
@@ -23,8 +23,11 @@ import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
 import kotlinx.android.synthetic.main.snapshot_list_item.view.*
 
-class SnapshotRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Int>>,
-                              private val mainActivity: MainActivity)
+class SnapshotRecyclerAdapter(private val items: ArrayList<Pair<Snapshot, Int>>,
+                              private val context: Context,
+                              private val onClickListener: (Long, String) -> Unit,
+                              private val onLongClickListener: (Long, String, Boolean) -> Unit,
+                              private val onClickMoreListener: (Long, String, Boolean) -> Unit)
     : RecyclerView.Adapter<SnapshotViewHolder>() {
 
     private var showMoreButton: Boolean = false
@@ -39,9 +42,8 @@ class SnapshotRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Int>>,
     override fun getItemCount() = items.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SnapshotViewHolder {
-        val view = LayoutInflater.from(mainActivity).inflate(R.layout.snapshot_list_item, parent,
-                false)
-        FontUtil.setFont(mainActivity, view, IntegrityCore.getFont())
+        val view = LayoutInflater.from(context).inflate(R.layout.snapshot_list_item, parent, false)
+        FontUtil.setFont(context, view, IntegrityCore.getFont())
         return SnapshotViewHolder(view)
     }
 
@@ -57,38 +59,37 @@ class SnapshotRecyclerAdapter(val items: ArrayList<Pair<Snapshot, Int>>,
         }
 
         val snapshotCount = items[position].second
+        val isMultipleSnapshots = snapshotCount > 1
 
         holder.view.bMore.visibility = if (showMoreButton) View.VISIBLE else View.GONE
-        holder.view.bMore.text = if (snapshotCount == 1) "Add more" else "${snapshotCount - 1} more"
-        holder.view.bMore.setOnClickListener {
-            if (snapshotCount == 1) {
-                mainActivity.addSnapshot(snapshot.artifactId)
-            } else {
-                mainActivity.filterArtifact(snapshot.artifactId)
-            }
-        }
+        holder.view.bMore.text = if (isMultipleSnapshots) "${snapshotCount - 1} more" else "Add more"
 
-        holder.view.setOnClickListener { mainActivity.viewSnapshot(snapshot) }
+        holder.view.bMore.setOnClickListener {
+            onClickMoreListener.invoke(snapshot.artifactId, snapshot.date, isMultipleSnapshots)
+        }
+        holder.view.setOnClickListener {
+            onClickListener.invoke(snapshot.artifactId, snapshot.date)
+        }
         holder.view.setOnLongClickListener {
-            mainActivity.askRemoveArtifact(snapshot.artifactId) // todo popup menu instead
+            onLongClickListener.invoke(snapshot.artifactId, snapshot.date, isMultipleSnapshots)
+            // todo popup menu instead
             false
         }
 
-        val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(mainActivity,
+        val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(context,
                 IntegrityCore.getDataFolderName(), snapshot.artifactId, snapshot.date)
-        if (!DataCacheFolderUtil.fileExists(mainActivity, snapshotPreviewPath)) {
-            holder.view.ivPreview.setImageDrawable(IconicsDrawable(mainActivity)
+        if (!DataCacheFolderUtil.fileExists(context, snapshotPreviewPath)) {
+            holder.view.ivPreview.setImageDrawable(IconicsDrawable(context)
                     .icon(CommunityMaterial.Icon2.cmd_view_grid)
                     .colorRes(R.color.colorBlueprint)
                     .sizeDp(36))
         } else {
-            Glide.with(mainActivity)
+            Glide.with(context)
                     .asBitmap()
                     .load(snapshotPreviewPath)
                     .into(holder.view.ivPreview)
         }
     }
 }
-
 
 class SnapshotViewHolder (val view: View) : RecyclerView.ViewHolder(view)

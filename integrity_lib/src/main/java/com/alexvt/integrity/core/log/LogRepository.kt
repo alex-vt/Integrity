@@ -18,12 +18,12 @@ interface LogRepository : Initializable {
      * Registers database contents changes listener with a tag.
      * todo narrow down to tracking changes of subset of data
      */
-    fun addChangesListener(context: Context, changesListener: () -> Unit)
+    fun addChangesListener(tag: String, changesListener: () -> Unit)
 
     /**
      * Removes database contents changes listener by a tag
      */
-    fun removeChangesListener(context: Context)
+    fun removeChangesListener(tag: String)
 
     /**
      * Adds the entry to the log.

@@ -7,6 +7,7 @@
 package com.alexvt.integrity.base.activity
 
 import android.app.SearchManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.PorterDuff
@@ -15,8 +16,6 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.base.adapter.SnapshotRecyclerAdapter
 import com.alexvt.integrity.base.adapter.SearchResultRecyclerAdapter
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.search.SearchUtil
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.leinardi.android.speeddial.SpeedDialActionItem
@@ -29,6 +28,7 @@ import android.widget.ImageView
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.LayoutInflaterCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProviders
 import co.zsmb.materialdrawerkt.builders.drawer
 import co.zsmb.materialdrawerkt.builders.footer
 import co.zsmb.materialdrawerkt.draweritems.badgeable.primaryItem
@@ -43,10 +43,7 @@ import java.util.*
 import co.zsmb.materialdrawerkt.draweritems.badge
 import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
-import com.alexvt.integrity.BuildConfig
-import com.alexvt.integrity.core.search.SearchResult
 import com.alexvt.integrity.core.search.SortingUtil
-import com.alexvt.integrity.core.settings.SortingMethod
 import com.alexvt.integrity.core.util.FontUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.core.util.ThemedActivity
@@ -64,38 +61,36 @@ import com.mikepenz.materialdrawer.model.*
 
 class MainActivity : ThemedActivity() {
 
-    data class Inputs(val filteredArtifactId: Long?,
-                      val searchText: String)
+    private val vm: MainScreenViewModel by lazy {
+        ViewModelProviders.of(this, MainScreenViewModelFactory(
+                packageName = packageName,
+                folderLocationsScreenClass = FolderLocationsActivity::class.java.name,
+                tagsScreenClass = TagsActivity::class.java.name,
+                logScreenClass = LogViewActivity::class.java.name,
+                settingsClass = SettingsActivity::class.java.name,
+                recoveryScreenClass = RecoveryActivity::class.java.name,
+                helpInfoScreenClass = HelpInfoActivity::class.java.name,
+                legalInfoScreenClass = LegalInfoActivity::class.java.name
+        )).get(MainScreenViewModel::class.java)
+    }
 
     private lateinit var drawer: Drawer
-
-    private var inputs: Inputs = Inputs(null, "")
-
-    private fun onInputsUpdate(newInputs: Inputs) {
-        inputs = newInputs
-        refreshSnapshotList(getSortingMethod(inputs), inputs.filteredArtifactId)
-        search(inputs.searchText, getSortingMethod(inputs), inputs.filteredArtifactId)
-        updateToolbar(inputs.searchText, inputs.filteredArtifactId)
-        updateFilterView(inputs.searchText, inputs.filteredArtifactId)
-        updateAddButton(inputs.filteredArtifactId)
-    }
+    private lateinit var jobProgressDialog: MaterialDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LayoutInflaterCompat.setFactory2(layoutInflater, IconicsLayoutInflater2(delegate))
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
 
+        bindVisualTheme()
+        bindToolbar()
         bindDrawer()
-        bindAddButton()
         bindSnapshotList()
-        bindSnapshotList()
-        bindFilter()
-        bindSearch()
-
-        onInputsUpdate(inputs)
-
-        FontUtil.setFont(this, IntegrityCore.getFont())
+        bindSearchResults()
+        bindFloatingButton()
+        bindBottomSheetControls()
+        bindJobProgressDialog()
+        bindNavigation()
     }
 
     override fun onAttachedToWindow() {
@@ -103,7 +98,27 @@ class MainActivity : ThemedActivity() {
         // todo fix and remove
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = ThemeUtil.getColorPrimaryDark(IntegrityCore.getColors())
+        window.statusBarColor = vm.computeColorPrimaryDark()
+    }
+
+
+    // binding to ViewModel
+
+    private fun bindVisualTheme() {
+        FontUtil.setFont(this, vm.getFont())
+    }
+
+    private fun bindToolbar() {
+        setSupportActionBar(toolbar)
+
+        vm.inputStateData.observe(this, androidx.lifecycle.Observer {
+            toolbar.title = vm.computeScreenTitle()
+            toolbar.subtitle = vm.computeScreenSubTitle()
+        })
+        vm.settingsData.observe(this, androidx.lifecycle.Observer {
+            toolbar.title = vm.computeScreenTitle()
+            toolbar.subtitle = vm.computeScreenSubTitle()
+        })
     }
 
     private fun bindDrawer() {
@@ -116,54 +131,54 @@ class MainActivity : ThemedActivity() {
                 identifier = 1
                 selectable = false
                 onClick { _ ->
-                    userTryToggleExpandJobs(false)
+                    tryToggleExpandSection(isScheduledJobs = false)
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_playlist_play
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
-                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
+                textColor = vm.computeTextColorPrimary().toLong()
+                iconColor = vm.computeTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, vm.getFont())
             } // updatable
             expandableItem("Up next") {
                 identifier = 2
                 selectable = false
                 onClick { _ ->
-                    userTryToggleExpandJobs(true)
+                    tryToggleExpandSection(isScheduledJobs = true)
                     false
                 }
                 iicon = CommunityMaterial.Icon.cmd_calendar_clock
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
-                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
+                textColor = vm.computeTextColorPrimary().toLong()
+                iconColor = vm.computeTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, vm.getFont())
             } // updatable
             divider { identifier = 3 }
             primaryItem("Archives & Storage") {
                 identifier = 4
                 selectable = false
                 onClick { _ ->
-                    viewFolderLocations() // todo also show data cache folder
+                    vm.viewArchiveLocations() // todo also show data cache folder in there
                     false
                 }
                 iicon = CommunityMaterial.Icon.cmd_archive
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
-                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
+                textColor = vm.computeTextColorPrimary().toLong()
+                iconColor = vm.computeTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, vm.getFont())
             }
             primaryItem("Tags") {
                 identifier = 5
                 selectable = false
                 onClick { _ ->
-                    viewTags()
+                    vm.viewTags()
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_tag_multiple
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
-                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
+                textColor = vm.computeTextColorPrimary().toLong()
+                iconColor = vm.computeTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, vm.getFont())
             }
             primaryItem("Log") {
                 identifier = 6
@@ -172,97 +187,263 @@ class MainActivity : ThemedActivity() {
             primaryItem("Extensions") {
                 selectable = false
                 onClick { _ ->
-                    viewSettings(true)
+                    vm.viewExtensions()
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_puzzle
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
-                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
+                textColor = vm.computeTextColorPrimary().toLong()
+                iconColor = vm.computeTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, vm.getFont())
             }
             divider { identifier = 8 }
             primaryItem("Restore...") {
                 identifier = 9
                 selectable = false
                 onClick { _ ->
-                    viewRestore()
+                    vm.viewRestore()
                     false
                 }
                 iicon = CommunityMaterial.Icon2.cmd_history
                 iconTintingEnabled = true
-                textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
-                iconColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
-                typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
+                textColor = vm.computeTextColorPrimary().toLong()
+                iconColor = vm.computeTextColorSecondary().toLong()
+                typeface = FontUtil.getTypeface(this@MainActivity, vm.getFont())
             }
             footer {
                 switchItem("Scheduled jobs") {
                     // updatable
-                    typeface = FontUtil.getTypeface(this@MainActivity, IntegrityCore.getFont())
+                    typeface = FontUtil.getTypeface(this@MainActivity, vm.getFont())
                 }
                 divider {}
                 primaryItem("Settings") {
                     selectable = false
                     onClick { _ ->
-                        viewSettings()
+                        vm.viewSettings()
                         false
                     }
-                    textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
+                    textColor = vm.computeTextColorPrimary().toLong()
                 }
                 primaryItem("Help") {
                     selectable = false
                     onClick { _ ->
-                        viewHelp()
+                        vm.viewHelp()
                         false
                     }
-                    badge("version ${BuildConfig.VERSION_NAME}") {
-                        textColor = ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()).toLong()
+                    badge("version ${vm.versionNameData.value}") {
+                        textColor = vm.computeTextColorSecondary().toLong()
                         colorRes = R.color.colorNone
                     }
-                    textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
+                    textColor = vm.computeTextColorPrimary().toLong()
                 }
                 divider {}
                 primaryItem("Legal") {
                     selectable = false
                     onClick { _ ->
-                        viewLegal()
+                        vm.viewLegal()
                         false
                     }
-                    textColor = ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()).toLong()
+                    textColor = vm.computeTextColorPrimary().toLong()
                 }
             }
             actionBarDrawerToggleAnimated = true
             actionBarDrawerToggleEnabled = true
         }
         drawer.recyclerView.scrollBarDefaultDelayBeforeFade = 3000 // todo don't show when updating but keeping size
-        drawer.slider.setBackgroundColor(ThemeUtil.getColorBackground(IntegrityCore.getColors()))
-        drawer.stickyFooter.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(IntegrityCore.getColors()))
+        drawer.slider.setBackgroundColor(vm.computeColorBackground())
+        drawer.stickyFooter.setBackgroundColor(vm.computeColorBackgroundSecondary())
         ThemeUtil.applyToView(drawer.slider)
         ThemeUtil.applyToView(drawer.stickyFooter)
+
+        vm.logErrorCountData.observe(this, androidx.lifecycle.Observer {
+            updateDrawerStatusHeader()
+            updateLogBadgeErrorCount()
+        })
+        vm.settingsData.observe(this, androidx.lifecycle.Observer {
+            updateDrawerStatusHeader()
+            updateRunningJobsInDrawer()
+            updateScheduledJobsInDrawer()
+            updateScheduledJobsSwitch()
+        })
+        vm.runningJobIdsData.observe(this, androidx.lifecycle.Observer {
+            updateRunningJobsInDrawer()
+        })
+        vm.scheduledJobIdsData.observe(this, androidx.lifecycle.Observer {
+            updateScheduledJobsInDrawer()
+        })
     }
 
-    private fun userTryToggleExpandJobs(isScheduledJobs: Boolean) {
+    private fun updateRunningJobsInDrawer() {
+        updateJobsInDrawer(vm.runningJobIdsData.value!!.map {
+            getRunningJobDrawerItem(it)
+        }, 1L, "Running now", "No running jobs")
+    }
+
+    private fun updateScheduledJobsInDrawer() {
+        updateJobsInDrawer(vm.scheduledJobIdsData.value!!.map {
+            getScheduledJobDrawerItem(it.first, it.second)
+        }, 2L, "Up next", "No scheduled jobs")
+    }
+
+    private fun bindSnapshotList() {
+        rvSnapshotList.adapter = SnapshotRecyclerAdapter(ArrayList(), this,
+                onClickListener = { artifactId, date ->
+                    vm.viewSnapshot(artifactId, date)
+                },
+                onLongClickListener = { artifactId, date, many ->
+                    if (many) askRemoveArtifact(artifactId) else askRemoveSnapshot(artifactId, date)
+                },
+                onClickMoreListener = { artifactId, _, many ->
+                    if (many) vm.viewMoreOfArtifact(artifactId) else vm.addSnapshot(artifactId)
+                })
+
+        vm.countedSnapshotsData.observe(this, androidx.lifecycle.Observer {
+            (rvSnapshotList.adapter as SnapshotRecyclerAdapter)
+                    .setItems(it, vm.inputStateData.value!!.filteredArtifactId == null)
+        })
+    }
+
+    private fun bindSearchResults() {
+        rvSearchResults.adapter = SearchResultRecyclerAdapter(ArrayList(), this)
+
+        vm.searchResultsData.observe(this, androidx.lifecycle.Observer {
+            (rvSearchResults.adapter as SearchResultRecyclerAdapter).setItems(it)
+            updateNoResultsPlaceholder()
+        })
+        vm.inputStateData.observe(this, androidx.lifecycle.Observer {
+            updateNoResultsPlaceholder()
+        })
+    }
+
+    private fun updateNoResultsPlaceholder() {
+        val searchResultsExist = vm.searchResultsData.value!!.isNotEmpty()
+        val isSearching = vm.inputStateData.value!!.searchViewText.isNotBlank()
+        tvNoResults.visibility = if (isSearching && !searchResultsExist) View.VISIBLE else View.GONE
+    }
+
+    private fun bindFloatingButton() {
+        SpeedDialCompatUtil.setStayOnExpand(sdAdd)
+        sdAdd.setMainFabClosedDrawable(getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
+        sdAdd.setMainFabOpenedDrawable(getPaddedIcon(CommunityMaterial.Icon.cmd_close))
+
+        vm.inputStateData.observe(this, androidx.lifecycle.Observer {
+            sdAdd.visibility = if (it.searchViewText.isBlank()) View.VISIBLE else View.GONE
+            sdAdd.clearActionItems()
+            if (it.filteredArtifactId != null) {
+                sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
+                        SpeedDialActionItem.Builder(0, getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
+                                .setLabel("Create another snapshot"), vm.getThemeColors()
+                ).create())
+                sdAdd.setOnActionSelectedListener {
+                    vm.clickFloatingButtonOption(0)
+                    false
+                }
+            } else {
+                vm.typeComponentNameData.value!!.map {
+                    // todo names from resources
+                    it.className.substringAfterLast(".").removeSuffix("TypeActivity")
+                }.forEachIndexed {
+                    index, name -> sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
+                        SpeedDialActionItem.Builder(index,
+                                getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
+                                .setLabel(name), vm.getThemeColors()).create())
+                }
+                sdAdd.setOnActionSelectedListener {
+                    vm.clickFloatingButtonOption(it.id)
+                    false
+                }
+            }
+            FontUtil.setFont(this, sdAdd, vm.getFont())
+        })
+    }
+
+    private fun bindBottomSheetControls() {
+        llBottomSheet.setBackgroundColor(vm.computeColorBackgroundSecondary())
+
+        // search
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as? SearchManager
+        if (searchManager != null) {
+            svMain.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+        }
+        fixMicIconBackground(svMain)
+        svMain.background.setColorFilter(vm.computeColorBackgroundBleached(), PorterDuff.Mode.DARKEN)
+        svMain.queryTextChanges()
+                .debounce(500, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    vm.setSearchText(it.toString())
+                } // todo debounce in vm
+        vm.settingsData.observe(this, androidx.lifecycle.Observer {
+            val sortingMethod = it.sortingMethod
+            val sortingTypeIcon: IIcon = when {
+                SortingUtil.isByDate(sortingMethod) -> CommunityMaterial.Icon.cmd_folder_clock_outline
+                SortingUtil.isByTitle(sortingMethod) -> CommunityMaterial.Icon2.cmd_sort_alphabetical
+                else -> CommunityMaterial.Icon2.cmd_shuffle
+            }
+            iivSortingType.icon = IconicsDrawable(this).icon(sortingTypeIcon)
+                    .colorRes(R.color.colorWhite)
+
+            val sortingDirectionIcon: IIcon = when {
+                SortingUtil.isDescending(sortingMethod) -> CommunityMaterial.Icon2.cmd_sort_descending
+                SortingUtil.isAscending(sortingMethod) -> CommunityMaterial.Icon2.cmd_sort_ascending
+                else -> CommunityMaterial.Icon2.cmd_refresh
+            }
+            iivSortingDirection.icon = IconicsDrawable(this).icon(sortingDirectionIcon)
+                    .colorRes(R.color.colorWhite)
+        })
+        vm.inputStateData.observe(this, androidx.lifecycle.Observer {
+            val searching = it.searchViewText.isNotBlank()
+            val filterArtifact = it.filteredArtifactId != null
+
+            rvSnapshotList.visibility = if (searching) View.GONE else View.VISIBLE
+            rvSearchResults.visibility = if (searching) View.VISIBLE else View.GONE
+            tvFilteredArtifactTitle.text = vm.computeArtifactFilterTitle()
+            llSorting.visibility = if (filterArtifact || searching) View.VISIBLE else View.GONE
+            llFilteredArtifact.visibility = if (filterArtifact) View.VISIBLE else View.GONE
+        })
+
+        // artifact filtering
+        iivUnFilterArtifact.setOnClickListener { vm.clickArtifactFilteringClose() }
+
+        // sorting
+        iivSortingType.setOnClickListener {
+            MaterialDialog(this).show {
+                title(text = "Sorting method")
+                listItemsSingleChoice(
+                        items = vm.getSortingTypeNames(),
+                        initialSelection = vm.getSortingTypeNameIndex()
+                ) { _, index, _ ->
+                    vm.selectSortingTypeOption(index)
+                }
+            }
+        }
+        iivSortingDirection.setOnClickListener {
+            vm.clickSortingDirectionButton()
+        }
+    }
+
+    private fun tryToggleExpandSection(isScheduledJobs: Boolean) {
         val sectionId = if (isScheduledJobs) 2L else 1L
         val isExpandable = drawer.getDrawerItem(sectionId).subItems.isNotEmpty()
         if (!isExpandable) {
             return
         }
         val isExpanded = drawer.getDrawerItem(sectionId).isExpanded
-        val oldSettings = IntegrityCore.settingsRepository.get()
-        IntegrityCore.settingsRepository.set(this, if (isScheduledJobs) {
-            oldSettings.copy(jobsExpandScheduled = isExpanded)
+
+        if (isScheduledJobs) {
+            vm.expandScheduledJobsHeader(isExpanded)
         } else {
-            oldSettings.copy(jobsExpandRunning = isExpanded)
-        })
+            vm.expandRunningJobsHeader(isExpanded)
+        }
     }
 
-    private fun updateStatusHeader() {
+    private fun updateDrawerStatusHeader() {
         val headerBinding: DrawerHeaderBinding = DataBindingUtil.inflate(LayoutInflater.from(
                 this), R.layout.drawer_header, null, false)
-        FontUtil.setFont(this, headerBinding.rlView, IntegrityCore.getFont())
-        val unreadErrorCount = IntegrityCore.logRepository.getUnreadErrors().count()
+        FontUtil.setFont(this, headerBinding.rlView, vm.getFont())
+        val unreadErrorCount = vm.logErrorCountData.value
         headerBinding.tvTitle.text = if (unreadErrorCount == 0) {
-            if (IntegrityCore.scheduledJobsEnabled()) {
+            if (vm.settingsData.value!!.jobsEnableScheduled) {
                 "App is working normally"
             } else {
                 "Scheduled jobs are disabled"
@@ -272,20 +453,19 @@ class MainActivity : ThemedActivity() {
         }
         headerBinding.bViewLog.visibility = if (unreadErrorCount == 0) View.GONE else View.VISIBLE
         headerBinding.bViewLog.setOnClickListener {
-            viewLog()
-            drawer.closeDrawer()
+            vm.viewLog()
         }
         drawer.header = headerBinding.rlView
-        headerBinding.rlView.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(IntegrityCore.getColors()))
-        headerBinding.tvTitle.setTextColor(ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()))
-        headerBinding.bViewLog.setTextColor(ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()))
+        headerBinding.rlView.setBackgroundColor(vm.computeColorBackgroundSecondary())
+        headerBinding.tvTitle.setTextColor(vm.computeTextColorPrimary())
+        headerBinding.bViewLog.setTextColor(vm.computeTextColorSecondary())
     }
 
     private fun updateLogBadgeErrorCount() {
-        val unreadErrorCount = IntegrityCore.logRepository.getUnreadErrors().count()
+        val unreadErrorCount = vm.logErrorCountData.value
         val badgeText = if (unreadErrorCount == 0) "" else "Errors: $unreadErrorCount"
         val badgeColor = if (unreadErrorCount == 0) {
-            ThemeUtil.getColorBackground(IntegrityCore.getColors())
+            vm.computeColorBackground()
         } else {
             getColor(R.color.colorError)
         }
@@ -293,15 +473,15 @@ class MainActivity : ThemedActivity() {
                 .withIdentifier(6)
                 .withName("Log")
                 .withSelectable(false)
-                .withOnDrawerItemClickListener { view, position, drawerItem -> run {
-                    viewLog()
+                .withOnDrawerItemClickListener { _, _, _ ->
+                    vm.viewLog()
                     false
-                } }
-                .withTextColor(ThemeUtil.getTextColorPrimary(IntegrityCore.getColors()))
-                .withIconColor(ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()))
+                }
+                .withTextColor(vm.computeTextColorPrimary())
+                .withIconColor(vm.computeTextColorSecondary())
                 .withIcon(CommunityMaterial.Icon2.cmd_text)
                 .withIconTintingEnabled(true)
-                .withTypeface(FontUtil.getTypeface(this, IntegrityCore.getFont()))
+                .withTypeface(FontUtil.getTypeface(this, vm.getFont()))
                 .withBadge(badgeText)
                 .withBadgeStyle(BadgeStyle()
                         .withColor(badgeColor)
@@ -315,30 +495,34 @@ class MainActivity : ThemedActivity() {
         drawer.updateStickyFooterItemAtPosition(SwitchDrawerItem()
                 .withName("Scheduled jobs")
                 .withSelectable(false)
-                .withChecked(IntegrityCore.scheduledJobsEnabled())
+                .withChecked(vm.settingsData.value!!.jobsEnableScheduled)
                 .withOnCheckedChangeListener { _, _, isChecked ->
-                    IntegrityCore.updateScheduledJobsOptions(this, isChecked)
-                    updateStatusHeader()
+                    vm.setScheduledJobsEnabled(isChecked)
                 }
-                .withTextColor(ThemeUtil.getTextColorPrimary(IntegrityCore.getColors())),
+                .withTextColor(vm.computeTextColorPrimary()),
                 0)
-        FontUtil.setFont(this, drawer.stickyFooter, IntegrityCore.getFont())
+        FontUtil.setFont(this, drawer.stickyFooter, vm.getFont())
     }
 
     /**
      * Updates the jobs header and job list.
      */
     private fun updateJobsInDrawer(jobListItems: List<SecondaryDrawerItem>,
-                                   sectionId: Long, title: String, titlePlaceholder: String,
-                                   isExpanded: Boolean) {
+                                   sectionId: Long, title: String, titlePlaceholder: String) {
         val sectionPosition = drawer.getPosition(sectionId)
+
+        val isExpanded = if (sectionId == 1L) {
+            vm.settingsData.value!!.jobsExpandRunning
+        } else {
+            vm.settingsData.value!!.jobsExpandScheduled
+        }
 
         val countSuffix = if (jobListItems.isEmpty()) "" else "(${jobListItems.size})"
         val visibleTitle = if (jobListItems.isEmpty()) titlePlaceholder else "$title $countSuffix"
         val arrowColor = if (jobListItems.isEmpty()) {
-            ThemeUtil.getColorBackground(IntegrityCore.getColors())
+            vm.computeColorBackground()
         } else {
-            ThemeUtil.getColorAccent(IntegrityCore.getColors())
+            vm.computeColorAccent()
         }
 
         val jobsExpandableItem = drawer.getDrawerItem(sectionId) as ExpandableDrawerItem
@@ -361,10 +545,8 @@ class MainActivity : ThemedActivity() {
         }
     }
 
-    private fun getScheduledJobDrawerItem(artifactId: Long): SecondaryDrawerItem {
-        val snapshot = IntegrityCore.metadataRepository.getLatestSnapshotMetadata(artifactId)
-        val timeRemainingMillis = IntegrityCore.getNextJobRunTimestamp(snapshot) -
-                System.currentTimeMillis()
+    private fun getScheduledJobDrawerItem(snapshot: Snapshot,
+                                          timeRemainingMillis: Long): SecondaryDrawerItem {
         val timeText = if (timeRemainingMillis <= 0) {
             "Should start now"
         } else {
@@ -373,72 +555,30 @@ class MainActivity : ThemedActivity() {
         return SecondaryDrawerItem()
                 .withName(snapshot.title)
                 .withDescription(timeText)
-                .withIdentifier(artifactId)
+                .withIdentifier(snapshot.artifactId)
                 .withLevel(2)
                 .withSelectable(false)
-                .withTextColor(ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()))
-                .withDescriptionTextColor(ThemeUtil.getTextColorSecondary(IntegrityCore.getColors()))
-                .withTypeface(FontUtil.getTypeface(this, IntegrityCore.getFont()))
+                .withTextColor(vm.computeTextColorSecondary())
+                .withDescriptionTextColor(vm.computeTextColorSecondary())
+                .withTypeface(FontUtil.getTypeface(this, vm.getFont()))
                 .withOnDrawerItemClickListener { _, _, _ ->
-                    IntegrityCore.openCreateNewSnapshot(this, snapshot.artifactId)
+                    vm.editSnapshot(snapshot.artifactId)
                     false
                 }
     }
 
-    private fun getRunningJobDrawerItem(artifactId: Long, date: String): SecondaryDrawerItem {
-        val snapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId, date)
+    private fun getRunningJobDrawerItem(snapshot: Snapshot): SecondaryDrawerItem {
         return SecondaryDrawerItem()
                 .withName(snapshot.title)
                 .withDescription("Running")
-                .withIdentifier(artifactId - 1_000_000_000L) // todo distinguish better
+                .withIdentifier(snapshot.artifactId - 1_000_000_000L) // todo distinguish better
                 .withLevel(2)
                 .withSelectable(false)
-                .withTypeface(FontUtil.getTypeface(this, IntegrityCore.getFont()))
+                .withTypeface(FontUtil.getTypeface(this, vm.getFont()))
                 .withOnDrawerItemClickListener { _, _, _ ->
-                    IntegrityCore.openViewSnapshotOrShowProgress(this, snapshot.artifactId,
-                            snapshot.date)
+                    vm.viewRunningJob(snapshot.artifactId, snapshot.date)
                     false
                 }
-    }
-
-    private fun bindSnapshotList() {
-        rvSnapshotList.adapter = SnapshotRecyclerAdapter(ArrayList(), this)
-    }
-
-    private fun bindAddButton() {
-        SpeedDialCompatUtil.setStayOnExpand(sdAdd)
-        sdAdd.setMainFabClosedDrawable(getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
-        sdAdd.setMainFabOpenedDrawable(getPaddedIcon(CommunityMaterial.Icon.cmd_close))
-    }
-
-    private fun updateAddButton(artifactId: Long?) {
-        sdAdd.clearActionItems()
-        if (artifactId != null) {
-            sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
-                    SpeedDialActionItem.Builder(0, getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
-                            .setLabel("Create another snapshot"), IntegrityCore.getColors()
-            ).create())
-            sdAdd.setOnActionSelectedListener { speedDialActionItem ->
-                addSnapshot(artifactId)
-                false
-            }
-        } else {
-            IntegrityCore.getTypeNames().map {
-                // todo names from resources
-                it.className.substringAfterLast(".").removeSuffix("TypeActivity")
-            }.forEachIndexed {
-                index, name -> sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
-                        SpeedDialActionItem.Builder(index,
-                                getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
-                                .setLabel(name), IntegrityCore.getColors()).create())
-            }
-            sdAdd.setOnActionSelectedListener { speedDialActionItem ->
-                val typeName = IntegrityCore.getTypeNames().toList()[speedDialActionItem.id]
-                IntegrityCore.openCreateNewArtifact(this, typeName)
-                false
-            }
-        }
-        FontUtil.setFont(this, sdAdd, IntegrityCore.getFont())
     }
 
     private fun getPaddedIcon(icon: IIcon) = IconicsDrawable(this)
@@ -446,85 +586,6 @@ class MainActivity : ThemedActivity() {
             .colorRes(R.color.colorWhite)
             .sizeDp(18)
             .paddingDp(3)
-
-    private fun bindFilter() {
-        iivUnFilterArtifact.setOnClickListener { removeArtifactFilter() }
-
-        llBottomSheet.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(IntegrityCore.getColors()))
-        svMain.background.setColorFilter(ThemeUtil.getColorBackgroundBleached(IntegrityCore.getColors()),
-                PorterDuff.Mode.DARKEN)
-
-        iivSortingType.setOnClickListener {
-            MaterialDialog(this).show {
-                title(text = "Sorting method")
-                listItemsSingleChoice(
-                        items = SortingUtil.getSortingTypeNames(),
-                        initialSelection = SortingUtil.getSortingTypeNameIndex(IntegrityCore
-                                .getSortingMethod())
-                ) { _, index, _ ->
-                    setSortingMethod(SortingUtil.changeSortingType(IntegrityCore.getSortingMethod(),
-                            index))
-                    onInputsUpdate(inputs)
-                }
-            }
-        }
-
-        iivSortingDirection.setOnClickListener {
-            setSortingMethod(SortingUtil.revertSortingDirection(IntegrityCore.getSortingMethod()))
-            onInputsUpdate(inputs)
-        }
-    }
-
-    private fun setSortingMethod(sortingMethod: String) {
-        IntegrityCore.settingsRepository.set(this, IntegrityCore.settingsRepository.get()
-                .copy(sortingMethod = sortingMethod))
-    }
-
-    private fun updateFilterView(searchText: String, artifactId: Long?) {
-        val searching = searchText.isNotBlank()
-        val filterArtifact = artifactId != null
-        if (filterArtifact) {
-            val title = IntegrityCore.metadataRepository
-                    .getLatestSnapshotMetadata(artifactId!!).title
-            val prefix = if (searching) "in: " else ""
-            tvFilteredArtifactTitle.text = "$prefix$title"
-        }
-        llSorting.visibility = if (filterArtifact || searching) View.VISIBLE else View.GONE
-        llFilteredArtifact.visibility = if (filterArtifact) View.VISIBLE else View.GONE
-
-        val sortingMethod = IntegrityCore.getSortingMethod()
-
-        val sortingTypeIcon: IIcon = when {
-            SortingUtil.isByDate(sortingMethod) -> CommunityMaterial.Icon.cmd_folder_clock_outline
-            SortingUtil.isByTitle(sortingMethod) -> CommunityMaterial.Icon2.cmd_sort_alphabetical
-            else -> CommunityMaterial.Icon2.cmd_shuffle
-        }
-        iivSortingType.icon = IconicsDrawable(this).icon(sortingTypeIcon)
-                .colorRes(R.color.colorWhite)
-
-        val sortingDirectionIcon: IIcon = when {
-            SortingUtil.isDescending(sortingMethod) -> CommunityMaterial.Icon2.cmd_sort_descending
-            SortingUtil.isAscending(sortingMethod) -> CommunityMaterial.Icon2.cmd_sort_ascending
-            else -> CommunityMaterial.Icon2.cmd_refresh
-        }
-        iivSortingDirection.icon = IconicsDrawable(this).icon(sortingDirectionIcon)
-                .colorRes(R.color.colorWhite)
-    }
-
-    private fun bindSearch() {
-        rvSearchResults.adapter = SearchResultRecyclerAdapter(ArrayList(), this)
-
-        val searchManager = getSystemService(Context.SEARCH_SERVICE) as? SearchManager
-            if (searchManager != null) {
-                svMain.setSearchableInfo(searchManager.getSearchableInfo(componentName))
-            }
-
-        fixMicIconBackground(svMain)
-        svMain.queryTextChanges()
-                .debounce(500, TimeUnit.MILLISECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { onInputsUpdate(inputs.copy(searchText = it.trim().toString())) }
-    }
 
     /**
      * Fixes default SearchView voice search icon background shape and visual artifacts.
@@ -544,179 +605,92 @@ class MainActivity : ThemedActivity() {
         }
     }
 
+    private fun bindNavigation() {
+        vm.navigationEventData.observe(this, androidx.lifecycle.Observer {
+            if (it.goBack) {
+                super.onBackPressed()
+            } else with (it) {
+                drawer.closeDrawer()
+                val intent = Intent()
+                intent.component = ComponentName(targetPackage, targetClass)
+                IntentUtil.putArtifactId(intent, bundledArtifactId)
+                IntentUtil.putDate(intent, bundledDate)
+                IntentUtil.putSnapshot(intent, bundledSnapshot)
+                IntentUtil.putDates(intent, bundledDates)
+                IntentUtil.putDataFolderName(intent, bundledDataFolderName)
+                IntentUtil.putFontName(intent, bundledFontName)
+                IntentUtil.putColorBackground(intent, bundledColorBackground)
+                IntentUtil.putColorPrimary(intent, bundledColorPrimary)
+                IntentUtil.putColorAccent(intent, bundledColorAccent)
+                IntentUtil.putViewExtensions(intent, bundledOptionExtensions)
+                this@MainActivity.startActivityForResult(intent, 0)
+            }
+        })
+    }
+
+    private fun bindJobProgressDialog() {
+        vm.inputStateData.observe(this, androidx.lifecycle.Observer {
+            if (it.jobProgressArtifactId != null && it.jobProgressDate != null) {
+                if (!::jobProgressDialog.isInitialized || !jobProgressDialog.isShowing) {
+                    jobProgressDialog = MaterialDialog(this)
+                            .title(text = "Creating snapshot of ${it.jobProgressTitle}")
+                            .message(text = "")
+                            .cancelable(false)
+                            .positiveButton(text = "In background") {
+                                it.cancel()
+                            }.negativeButton(text = "Stop") {
+                                vm.cancelSnapshotCreation()
+                                it.cancel()
+                            }
+                    jobProgressDialog.show()
+                }
+                jobProgressDialog.message(text = it.jobProgressMessage)
+            } else {
+                if (::jobProgressDialog.isInitialized && jobProgressDialog.isShowing) {
+                    jobProgressDialog.cancel()
+                }
+            }
+        })
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (Intent.ACTION_SEARCH == intent.action) {
             val query = intent.getStringExtra(SearchManager.QUERY)
-            onInputsUpdate(inputs.copy(searchText = query.trim()))
+            vm.setSearchText(query.trim())
         }
     }
-
-    private fun search(searchedText: String, sortingMethod: String, filteredArtifactId: Long?) {
-        svMain.setQuery(searchedText, false)
-        if (searchedText.length >= 3) {
-            val searchResults = sortSearchResults(
-                    SearchUtil.searchText(searchedText, filteredArtifactId), sortingMethod)
-
-            (rvSearchResults.adapter as SearchResultRecyclerAdapter).setItems(searchResults)
-            tvNoResults.visibility = if (searchResults.isEmpty()) View.VISIBLE else View.GONE
-        } else {
-            tvNoResults.visibility = View.GONE
-            refreshSnapshotList(sortingMethod = sortingMethod, artifactId = filteredArtifactId)
-        }
-        rvSnapshotList.visibility = if (searchedText.isBlank()) View.VISIBLE else View.GONE
-        rvSearchResults.visibility = if (searchedText.isBlank()) View.GONE else View.VISIBLE
-        sdAdd.visibility = if (searchedText.isBlank()) View.VISIBLE else View.GONE
-    }
-
-    private fun updateToolbar(searchedText: String, filteredArtifactId: Long?) {
-        val isSearching = searchedText.isNotBlank()
-        val isArtifactFiltered = filteredArtifactId != null
-
-        toolbar.title = if (isSearching) "Search" else "Snapshots"
-
-        val scopeTitle = if (isSearching) when {
-            isArtifactFiltered -> "in ${getLatestSnapshotTitle(filteredArtifactId!!)}"
-            else -> "In all"
-        } else when {
-            isArtifactFiltered -> "of ${getLatestSnapshotTitle(filteredArtifactId!!)}"
-            else -> "Recent in all"
-        }
-        val sortingTitleSuffix = if (isSearching || isArtifactFiltered) {
-            "  · " + SortingUtil.getSortingMethodNameMap()[IntegrityCore.getSortingMethod()]
-        } else {
-            "" // sorting not applied for default view
-        }
-        toolbar.subtitle = "$scopeTitle$sortingTitleSuffix"
-    }
-
-    private fun getLatestSnapshotTitle(filteredArtifactId: Long) = IntegrityCore.metadataRepository
-            .getLatestSnapshotMetadata(filteredArtifactId).title
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         val snapshot = IntentUtil.getSnapshot(data)
         if (snapshot != null) {
-            IntegrityCore.saveSnapshot(this, snapshot)
+            vm.snapshotReturned(snapshot)
         }
         if (IntentUtil.isRecreate(data)) {
             recreate()
         }
-        if (IntentUtil.isRefresh(data)) {
-            onInputsUpdate(inputs) // todo settings change listener instead
-        }
     }
 
-    override fun onStart() {
-        super.onStart()
-        IntegrityCore.metadataRepository.addChangesListener(this) {
-            refreshSnapshotList(getSortingMethod(inputs), inputs.filteredArtifactId)
-        }
-        IntegrityCore.subscribeToRunningJobListing(this) {
-            updateJobsInDrawer(it.map { getRunningJobDrawerItem(it.first, it.second) },
-                    1L, "Running now", "No running jobs",
-                    IntegrityCore.settingsRepository.get().jobsExpandRunning)
-        }
-        IntegrityCore.subscribeToScheduledJobListing(this) {
-            updateJobsInDrawer(it.map { getScheduledJobDrawerItem(it.first) },
-                    2L, "Up next", "No scheduled jobs",
-                    IntegrityCore.settingsRepository.get().jobsExpandScheduled)
-        }
-        // todo update using settings changes listener
-        updateStatusHeader()
-        updateLogBadgeErrorCount()
-        updateScheduledJobsSwitch()
-    }
-
-    override fun onStop() {
-        IntegrityCore.metadataRepository.removeChangesListener(this)
-        IntegrityCore.unsubscribeFromScheduledJobListing(this)
-        IntegrityCore.unsubscribeFromRunningJobListing(this)
-        super.onStop()
-    }
-
-    fun askRemoveArtifact(artifactId: Long) {
+    private fun askRemoveArtifact(artifactId: Long) {
         MaterialDialog(this)
                 .title(text = "Delete artifact?\nData archives will not be affected.")
                 .positiveButton(text = "Delete") {
-                    IntegrityCore.removeArtifact(artifactId, false)
+                    vm.removeArtifact(artifactId)
                 }
                 .negativeButton(text = "Cancel")
                 .show()
     }
 
-    private fun askRemoveAll() {
+    private fun askRemoveSnapshot(artifactId: Long, date: String) {
         MaterialDialog(this)
-                .title(text = "Delete all artifacts?")
+                .title(text = "Delete snapshot?\nData archive will not be affected.")
                 .positiveButton(text = "Delete") {
-                    IntegrityCore.removeAll(false)
+                    vm.removeSnapshot(artifactId, date)
                 }
                 .negativeButton(text = "Cancel")
                 .show()
     }
-
-    fun addSnapshot(artifactId: Long) = IntegrityCore.openCreateNewSnapshot(this, artifactId)
-
-    private fun refreshSnapshotList(sortingMethod: String, artifactId: Long?) {
-        val snapshots = sortSnapshots(when (artifactId) {
-            null -> IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(true)
-            else -> IntegrityCore.metadataRepository.getArtifactMetadata(artifactId)
-        }.snapshots, sortingMethod)
-        (rvSnapshotList.adapter as SnapshotRecyclerAdapter)
-                .setItems(snapshots.map { Pair(it, getSnapshotCount(it.artifactId)) }.toList(),
-                        inputs.filteredArtifactId == null)
-    }
-
-    private fun getSortingMethod(inputs: Inputs): String {
-        val isSearching = inputs.searchText.isNotBlank()
-        val isArtifactFiltered = inputs.filteredArtifactId != null
-        return if (isSearching || isArtifactFiltered) {
-            IntegrityCore.getSortingMethod()
-        } else {
-            SortingMethod.NEW_FIRST
-        }
-    }
-
-    private fun sortSnapshots(snapshots: List<Snapshot>,
-                              sortingMethod: String) = with (snapshots) {
-        if (SortingUtil.isByDate(sortingMethod)) {
-            if (SortingUtil.isAscending(sortingMethod)) {
-                sortedBy { it.date }
-            } else {
-                sortedByDescending { it.date }
-            }
-        } else if (SortingUtil.isByTitle(sortingMethod)) {
-            if (SortingUtil.isAscending(sortingMethod)) {
-                sortedBy { it.title }
-            } else {
-                sortedByDescending { it.title }
-            }
-        } else {
-            shuffled()
-        }
-    }
-
-    private fun sortSearchResults(searchResults: List<SearchResult>,
-                                  sortingMethod: String) = with (searchResults) {
-        if (SortingUtil.isByDate(sortingMethod)) {
-            if (SortingUtil.isAscending(sortingMethod)) {
-                sortedBy { it.date }
-            } else {
-                sortedByDescending { it.date }
-            }
-        } else if (SortingUtil.isByTitle(sortingMethod)) {
-            if (SortingUtil.isAscending(sortingMethod)) {
-                sortedBy { it.snapshotTitle }
-            } else {
-                sortedByDescending { it.snapshotTitle }
-            }
-        } else {
-            shuffled()
-        }
-    }
-
-    private fun getSnapshotCount(artifactId: Long) = IntegrityCore.metadataRepository
-            .getArtifactMetadata(artifactId).snapshots.count()
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         IconicsMenuInflaterUtil.inflate(menuInflater, this, R.menu.menu_main, menu)
@@ -731,42 +705,5 @@ class MainActivity : ThemedActivity() {
         else -> super.onOptionsItemSelected(item)
     }
 
-    private fun viewLog() {
-        startActivity(Intent(this, LogViewActivity::class.java))
-    }
-
-    private fun viewFolderLocations() {
-        startActivity(Intent(this, FolderLocationsActivity::class.java))
-    }
-
-    private fun viewTags() {
-        startActivity(Intent(this, TagsActivity::class.java))
-    }
-
-    private fun viewSettings(viewExtensions: Boolean = false) {
-        startActivityForResult(IntentUtil.putViewExtensions(
-                Intent(this, SettingsActivity::class.java), viewExtensions), 0)
-    }
-
-    private fun viewRestore() {
-        startActivity(Intent(this, RecoveryActivity::class.java))
-    }
-
-    private fun viewHelp() {
-        startActivity(Intent(this, HelpInfoActivity::class.java))
-    }
-
-    private fun viewLegal() {
-        startActivity(Intent(this, LegalInfoActivity::class.java))
-    }
-
-    fun filterArtifact(artifactId: Long?) {
-        onInputsUpdate(inputs.copy(filteredArtifactId = artifactId))
-    }
-
-    private fun removeArtifactFilter() = filterArtifact(null)
-
-    fun viewSnapshot(snapshot: Snapshot) {
-        IntegrityCore.openViewSnapshotOrShowProgress(this, snapshot.artifactId, snapshot.date)
-    }
+    override fun onBackPressed() = vm.pressBackButton()
 }

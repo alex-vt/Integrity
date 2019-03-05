@@ -400,6 +400,10 @@ class MainActivity : ThemedActivity() {
             tvFilteredArtifactTitle.text = vm.computeArtifactFilterTitle()
             llSorting.visibility = if (filterArtifact || searching) View.VISIBLE else View.GONE
             llFilteredArtifact.visibility = if (filterArtifact) View.VISIBLE else View.GONE
+
+            if (it.searchViewText != svMain.query) { // preventing loop between vm and view
+                svMain.setQuery(it.searchViewText, false)
+            }
         })
 
         // artifact filtering

@@ -266,17 +266,7 @@ class MainScreenViewModel(
     private fun viewRunningJobOrOpenSnapshot(artifactId: Long, date: String) {
         val snapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId, date)
         if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
-            updateInputState(inputStateData.value!!.copy(jobProgressArtifactId = artifactId,
-                    jobProgressDate = date, jobProgressTitle = snapshot.title))
-            IntegrityCore.subscribeToJobProgress(snapshot.artifactId, snapshot.date) {
-                if (it.result != null) {
-                    hideRunningJobDialog() // done
-                } else if (it.progressMessage != null) {
-                    // continuing
-                    updateInputState(inputStateData.value!!.copy(
-                            jobProgressMessage = it.progressMessage!!))
-                }
-            }
+            viewRunningJobDialog(artifactId, date)
             return
         }
         // todo ensure snapshot data presence in folder first
@@ -292,6 +282,23 @@ class MainScreenViewModel(
                 bundledColorAccent = IntegrityCore.getColorAccent(),
                 bundledDataFolderName = IntegrityCore.getDataFolderName()
                 )
+    }
+
+    private fun viewRunningJobDialog(artifactId: Long, date: String) {
+        val snapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId, date)
+        if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
+            updateInputState(inputStateData.value!!.copy(jobProgressArtifactId = artifactId,
+                    jobProgressDate = date, jobProgressTitle = snapshot.title))
+            IntegrityCore.subscribeToJobProgress(snapshot.artifactId, snapshot.date) {
+                if (it.result != null) {
+                    hideRunningJobDialog() // done
+                } else if (it.progressMessage != null) {
+                    // continuing
+                    updateInputState(inputStateData.value!!.copy(
+                            jobProgressMessage = it.progressMessage!!))
+                }
+            }
+        }
     }
 
     private fun hideRunningJobDialog() {
@@ -470,6 +477,11 @@ class MainScreenViewModel(
     // lifecycle actions
 
     fun snapshotReturned(snapshot: Snapshot) {
-        IntegrityCore.saveSnapshot(IntegrityCore.context, snapshot)
+        val isSaving = IntegrityCore.saveSnapshot(IntegrityCore.context, snapshot)
+        if (isSaving) {
+            val snapshotBlueprint = IntegrityCore.metadataRepository
+                    .getLatestSnapshotMetadata(snapshot.artifactId)
+            viewRunningJobDialog(snapshotBlueprint.artifactId, snapshotBlueprint.date)
+        }
     }
 }

@@ -7,10 +7,8 @@
 package com.alexvt.integrity.core
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.core.database.MetadataRepository
 import com.alexvt.integrity.core.database.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.filesystem.ArchiveLocationUtil
@@ -34,8 +32,6 @@ import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.util.*
 import com.alexvt.integrity.lib.*
 import com.alexvt.integrity.lib.util.DataCacheFolderUtil
-import com.alexvt.integrity.lib.util.IntentUtil
-
 
 @SuppressLint("StaticFieldLeak") // context // todo DI
 /**
@@ -152,34 +148,11 @@ object IntegrityCore {
     /**
      * Saves snapshot data and/or metadata blueprint according to its status.
      */
-    fun saveSnapshot(context: Context, snapshot: Snapshot) {
-        SnapshotSavingUtil.saveSnapshot(context, snapshot)
-    }
+    fun saveSnapshot(context: Context, snapshot: Snapshot)
+            = SnapshotSavingUtil.saveSnapshot(context, snapshot)
 
     fun getNextJobRunTimestamp(snapshot: Snapshot)
             = ScheduledJobManager.getNextRunTimestamp(snapshot)
-
-    fun showRunningJobProgressDialog(context: Context, artifactId: Long, date: String): MaterialDialog {
-        val title = metadataRepository.getSnapshotMetadata(artifactId, date).title
-        val progressDialog = MaterialDialog(context)
-                .title(text = "Creating snapshot of $title")
-                .cancelable(false)
-                .positiveButton(text = "In background") {
-                    it.cancel()
-                }
-        progressDialog.show()
-        subscribeToJobProgress(artifactId, date) {
-            progressDialog.message(text = it.progressMessage)
-            if (it.result != null) {
-                progressDialog.cancel()
-            }
-        }
-        progressDialog.negativeButton(text = "Stop") {
-            cancelSnapshotCreation(artifactId, date)
-            it.cancel()
-        }
-        return progressDialog
-    }
 
     fun subscribeToJobProgress(artifactId: Long, date: String,
                                jobProgressListener: (JobProgress<Snapshot>) -> Unit) {

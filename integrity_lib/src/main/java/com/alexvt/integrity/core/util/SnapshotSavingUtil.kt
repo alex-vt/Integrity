@@ -34,8 +34,9 @@ object SnapshotSavingUtil {
 
     /**
      * Saves snapshot data and/or metadata blueprint according to its status.
+     * @return true when snapshot is saving
      */
-    fun saveSnapshot(context: Context, snapshot: Snapshot) {
+    fun saveSnapshot(context: Context, snapshot: Snapshot): Boolean {
         if (snapshot.status == SnapshotStatus.BLUEPRINT
                 || snapshot.status == SnapshotStatus.IN_PROGRESS) {
             saveSnapshotBlueprint(context, snapshot)
@@ -46,12 +47,10 @@ object SnapshotSavingUtil {
                     .getLatestSnapshotMetadata(snapshot.artifactId)
             if (deviceStateAllowsDownload(context, snapshot)) {
                 downloadFromBlueprint(context, snapshotBlueprint)
-                if (context is Activity) {
-                    IntegrityCore.showRunningJobProgressDialog(context,
-                            snapshotBlueprint.artifactId, snapshotBlueprint.date)
-                }
+                return true
             }
         }
+        return false
     }
 
     private fun deviceStateAllowsDownload(context: Context, snapshot: Snapshot): Boolean {

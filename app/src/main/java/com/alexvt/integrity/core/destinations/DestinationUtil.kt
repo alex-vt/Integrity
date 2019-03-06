@@ -11,7 +11,7 @@ import android.content.Context
 import com.alexvt.integrity.lib.FolderLocation
 
 /**
- * Data archive read/write contract for a type of folder location
+ * Data archive read/write contract for a type of viewable folder location
  */
 interface DestinationUtil<F: FolderLocation> {
 
@@ -26,4 +26,13 @@ interface DestinationUtil<F: FolderLocation> {
 
     fun readArchive(archiveFolderLocation: F, artifactId: Long, date: String,
                     destinationArchivePath: String, destinationHashPath: String)
+
+    /**
+     * Gets component name of activity responsible for (starting) viewing or editing
+     * this folder location.
+     *
+     * Activity should accept in intent:
+     * title of file location to view/edit.
+     */
+    fun getViewMainActivityComponent(): ComponentName
 }

@@ -19,7 +19,6 @@ import com.alexvt.integrity.core.job.ScheduledJobManager
 import android.content.ComponentName
 import android.content.pm.ActivityInfo
 import com.alexvt.integrity.core.destinations.DestinationUtil
-import com.alexvt.integrity.core.destinations.ArchiveLocationUtil
 import com.alexvt.integrity.core.destinations.local.LocalFolderLocation
 import com.alexvt.integrity.core.destinations.samba.SambaFolderLocation
 import com.alexvt.integrity.core.log.*
@@ -174,11 +173,11 @@ object IntegrityCore {
     /**
      * Returns intent for editing archive location defined by title.
      */
-    fun getFolderLocationEditIntent(title: String): Intent {
+    fun getDestinationEditIntent(title: String): Intent {
         val folderLocation = settingsRepository.getAllFolderLocations()
                 .first { it.title == title }
         val typeViewCreateIntent = Intent()
-        typeViewCreateIntent.component = IntegrityEx.getFileLocationUtil(folderLocation.javaClass)
+        typeViewCreateIntent.component = getDestinationUtil(folderLocation.javaClass)
                 .getViewMainActivityComponent()
         typeViewCreateIntent.putExtra("title", title)
         return typeViewCreateIntent
@@ -245,18 +244,20 @@ object IntegrityCore {
      * Gets alphabetically sorted map of labels of code listed folder location types
      * to intents of main view activities for these folder location types.
      */
-    fun getNamedFileLocationCreateIntentMap(): Map<String, Intent>
+    fun getNamedDestinationCreateIntentMap(): Map<String, Intent>
             = listOf(
             LocalFolderLocation::class.java,
-            SambaFolderLocation::class.java
-            ).map { IntegrityEx.getFileLocationUtil(it) }
-            .map { Pair(it.getFolderLocationLabel(), getNamedFileLocationCreateIntent(it)) }
+            SambaFolderLocation::class.java)
+            .map {
+                Pair(IntegrityEx.getDestinationNameUtil(it).getFolderLocationLabel(),
+                        getDestinationCreateIntent(getDestinationUtil(it)))
+            }
             .toMap()
             .toSortedMap()
 
-    private fun getNamedFileLocationCreateIntent(archiveLocationUtil: ArchiveLocationUtil<*>): Intent {
+    private fun getDestinationCreateIntent(destinationUtil: DestinationUtil<out FolderLocation>): Intent {
         val intent = Intent()
-        intent.component = archiveLocationUtil.getViewMainActivityComponent()
+        intent.component = destinationUtil.getViewMainActivityComponent()
         return intent
     }
 

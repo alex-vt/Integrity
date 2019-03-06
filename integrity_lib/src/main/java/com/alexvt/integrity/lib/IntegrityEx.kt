@@ -8,7 +8,7 @@ package com.alexvt.integrity.lib
 
 import android.content.Context
 import android.content.Intent
-import com.alexvt.integrity.core.destinations.ArchiveLocationUtil
+import com.alexvt.integrity.core.destinations.DestinationNameUtil
 import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.search.DataChunk
 import com.alexvt.integrity.core.search.NamedLink
@@ -87,10 +87,10 @@ object IntegrityEx {
     /**
      * See https://stackoverflow.com/a/41103379
      */
-    fun <F: FolderLocation> getFileLocationUtil(dataArchiveLocationClass: Class<F>): ArchiveLocationUtil<F> {
+    fun <F: FolderLocation> getDestinationNameUtil(dataArchiveLocationClass: Class<F>): DestinationNameUtil<F> {
         val utilClassName = dataArchiveLocationClass.name
-                .replace("FolderLocation", "LocationUtil")
-        return Class.forName(utilClassName).kotlin.objectInstance as ArchiveLocationUtil<F>
+                .replace("FolderLocation", "DestinationNameUtil")
+        return Class.forName(utilClassName).kotlin.objectInstance as DestinationNameUtil<F>
     }
 
     fun getFolderLocationNames(archiveFolderLocations: List<FolderLocation>) = archiveFolderLocations
@@ -98,8 +98,8 @@ object IntegrityEx {
             .toTypedArray()
 
     fun getFolderLocationName(folderLocation: FolderLocation) = folderLocation.title +
-            " (" + getFileLocationUtil(folderLocation.javaClass).getFolderLocationLabel() + "): " +
-            getFileLocationUtil(folderLocation.javaClass).getFolderLocationDescription(folderLocation)
+            " (" + getDestinationNameUtil(folderLocation.javaClass).getFolderLocationLabel() + "): " +
+            getDestinationNameUtil(folderLocation.javaClass).getFolderLocationDescription(folderLocation)
 
 
 

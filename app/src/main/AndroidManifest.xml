@@ -74,12 +74,12 @@
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.ui.destinations.local.LocalLocationActivity"
+            android:name="com.alexvt.integrity.ui.destinations.local.LocalDestinationActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.ui.destinations.samba.SambaLocationActivity"
+            android:name="com.alexvt.integrity.ui.destinations.samba.SambaDestinationActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 

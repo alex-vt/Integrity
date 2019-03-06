@@ -17,9 +17,9 @@ import com.alexvt.integrity.core.util.ThemedActivity
 import kotlinx.android.synthetic.main.activity_samba_location.*
 
 
-class SambaLocationActivity : ThemedActivity() {
+class SambaDestinationActivity : ThemedActivity() {
 
-    private val TAG = SambaLocationActivity::class.java.simpleName
+    private val TAG = SambaDestinationActivity::class.java.simpleName
 
     // folder location to view/edit
     private lateinit var folderLocation: SambaFolderLocation

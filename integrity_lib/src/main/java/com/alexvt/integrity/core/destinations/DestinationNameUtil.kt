@@ -12,19 +12,9 @@ import com.alexvt.integrity.lib.FolderLocation
 /**
  * Data archive naming for a type of folder location
  */
-interface ArchiveLocationUtil<F: FolderLocation> {
+interface DestinationNameUtil<F: FolderLocation> {
 
     fun getFolderLocationLabel(): String
 
     fun getFolderLocationDescription(folderLocation: F): String
-
-    /**
-     * Gets component name of activity responsible for (starting) viewing or editing
-     * this folder location.
-     *
-     * Activity should accept in intent:
-     * title of file location to view/edit.
-     */
-    fun getViewMainActivityComponent(): ComponentName
-
 }

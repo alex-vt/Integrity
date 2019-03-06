@@ -6,6 +6,7 @@
 
 package com.alexvt.integrity.core.destinations.samba
 
+import android.content.ComponentName
 import android.content.Context
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.destinations.DestinationUtil
@@ -17,7 +18,7 @@ import jcifs.smb.NtlmPasswordAuthentication
 import jcifs.smb.SmbFileOutputStream
 
 
-object SambaLocationUtil : DestinationUtil<SambaFolderLocation> {
+object SambaDestinationUtil : DestinationUtil<SambaFolderLocation> {
 
     override fun writeArchive(context: Context, sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,
@@ -69,4 +70,7 @@ object SambaLocationUtil : DestinationUtil<SambaFolderLocation> {
                              destinationHashPath: String) {
         // todo (locate by artifactId and date, then copy to local paths)
     }
+
+    override fun getViewMainActivityComponent() = ComponentName("com.alexvt.integrity",
+            "com.alexvt.integrity.ui.destinations.samba.SambaDestinationActivity")
 }

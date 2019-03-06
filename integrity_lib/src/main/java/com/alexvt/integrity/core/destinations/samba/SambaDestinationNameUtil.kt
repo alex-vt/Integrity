@@ -6,17 +6,13 @@
 
 package com.alexvt.integrity.core.destinations.samba
 
-import android.content.ComponentName
-import com.alexvt.integrity.core.destinations.ArchiveLocationUtil
+import com.alexvt.integrity.core.destinations.DestinationNameUtil
 
 
-object SambaLocationUtil : ArchiveLocationUtil<SambaFolderLocation> {
+object SambaDestinationNameUtil : DestinationNameUtil<SambaFolderLocation> {
 
     override fun getFolderLocationLabel() = "Samba"
 
     override fun getFolderLocationDescription(folderLocation: SambaFolderLocation)
             = folderLocation.fullPath
-
-    override fun getViewMainActivityComponent() = ComponentName("com.alexvt.integrity",
-            "com.alexvt.integrity.ui.destinations.samba.SambaLocationActivity")
 }

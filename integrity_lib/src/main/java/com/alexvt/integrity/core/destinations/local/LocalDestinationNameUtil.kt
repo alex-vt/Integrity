@@ -6,16 +6,12 @@
 
 package com.alexvt.integrity.core.destinations.local
 
-import android.content.ComponentName
-import com.alexvt.integrity.core.destinations.ArchiveLocationUtil
+import com.alexvt.integrity.core.destinations.DestinationNameUtil
 
-object LocalLocationUtil : ArchiveLocationUtil<LocalFolderLocation> {
+object LocalDestinationNameUtil : DestinationNameUtil<LocalFolderLocation> {
 
     override fun getFolderLocationLabel() = "Local"
 
     override fun getFolderLocationDescription(folderLocation: LocalFolderLocation)
             = folderLocation.folderPath
-
-    override fun getViewMainActivityComponent() = ComponentName("com.alexvt.integrity",
-            "com.alexvt.integrity.ui.destinations.local.LocalLocationActivity")
 }

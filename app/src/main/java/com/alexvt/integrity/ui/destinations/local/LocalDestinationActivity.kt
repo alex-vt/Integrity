@@ -16,9 +16,9 @@ import com.alexvt.integrity.core.util.ThemedActivity
 import kotlinx.android.synthetic.main.activity_local_location.*
 
 
-class LocalLocationActivity : ThemedActivity() {
+class LocalDestinationActivity : ThemedActivity() {
 
-    private val TAG = LocalLocationActivity::class.java.simpleName
+    private val TAG = LocalDestinationActivity::class.java.simpleName
 
     // folder location to view/edit
     private lateinit var folderLocation: LocalFolderLocation

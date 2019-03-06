@@ -6,6 +6,7 @@
 
 package com.alexvt.integrity.core.destinations.local
 
+import android.content.ComponentName
 import android.content.Context
 import com.alexvt.integrity.core.destinations.DestinationUtil
 import com.snatik.storage.Storage
@@ -35,4 +36,7 @@ object LocalDestinationUtil : DestinationUtil<LocalFolderLocation> {
                              destinationHashPath: String) {
         // todo (locate by artifactId and date, then copy to local paths)
     }
+
+    override fun getViewMainActivityComponent() = ComponentName("com.alexvt.integrity",
+            "com.alexvt.integrity.ui.destinations.local.LocalDestinationActivity")
 }

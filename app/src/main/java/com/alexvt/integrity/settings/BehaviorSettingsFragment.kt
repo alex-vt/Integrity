@@ -28,6 +28,7 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         bindExpandRunning()
         bindExpandScheduled()
         bindSorting()
+        bindFasterFiltering()
     }
 
     private fun bindEnableScheduled() {
@@ -87,6 +88,18 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
+    private fun bindFasterFiltering() {
+        val prefFasterFiltering: CheckBoxPreference = findPreference("behavior_filtering_faster")
+        updateFasterFiltering(prefFasterFiltering)
+        prefFasterFiltering.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            val fasterFiltering = IntegrityCore.settingsRepository.get().fasterSearchInputs
+            IntegrityCore.settingsRepository.set(context!!, IntegrityCore.settingsRepository.get()
+                    .copy(fasterSearchInputs = !fasterFiltering))
+            updateFasterFiltering(prefFasterFiltering)
+            true
+        }
+    }
+
     private fun updateEnableScheduled(prefEnableScheduled: SwitchPreferenceCompat) {
         prefEnableScheduled.isChecked = IntegrityCore.scheduledJobsEnabled()
     }
@@ -106,4 +119,8 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
                 .settingsRepository.get().sortingMethod]
     }
 
+    private fun updateFasterFiltering(prefFasterFiltering: CheckBoxPreference) {
+        prefFasterFiltering.isChecked = IntegrityCore.settingsRepository.get()
+                .fasterSearchInputs
+    }
 }

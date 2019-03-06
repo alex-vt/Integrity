@@ -45,6 +45,13 @@
             app:summary="Random"
             />
 
+        <CheckBoxPreference
+            app:key="behavior_filtering_faster"
+            app:title="Update search &amp; filtered results faster"
+            app:summaryOn="Results will update while typing"
+            app:summaryOff="Results will update in a few moments after typing"
+            />
+
     </PreferenceCategory>
 
 </androidx.preference.PreferenceScreen>

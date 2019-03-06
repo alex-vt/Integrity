@@ -297,7 +297,7 @@ class MainActivity : ThemedActivity() {
                     if (many) vm.viewMoreOfArtifact(artifactId) else vm.addSnapshot(artifactId)
                 })
 
-        vm.countedSnapshotsData.observe(this, androidx.lifecycle.Observer {
+        vm.snapshotsData.observe(this, androidx.lifecycle.Observer {
             (rvSnapshotList.adapter as SnapshotRecyclerAdapter)
                     .setItems(it, vm.inputStateData.value!!.filteredArtifactId == null)
         })
@@ -368,7 +368,6 @@ class MainActivity : ThemedActivity() {
         fixMicIconBackground(svMain)
         svMain.background.setColorFilter(vm.computeColorBackgroundBleached(), PorterDuff.Mode.DARKEN)
         svMain.queryTextChanges()
-                .debounce(500, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     vm.setSearchText(it.toString())

@@ -19,6 +19,7 @@ import com.alexvt.integrity.core.search.SearchUtil
 import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.core.settings.IntegrityAppSettings
 import com.alexvt.integrity.core.settings.SortingMethod
+import com.alexvt.integrity.core.util.ThrottledFunction
 import com.alexvt.integrity.core.util.ThemeColors
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.lib.Snapshot
@@ -103,17 +104,10 @@ class MainScreenViewModel(
 
     // depends on primary
     val searchResultsData = MutableLiveData<List<SearchResult>>()
-    val countedSnapshotsData = MutableLiveData<List<Pair<Snapshot, Int>>>()
+    val snapshotsData = MutableLiveData<List<Pair<Snapshot, Int>>>()
 
     // single events
     val navigationEventData = SingleLiveEvent<NavigationEvent>()
-
-    private fun updateInputState(inputState: MainScreenInputState) {
-        inputStateData.value = inputState
-        // snapshots, search results  depend on  input state
-        countedSnapshotsData.value = fetchSnapshots()
-        searchResultsData.value = fetchSearchResults()
-    }
 
     init {
         // input state  starts as default
@@ -126,9 +120,7 @@ class MainScreenViewModel(
         settingsData.value = IntegrityCore.settingsRepository.get()
         IntegrityCore.settingsRepository.addChangesListener(this.toString()) {
             settingsData.value = it
-            // snapshots, search results  depend on  settings
-            countedSnapshotsData.value = fetchSnapshots()
-            searchResultsData.value = fetchSearchResults()
+            updateContentData() // snapshots, search results  depend on  settings
         }
         runningJobIdsData.value = emptyList()
         RunningJobManager.addJobListListener(this.toString()) {
@@ -153,9 +145,28 @@ class MainScreenViewModel(
         versionNameData.value = BuildConfig.VERSION_NAME
         typeComponentNameData.value = IntegrityCore.getTypeNames()  // todo listen to changes
 
-        // snapshots, search results  depend on  inputStateData, settingsData
-        countedSnapshotsData.value = fetchSnapshots()
+        // snapshots, search results initial values
+        snapshotsData.value = fetchSnapshots()
         searchResultsData.value = fetchSearchResults()
+    }
+
+    private fun updateInputState(inputState: MainScreenInputState) {
+        inputStateData.value = inputState
+        updateContentData() // snapshots, search results  depend on  inputStateData
+    }
+
+
+    private val updateContentCoolingOffMillis = 500L
+    private val contentDataWithCoolingOff = ThrottledFunction(updateContentCoolingOffMillis) {
+        snapshotsData.value = fetchSnapshots()
+        searchResultsData.value = fetchSearchResults()
+    }
+
+    private fun updateContentData() {
+        val isFasterMethod = settingsData.value!!.fasterSearchInputs
+        with (contentDataWithCoolingOff) {
+            if (isFasterMethod) requestThrottledLatest() else requestDebounced()
+        }
     }
 
     private fun fetchSearchResults(): List<SearchResult> {
@@ -202,7 +213,7 @@ class MainScreenViewModel(
         val isSearching = inputStateData.value!!.searchViewText.isNotBlank()
         val isArtifactFiltered = inputStateData.value!!.filteredArtifactId != null
 
-        val latestSnapshotTitle = countedSnapshotsData.value!!.firstOrNull()?.first?.title ?: ""
+        val latestSnapshotTitle = snapshotsData.value!!.firstOrNull()?.first?.title ?: ""
 
         val scopeTitle = if (isSearching) when {
             isArtifactFiltered -> "in $latestSnapshotTitle"

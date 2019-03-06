@@ -25,6 +25,7 @@ data class IntegrityAppSettings(
         val jobsExpandRunning: Boolean = true,
         val jobsExpandScheduled: Boolean = true,
         val sortingMethod: String = SortingMethod.NEW_FIRST,
+        val fasterSearchInputs: Boolean = false,
         val dataFolderPath: String = "Integrity",
         val dataTags: ArrayList<Tag> = arrayListOf(),
         val dataFolderLocations: ArrayList<FolderLocation> = arrayListOf(),

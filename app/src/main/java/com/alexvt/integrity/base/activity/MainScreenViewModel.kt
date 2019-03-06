@@ -6,7 +6,6 @@
 
 package com.alexvt.integrity.base.activity
 
-import android.content.ComponentName
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -100,7 +99,7 @@ class MainScreenViewModel(
     val scheduledJobIdsData = MutableLiveData<List<Pair<Snapshot, Long>>>()
     val logErrorCountData = MutableLiveData<Int>()
     val versionNameData = MutableLiveData<String>()
-    val typeComponentNameData = MutableLiveData<List<ComponentName>>()
+    val typeNameData = MutableLiveData<List<String>>()
 
     // depends on primary
     val searchResultsData = MutableLiveData<List<SearchResult>>()
@@ -143,7 +142,9 @@ class MainScreenViewModel(
 
         // version name, snapshot type component names  are static
         versionNameData.value = BuildConfig.VERSION_NAME
-        typeComponentNameData.value = IntegrityCore.getTypeNames()  // todo listen to changes
+        typeNameData.value = IntegrityCore.getTypeNames().map {
+            it.className.substringAfterLast(".").removeSuffix("TypeActivity")
+        }  // todo names from resources; listen to changes
 
         // snapshots, search results initial values
         snapshotsData.value = fetchSnapshots()

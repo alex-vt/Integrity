@@ -22,7 +22,6 @@ import com.leinardi.android.speeddial.SpeedDialActionItem
 import io.reactivex.android.schedulers.AndroidSchedulers
 
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.concurrent.TimeUnit
 import android.view.*
 import android.widget.ImageView
 import androidx.appcompat.widget.SearchView
@@ -328,33 +327,43 @@ class MainActivity : ThemedActivity() {
 
         vm.inputStateData.observe(this, androidx.lifecycle.Observer {
             sdAdd.visibility = if (it.searchViewText.isBlank()) View.VISIBLE else View.GONE
-            sdAdd.clearActionItems()
-            if (it.filteredArtifactId != null) {
-                sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
-                        SpeedDialActionItem.Builder(0, getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
-                                .setLabel("Create another snapshot"), vm.getThemeColors()
-                ).create())
-                sdAdd.setOnActionSelectedListener {
-                    vm.clickFloatingButtonOption(0)
-                    false
-                }
-            } else {
-                vm.typeComponentNameData.value!!.map {
-                    // todo names from resources
-                    it.className.substringAfterLast(".").removeSuffix("TypeActivity")
-                }.forEachIndexed {
-                    index, name -> sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
-                        SpeedDialActionItem.Builder(index,
-                                getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
-                                .setLabel(name), vm.getThemeColors()).create())
-                }
-                sdAdd.setOnActionSelectedListener {
-                    vm.clickFloatingButtonOption(it.id)
-                    false
-                }
+            // lazy updating for FloatingSubButtons
+            val floatingButtonTag = if (it.filteredArtifactId == null) "Types" else "Type"
+            if (floatingButtonTag != sdAdd.tag) {
+                sdAdd.tag = floatingButtonTag
+                updateFloatingSubButtons()
             }
-            FontUtil.setFont(this, sdAdd, vm.getFont())
         })
+        vm.typeNameData.observe(this, androidx.lifecycle.Observer {
+            updateFloatingSubButtons()
+        })
+    }
+
+    private fun updateFloatingSubButtons() {
+        sdAdd.clearActionItems()
+        val isFilteringArtifactId = vm.inputStateData.value!!.filteredArtifactId != null
+        if (isFilteringArtifactId) {
+            sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
+                    SpeedDialActionItem.Builder(0, getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
+                            .setLabel("Create another snapshot"), vm.getThemeColors()
+            ).create())
+            sdAdd.setOnActionSelectedListener {
+                vm.clickFloatingButtonOption(0)
+                false
+            }
+        } else {
+            vm.typeNameData.value!!.forEachIndexed {
+                index, name -> sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
+                    SpeedDialActionItem.Builder(index,
+                            getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
+                            .setLabel(name), vm.getThemeColors()).create())
+            }
+            sdAdd.setOnActionSelectedListener {
+                vm.clickFloatingButtonOption(it.id)
+                false
+            }
+        }
+        FontUtil.setFont(this, sdAdd, vm.getFont())
     }
 
     private fun bindBottomSheetControls() {

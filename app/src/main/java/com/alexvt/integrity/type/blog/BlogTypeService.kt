@@ -11,6 +11,7 @@ import com.alexvt.integrity.lib.DataTypeService
 import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
 import com.alexvt.integrity.lib.util.WebPageLoader
+import com.alexvt.integrity.type.blog.ui.BlogTypeActivity
 
 class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
 

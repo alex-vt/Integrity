@@ -10,24 +10,16 @@ import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.IntentUtil
 
 object LoggingUtil {
 
     /**
      * Shows event in logcat and sends it to the main app log repository.
-     *
-     * When the log entry cannot be written (crash, or not the main app),
-     * it's passed through a broadcast.
      */
     fun registerLogEvent(context: Context, logEntry: LogEntry) {
         showLogEntryInLogcat(logEntry)
-        if (canLogDirectly(context, logEntry)) {
-            acceptLogEntry(context, logEntry)
-        } else {
-            sendLogEntryBroadcast(context, logEntry, isProcessFailed(logEntry))
-        }
+        sendLogEntryBroadcast(context, logEntry, isProcessFailed(logEntry))
     }
 
     private fun canLogDirectly(context: Context, logEntry: LogEntry)
@@ -69,17 +61,6 @@ object LoggingUtil {
         })
     }
 
-    private fun acceptLogEntry(context: Context, logEntry: LogEntry) {
-        IntegrityCore.logRepository.addEntry(context, logEntry)
-    }
-
-    // Broadcast receiver for receiving status updates from the IntentService.
-    class LogEntryReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            acceptLogEntry(context, IntentUtil.getLogEntry(intent))
-        }
-    }
-
     // Using a broadcast receiver in a temporary separate recovery process
     // to receive crash log entry from the faulty process (which then is terminated)
     // and sending it to the main process (starts again if it was terminated or not running).
@@ -93,9 +74,4 @@ object LoggingUtil {
         }
     }
 
-    class LogReadReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            IntegrityCore.markErrorsRead(context)
-        }
-    }
 }

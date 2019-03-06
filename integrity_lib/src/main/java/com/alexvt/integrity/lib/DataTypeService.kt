@@ -8,9 +8,7 @@ package com.alexvt.integrity.lib
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Bitmap
 import androidx.core.app.JobIntentService
-import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 import com.alexvt.integrity.lib.util.IntentUtil
@@ -98,7 +96,7 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
 
     private fun writeMetadataFile(dataFolderPath: String, snapshot: Snapshot) {
         val metadataFilePath = "$dataFolderPath/_metadata.json.txt"
-        val snapshotMetadata = IntegrityCore.toTypeSpecificMetadata(snapshot)
+        val snapshotMetadata = IntegrityEx.toTypeSpecificMetadata(snapshot)
         DataCacheFolderUtil.writeTextToFile(applicationContext,
                 JsonSerializerUtil.toJson(snapshotMetadata), metadataFilePath)
     }

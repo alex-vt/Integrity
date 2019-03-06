@@ -28,7 +28,7 @@
         >
 
         <activity
-            android:name="com.alexvt.integrity.base.activity.MainActivity"
+            android:name="com.alexvt.integrity.ui.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:launchMode="singleTop"
             >
@@ -46,7 +46,7 @@
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.base.activity.LogViewActivity"
+            android:name="com.alexvt.integrity.ui.log.LogViewActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:taskAffinity=""
             android:excludeFromRecents="true"
@@ -54,52 +54,52 @@
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.type.blog.BlogTypeActivity"
+            android:name="com.alexvt.integrity.type.blog.ui.BlogTypeActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
-                <action android:name="com.alexvt.integrity.core.ACTION_VIEW" />
+                <action android:name="com.alexvt.integrity.ACTION_VIEW" />
             </intent-filter>
         </activity>
 
         <activity
             android:exported="true"
-            android:name="com.alexvt.integrity.base.activity.FolderLocationsActivity"
+            android:name="com.alexvt.integrity.ui.destinations.FolderLocationsActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
             android:exported="true"
-            android:name="com.alexvt.integrity.base.activity.TagsActivity"
+            android:name="com.alexvt.integrity.ui.tags.TagsActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.core.filesystem.local.LocalLocationActivity"
+            android:name="com.alexvt.integrity.ui.destinations.local.LocalLocationActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.core.filesystem.samba.SambaLocationActivity"
+            android:name="com.alexvt.integrity.ui.destinations.samba.SambaLocationActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.settings.SettingsActivity"
+            android:name="com.alexvt.integrity.ui.settings.SettingsActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.recovery.RecoveryActivity"
+            android:name="com.alexvt.integrity.ui.recovery.RecoveryActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name=".info.HelpInfoActivity"
+            android:name="com.alexvt.integrity.ui.info.HelpInfoActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name=".info.LegalInfoActivity"
+            android:name="com.alexvt.integrity.ui.info.LegalInfoActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
@@ -109,7 +109,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.core.log.LoggingUtil$LogEntryReceiver" >
+        <receiver android:name="com.alexvt.integrity.core.log.LogEventReceiver$LogEntryReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.LOG_ENTRY_ADDED" />
             </intent-filter>
@@ -123,7 +123,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.core.log.LoggingUtil$LogReadReceiver" >
+        <receiver android:name="com.alexvt.integrity.core.log.LogEventReceiver$LogReadReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.LOG_READ" />
             </intent-filter>
@@ -135,13 +135,13 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".recovery.AppOpenReceiver" >
+        <receiver android:name="com.alexvt.integrity.ui.recovery.AppOpenReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.APP_OPEN" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".recovery.AppReopenReceiver"
+        <receiver android:name="com.alexvt.integrity.ui.recovery.AppReopenReceiver"
             android:process=":restart"
             >
             <intent-filter>

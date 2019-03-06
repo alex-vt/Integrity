@@ -8,6 +8,7 @@ package com.alexvt.integrity.type.github
 
 import com.alexvt.integrity.lib.DataTypeService
 import com.alexvt.integrity.lib.IntegrityEx
+import com.alexvt.integrity.type.github.ui.GitHubTypeActivity
 
 class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
 

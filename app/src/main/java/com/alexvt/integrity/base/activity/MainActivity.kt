@@ -18,13 +18,10 @@ import com.alexvt.integrity.base.adapter.SnapshotRecyclerAdapter
 import com.alexvt.integrity.base.adapter.SearchResultRecyclerAdapter
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.util.IntentUtil
-import com.leinardi.android.speeddial.SpeedDialActionItem
 import io.reactivex.android.schedulers.AndroidSchedulers
 
 import kotlinx.android.synthetic.main.activity_main.*
 import android.view.*
-import android.widget.ImageView
-import androidx.appcompat.widget.SearchView
 import androidx.core.view.LayoutInflaterCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProviders
@@ -34,7 +31,7 @@ import co.zsmb.materialdrawerkt.draweritems.badgeable.primaryItem
 import co.zsmb.materialdrawerkt.draweritems.divider
 import co.zsmb.materialdrawerkt.draweritems.expandable.expandableItem
 import com.alexvt.integrity.databinding.DrawerHeaderBinding
-import com.alexvt.integrity.util.SpeedDialCompatUtil
+import com.alexvt.integrity.util.SpeedDialUtil
 import com.mikepenz.iconics.context.IconicsLayoutInflater2
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.holder.BadgeStyle
@@ -44,6 +41,7 @@ import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.core.util.FontUtil
+import com.alexvt.integrity.core.util.SearchViewUtil
 import com.alexvt.integrity.core.util.ThemeUtil
 import com.alexvt.integrity.core.util.ThemedActivity
 import com.alexvt.integrity.info.HelpInfoActivity
@@ -321,9 +319,9 @@ class MainActivity : ThemedActivity() {
     }
 
     private fun bindFloatingButton() {
-        SpeedDialCompatUtil.setStayOnExpand(sdAdd)
-        sdAdd.setMainFabClosedDrawable(getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
-        sdAdd.setMainFabOpenedDrawable(getPaddedIcon(CommunityMaterial.Icon.cmd_close))
+        SpeedDialUtil.setStayOnExpand(sdAdd)
+        SpeedDialUtil.setIcons(this, sdAdd, CommunityMaterial.Icon2.cmd_plus,
+                CommunityMaterial.Icon.cmd_close)
 
         vm.inputStateData.observe(this, androidx.lifecycle.Observer {
             sdAdd.visibility = if (it.searchViewText.isBlank()) View.VISIBLE else View.GONE
@@ -343,20 +341,16 @@ class MainActivity : ThemedActivity() {
         sdAdd.clearActionItems()
         val isFilteringArtifactId = vm.inputStateData.value!!.filteredArtifactId != null
         if (isFilteringArtifactId) {
-            sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
-                    SpeedDialActionItem.Builder(0, getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
-                            .setLabel("Create another snapshot"), vm.getThemeColors()
-            ).create())
+            sdAdd.addActionItem(SpeedDialUtil.getActionItem(this, 0,
+                    CommunityMaterial.Icon2.cmd_plus, "Create another snapshot", vm.getThemeColors()))
             sdAdd.setOnActionSelectedListener {
                 vm.clickFloatingButtonOption(0)
                 false
             }
         } else {
             vm.typeNameData.value!!.forEachIndexed {
-                index, name -> sdAdd.addActionItem(ThemeUtil.applyToSpeedDial(
-                    SpeedDialActionItem.Builder(index,
-                            getPaddedIcon(CommunityMaterial.Icon2.cmd_plus))
-                            .setLabel(name), vm.getThemeColors()).create())
+                index, name -> sdAdd.addActionItem(SpeedDialUtil.getActionItem(this, index,
+                    CommunityMaterial.Icon2.cmd_plus, name, vm.getThemeColors()))
             }
             sdAdd.setOnActionSelectedListener {
                 vm.clickFloatingButtonOption(it.id)
@@ -374,7 +368,7 @@ class MainActivity : ThemedActivity() {
         if (searchManager != null) {
             svMain.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         }
-        fixMicIconBackground(svMain)
+        SearchViewUtil.fixMicIconBackground(svMain)
         svMain.background.setColorFilter(vm.computeColorBackgroundBleached(), PorterDuff.Mode.DARKEN)
         svMain.queryTextChanges()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -591,30 +585,6 @@ class MainActivity : ThemedActivity() {
                     vm.viewRunningJob(snapshot.artifactId, snapshot.date)
                     false
                 }
-    }
-
-    private fun getPaddedIcon(icon: IIcon) = IconicsDrawable(this)
-            .icon(icon)
-            .colorRes(R.color.colorWhite)
-            .sizeDp(18)
-            .paddingDp(3)
-
-    /**
-     * Fixes default SearchView voice search icon background shape and visual artifacts.
-     * todo improve and move
-     */
-    private fun fixMicIconBackground(svMain: SearchView) {
-        // Rounded mic icon background that doesn't extend outsize the rounded search view
-        val ivMicButton: ImageView? = svMain.findViewById(R.id.search_voice_btn)
-        if (ivMicButton != null) {
-            ivMicButton.setBackgroundResource(R.drawable.rounded_padded_clickable)
-        }
-        // Removing the thin gray line visual artifact on the mic icon background
-        val llSubmitArea: View? = svMain.findViewById(R.id.submit_area)
-        if (llSubmitArea != null) {
-            llSubmitArea.setBackgroundColor(getColor(R.color.colorNone))
-            llSubmitArea.setPadding(0, 0, 0, 0)
-        }
     }
 
     private fun bindNavigation() {

@@ -6,13 +6,42 @@
 
 package com.alexvt.integrity.util
 
+import android.content.Context
+import android.graphics.Color
 import android.view.Gravity
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.doOnNextLayout
+import com.alexvt.integrity.core.util.ThemeColors
+import com.alexvt.integrity.core.util.ThemeUtil
+import com.leinardi.android.speeddial.SpeedDialActionItem
 import com.leinardi.android.speeddial.SpeedDialView
+import com.mikepenz.iconics.IconicsDrawable
+import com.mikepenz.iconics.typeface.IIcon
 
-object SpeedDialCompatUtil {
+object SpeedDialUtil {
+
+    fun getActionItem(context: Context, index: Int, icon: IIcon, title: String, colors: ThemeColors)
+            = SpeedDialActionItem.Builder(index, getPaddedIcon(context, icon))
+            .setLabel(title)
+            .applyColors(colors)
+            .create()
+
+    private fun SpeedDialActionItem.Builder.applyColors(colors: ThemeColors): SpeedDialActionItem.Builder {
+        ThemeUtil.applyToSpeedDial(this, colors)
+        return this
+    }
+
+    fun setIcons(context: Context, sd: SpeedDialView, closedIcon: IIcon, openedIcon: IIcon) {
+        sd.setMainFabClosedDrawable(getPaddedIcon(context, closedIcon))
+        sd.setMainFabOpenedDrawable(getPaddedIcon(context, openedIcon))
+    }
+
+    private fun getPaddedIcon(context: Context, icon: IIcon) = IconicsDrawable(context)
+            .icon(icon)
+            .color(Color.WHITE)
+            .sizeDp(18)
+            .paddingDp(3)
 
     /**
      * Enforces SpeedDialView anchored to other view's top to stay in place on expand click.
@@ -57,7 +86,7 @@ object SpeedDialCompatUtil {
     }
 
     private fun logViewY(tag: String, view: View) {
-        android.util.Log.v(SpeedDialCompatUtil::class.java.simpleName,
+        android.util.Log.v(SpeedDialUtil::class.java.simpleName,
                 "action=$tag, top=${view.top}, height=${view.height}, " +
                         "bottom=${view.bottom}, translationY=${view.translationY}")
     }

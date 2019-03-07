@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.core.util
+package com.alexvt.integrity.core.operations
 
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.SnapshotMetadata

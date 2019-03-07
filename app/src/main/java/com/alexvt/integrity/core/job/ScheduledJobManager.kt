@@ -9,6 +9,7 @@ package com.alexvt.integrity.core.job
 import android.content.Context
 import androidx.work.*
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.operations.SnapshotOperations
 import com.alexvt.integrity.lib.Log
 import com.alexvt.integrity.lib.Snapshot
 import com.alexvt.integrity.lib.SnapshotStatus
@@ -133,7 +134,8 @@ class SnapshotDownloadWorker(val context: Context, params: WorkerParameters): Wo
         // Starting creating snapshot async. Use RunningJobManager to get status
 
         val latestSnapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId, date)
-        IntegrityCore.saveSnapshot(context, latestSnapshot.copy(status = SnapshotStatus.IN_PROGRESS))
+        SnapshotOperations.saveSnapshot(context,
+                latestSnapshot.copy(status = SnapshotStatus.IN_PROGRESS))
 
         return Result.success()
     }

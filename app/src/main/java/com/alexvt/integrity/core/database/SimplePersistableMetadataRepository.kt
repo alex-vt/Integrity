@@ -7,7 +7,7 @@
 package com.alexvt.integrity.core.database
 
 import android.content.Context
-import com.alexvt.integrity.core.util.HashUtil
+import com.alexvt.integrity.core.operations.HashUtil
 import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.lib.MetadataCollection
 import com.alexvt.integrity.lib.Snapshot
@@ -38,7 +38,7 @@ object SimplePersistableMetadataRepository: MetadataRepository {
         if (clear || !::allMetadata.isInitialized) {
             val snapshotMetadataList = arrayListOf<Snapshot>()
             allMetadata = MetadataCollection(snapshotMetadataList,
-                    HashUtil.getHash(snapshotMetadataList))
+                    HashUtil.getHash(snapshotMetadataList)) // todo move hash calculations out
             saveChanges(context)
         }
     }

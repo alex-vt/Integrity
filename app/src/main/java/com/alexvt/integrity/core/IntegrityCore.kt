@@ -13,8 +13,6 @@ import com.alexvt.integrity.core.database.MetadataRepository
 import com.alexvt.integrity.core.database.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.credentials.CredentialsRepository
 import com.alexvt.integrity.core.credentials.SimplePersistableCredentialsRepository
-import com.alexvt.integrity.core.job.JobProgress
-import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.job.ScheduledJobManager
 import android.content.ComponentName
 import android.content.pm.ActivityInfo
@@ -28,10 +26,8 @@ import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.search.SimplePersistableSearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.core.settings.SimplePersistableSettingsRepository
-import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.util.*
 import com.alexvt.integrity.lib.*
-import com.alexvt.integrity.lib.util.DataCacheFolderUtil
 
 @SuppressLint("StaticFieldLeak") // context // todo DI
 /**
@@ -141,34 +137,6 @@ object IntegrityCore {
 
     fun getColorAccent() = settingsRepository.get().colorAccent
 
-    /**
-     * Saves snapshot data and/or metadata blueprint according to its status.
-     */
-    fun saveSnapshot(context: Context, snapshot: Snapshot)
-            = SnapshotSavingUtil.saveSnapshot(context, snapshot)
-
-    fun getNextJobRunTimestamp(snapshot: Snapshot)
-            = ScheduledJobManager.getNextRunTimestamp(snapshot)
-
-    fun subscribeToJobProgress(artifactId: Long, date: String,
-                               jobProgressListener: (JobProgress<Snapshot>) -> Unit) {
-        val snapshotInProgress = metadataRepository.getSnapshotMetadata(artifactId, date)
-        RunningJobManager.setJobProgressListener(snapshotInProgress, jobProgressListener)
-    }
-
-    /**
-     * Cancels long running job if it's running. Metadata status changes to Incomplete.
-     */
-    fun cancelSnapshotCreation(artifactId: Long, date: String) {
-        val snapshotInProgress = metadataRepository.getSnapshotMetadata(artifactId, date)
-        SnapshotDownloadCancelRequest().send(context, getDataFolderName(), snapshotInProgress)
-
-        // Updating snapshot status as incomplete in database.
-        val incompleteMetadata = snapshotInProgress.copy(status = SnapshotStatus.INCOMPLETE)
-        metadataRepository.removeSnapshotMetadata(context, incompleteMetadata.artifactId,
-                incompleteMetadata.date)
-        metadataRepository.addSnapshotMetadata(context, incompleteMetadata)
-    }
 
     fun getDestinationComponent(title: String): ComponentName {
         val folderLocation = settingsRepository.getAllFolderLocations()
@@ -177,55 +145,6 @@ object IntegrityCore {
                 .getViewMainActivityComponent()
     }
 
-    /**
-     * Removes artifact specified by artifact ID, with all its snapshots metadata.
-     * Optionally removes snapshot data as well.
-     */
-    fun removeArtifact(artifactId: Long, alsoRemoveData: Boolean) {
-        metadataRepository.removeArtifactMetadata(context, artifactId)
-        searchIndexRepository.removeForArtifact(context, artifactId)
-        DataCacheFolderUtil.clear(context, getDataFolderName(), artifactId)
-        // todo alsoRemoveData if needed
-    }
-
-    /**
-     * Removes snapshot metadata specified by artifact ID and date.
-     * Optionally removes snapshot data as well.
-     */
-    fun removeSnapshot(artifactId: Long, date: String, alsoRemoveData: Boolean) {
-        metadataRepository.removeSnapshotMetadata(context, artifactId, date)
-        searchIndexRepository.removeForSnapshot(context, artifactId, date)
-        DataCacheFolderUtil.clear(context, getDataFolderName(), artifactId, date)
-        // todo alsoRemoveData if needed
-    }
-
-    /**
-     * Removes all snapshot metadata.
-     * Optionally removes snapshot data as well.
-     */
-    fun removeAll(alsoRemoveData: Boolean) {
-        metadataRepository.clear(context)
-        searchIndexRepository.clear(context)
-        DataCacheFolderUtil.clear(context, getDataFolderName())
-        // todo alsoRemoveData if needed
-    }
-
-    /**
-     * Checks integrity of all stored and archived metadata, and also optionally the data.
-     *
-     * If data verification is not required,
-     * hash of metadata in database is calculated and compared to given verified value,
-     * and presence of correctly named data archives is checked according to metadata.
-     *
-     * If data verification is required,
-     * then in addition to the previous steps
-     * hash of every data archive is calculated and compared to the
-     * value in snapshot metadata in database.
-     */
-    fun verifyIntegrity(metadataHash: String, alsoVerifyData: Boolean): Boolean {
-        // todo
-        return false
-    }
 
     /**
      * Gets alphabetically sorted set of names of available data types.

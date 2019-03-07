@@ -18,6 +18,7 @@ import com.alexvt.integrity.core.search.SearchUtil
 import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.core.settings.IntegrityAppSettings
 import com.alexvt.integrity.core.settings.SortingMethod
+import com.alexvt.integrity.core.operations.SnapshotOperations
 import com.alexvt.integrity.core.util.ThrottledFunction
 import com.alexvt.integrity.core.util.ThemeColors
 import com.alexvt.integrity.core.util.ThemeUtil
@@ -132,7 +133,7 @@ class MainScreenViewModel(
             scheduledJobIdsData.value = it.map {
                 IntegrityCore.metadataRepository.getSnapshotMetadata(it.first, it.second)
             }.map {
-                it to IntegrityCore.getNextJobRunTimestamp(it) - System.currentTimeMillis()
+                it to ScheduledJobManager.getNextRunTimestamp(it) - System.currentTimeMillis()
             }
         }
         logErrorCountData.value = IntegrityCore.logRepository.getUnreadErrors().count()
@@ -301,7 +302,7 @@ class MainScreenViewModel(
         if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
             updateInputState(inputStateData.value!!.copy(jobProgressArtifactId = artifactId,
                     jobProgressDate = date, jobProgressTitle = snapshot.title))
-            IntegrityCore.subscribeToJobProgress(snapshot.artifactId, snapshot.date) {
+            RunningJobManager.setJobProgressListener(snapshot) {
                 if (it.result != null) {
                     hideRunningJobDialog() // done
                 } else if (it.progressMessage != null) {
@@ -344,10 +345,10 @@ class MainScreenViewModel(
     }
 
     fun removeArtifact(artifactId: Long)
-            = IntegrityCore.removeArtifact(artifactId, false)
+            = SnapshotOperations.removeArtifact(IntegrityCore.context, artifactId, false)
 
     fun removeSnapshot(artifactId: Long, date: String)
-            = IntegrityCore.removeSnapshot(artifactId, date, false)
+            = SnapshotOperations.removeSnapshot(IntegrityCore.context, artifactId, date, false)
 
     fun addSnapshot(artifactId: Long) {
         openAddSnapshotOfArtifact(artifactId)
@@ -459,7 +460,8 @@ class MainScreenViewModel(
     // dialog
 
     fun cancelSnapshotCreation() {
-        IntegrityCore.cancelSnapshotCreation(inputStateData.value!!.jobProgressArtifactId!!,
+        SnapshotOperations.cancelSnapshotCreation(IntegrityCore.context,
+                inputStateData.value!!.jobProgressArtifactId!!,
                 inputStateData.value!!.jobProgressDate!!)
         hideRunningJobDialog()
     }
@@ -489,7 +491,7 @@ class MainScreenViewModel(
     // lifecycle actions
 
     fun snapshotReturned(snapshot: Snapshot) {
-        val isSaving = IntegrityCore.saveSnapshot(IntegrityCore.context, snapshot)
+        val isSaving = SnapshotOperations.saveSnapshot(IntegrityCore.context, snapshot)
         if (isSaving) {
             val snapshotBlueprint = IntegrityCore.metadataRepository
                     .getLatestSnapshotMetadata(snapshot.artifactId)

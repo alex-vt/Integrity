@@ -103,7 +103,7 @@
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
-        <receiver android:name="com.alexvt.integrity.core.util.SnapshotSavingUtil$SnapshotProgressReceiver" >
+        <receiver android:name="com.alexvt.integrity.core.operations.SnapshotOperations$SnapshotProgressReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.SNAPSHOT_DOWNLOAD_PROGRESS" />
             </intent-filter>

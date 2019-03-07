@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.core.util
+package com.alexvt.integrity.core.operations
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -15,7 +15,10 @@ import com.alexvt.integrity.lib.SnapshotStatus
 import com.alexvt.integrity.core.job.JobProgress
 import com.alexvt.integrity.core.job.RunningJobManager
 import com.alexvt.integrity.core.search.DataChunks
+import com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.core.type.SnapshotDownloadStartRequest
+import com.alexvt.integrity.core.util.DeviceStateUtil
+import com.alexvt.integrity.core.util.JsonSerializerUtil
 import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.Log
 import com.alexvt.integrity.lib.util.DataCacheFolderUtil
@@ -28,7 +31,7 @@ import java.text.SimpleDateFormat
 /**
  * Saves snapshot metadata and data.
  */
-object SnapshotSavingUtil {
+object SnapshotOperations {
 
     /**
      * Saves snapshot data and/or metadata blueprint according to its status.
@@ -50,6 +53,56 @@ object SnapshotSavingUtil {
         }
         return false
     }
+
+    /**
+     * Cancels long running job if it's running. Metadata status changes to Incomplete.
+     */
+    fun cancelSnapshotCreation(context: Context, artifactId: Long, date: String) {
+        val snapshotInProgress = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId,
+                date)
+        SnapshotDownloadCancelRequest().send(context, IntegrityCore.getDataFolderName(),
+                snapshotInProgress)
+
+        // Updating snapshot status as incomplete in database.
+        val incompleteMetadata = snapshotInProgress.copy(status = SnapshotStatus.INCOMPLETE)
+        IntegrityCore.metadataRepository.removeSnapshotMetadata(context,
+                incompleteMetadata.artifactId, incompleteMetadata.date)
+        IntegrityCore.metadataRepository.addSnapshotMetadata(context, incompleteMetadata)
+    }
+
+    /**
+     * Removes artifact specified by artifact ID, with all its snapshots metadata.
+     * Optionally removes snapshot data as well.
+     */
+    fun removeArtifact(context: Context, artifactId: Long, alsoRemoveData: Boolean) {
+        IntegrityCore.metadataRepository.removeArtifactMetadata(context, artifactId)
+        IntegrityCore.searchIndexRepository.removeForArtifact(context, artifactId)
+        DataCacheFolderUtil.clear(context, IntegrityCore.getDataFolderName(), artifactId)
+        // todo alsoRemoveData if needed
+    }
+
+    /**
+     * Removes snapshot metadata specified by artifact ID and date.
+     * Optionally removes snapshot data as well.
+     */
+    fun removeSnapshot(context: Context, artifactId: Long, date: String, alsoRemoveData: Boolean) {
+        IntegrityCore.metadataRepository.removeSnapshotMetadata(context, artifactId, date)
+        IntegrityCore.searchIndexRepository.removeForSnapshot(context, artifactId, date)
+        DataCacheFolderUtil.clear(context, IntegrityCore.getDataFolderName(), artifactId, date)
+        // todo alsoRemoveData if needed
+    }
+
+    /**
+     * Removes all snapshot metadata.
+     * Optionally removes snapshot data as well.
+     */
+    fun removeAllSnapshots(context: Context, alsoRemoveData: Boolean) {
+        IntegrityCore.metadataRepository.clear(context)
+        IntegrityCore.searchIndexRepository.clear(context)
+        DataCacheFolderUtil.clear(context, IntegrityCore.getDataFolderName())
+        // todo alsoRemoveData if needed
+    }
+
 
     private fun deviceStateAllowsDownload(context: Context, snapshot: Snapshot): Boolean {
         val batteryStateForbidsDownload = !snapshot.downloadSchedule.allowOnLowBattery

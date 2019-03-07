@@ -170,17 +170,11 @@ object IntegrityCore {
         metadataRepository.addSnapshotMetadata(context, incompleteMetadata)
     }
 
-    /**
-     * Returns intent for editing archive location defined by title.
-     */
-    fun getDestinationEditIntent(title: String): Intent {
+    fun getDestinationComponent(title: String): ComponentName {
         val folderLocation = settingsRepository.getAllFolderLocations()
                 .first { it.title == title }
-        val typeViewCreateIntent = Intent()
-        typeViewCreateIntent.component = getDestinationUtil(folderLocation.javaClass)
+        return getDestinationUtil(folderLocation.javaClass)
                 .getViewMainActivityComponent()
-        typeViewCreateIntent.putExtra("title", title)
-        return typeViewCreateIntent
     }
 
     /**
@@ -241,25 +235,16 @@ object IntegrityCore {
             .sortedBy { it.className.substringAfterLast(".") } // sorted by simple name
 
     /**
-     * Gets alphabetically sorted map of labels of code listed folder location types
-     * to intents of main view activities for these folder location types.
+     * Gets list of archive destination labels.
      */
-    fun getNamedDestinationCreateIntentMap(): Map<String, Intent>
-            = listOf(
-            LocalFolderLocation::class.java,
-            SambaFolderLocation::class.java)
-            .map {
-                Pair(IntegrityEx.getDestinationNameUtil(it).getFolderLocationLabel(),
-                        getDestinationCreateIntent(getDestinationUtil(it)))
-            }
-            .toMap()
-            .toSortedMap()
-
-    private fun getDestinationCreateIntent(destinationUtil: DestinationUtil<out FolderLocation>): Intent {
-        val intent = Intent()
-        intent.component = destinationUtil.getViewMainActivityComponent()
-        return intent
+    fun getDestinationNames() = getDestinationClasses().map {
+        IntegrityEx.getDestinationNameUtil(it).getFolderLocationLabel()
     }
+
+    fun getDestinationClasses() = listOf(
+            LocalFolderLocation::class.java,
+            SambaFolderLocation::class.java
+    )
 
     /**
      * See https://stackoverflow.com/a/41103379

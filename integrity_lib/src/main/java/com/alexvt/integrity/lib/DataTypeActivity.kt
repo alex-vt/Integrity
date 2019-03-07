@@ -317,7 +317,7 @@ abstract class DataTypeActivity : ThemedActivity() {
     private fun openFolderLocationList(selectMode: Boolean) {
         val intent = Intent()
         intent.component = ComponentName("com.alexvt.integrity",
-                "com.alexvt.integrity.ui.destinations.FolderLocationsActivity") // todo resolve
+                "com.alexvt.integrity.ui.destinations.DestinationsActivity") // todo resolve
         IntentUtil.putSelectMode(intent, selectMode)
         IntentUtil.putSnapshot(intent, IntegrityEx.fromTypeSpecificMetadata(this, snapshot))
         startActivityForResult(intent, 0)

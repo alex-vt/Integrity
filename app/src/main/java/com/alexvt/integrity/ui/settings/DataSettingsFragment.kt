@@ -13,7 +13,7 @@ import androidx.preference.PreferenceFragmentCompat
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
 import com.alexvt.integrity.R
-import com.alexvt.integrity.ui.destinations.FolderLocationsActivity
+import com.alexvt.integrity.ui.destinations.DestinationsActivity
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.ui.info.LegalInfoActivity
 import com.alexvt.integrity.lib.Log
@@ -55,7 +55,7 @@ class DataSettingsFragment : PreferenceFragmentCompat() {
             true
         }
         prefArchives.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            startActivity(Intent(context!!, FolderLocationsActivity::class.java))
+            startActivity(Intent(context!!, DestinationsActivity::class.java))
             true
         }
         prefLegal.onPreferenceClickListener = Preference.OnPreferenceClickListener {

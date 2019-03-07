@@ -37,7 +37,7 @@ import java.util.*
 import co.zsmb.materialdrawerkt.draweritems.badge
 import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
-import com.alexvt.integrity.ui.destinations.FolderLocationsActivity
+import com.alexvt.integrity.ui.destinations.DestinationsActivity
 import com.alexvt.integrity.ui.log.LogViewActivity
 import com.alexvt.integrity.ui.tags.TagsActivity
 import com.alexvt.integrity.core.search.SortingUtil
@@ -62,7 +62,7 @@ class MainActivity : ThemedActivity() {
     private val vm: MainScreenViewModel by lazy {
         ViewModelProviders.of(this, MainScreenViewModelFactory(
                 packageName = packageName,
-                folderLocationsScreenClass = FolderLocationsActivity::class.java.name,
+                destinationsScreenClass = DestinationsActivity::class.java.name,
                 tagsScreenClass = TagsActivity::class.java.name,
                 logScreenClass = LogViewActivity::class.java.name,
                 settingsClass = SettingsActivity::class.java.name,

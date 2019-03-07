@@ -33,6 +33,7 @@ object IntentUtil {
     private const val colorPrimary = "colorPrimary"
     private const val colorAccent = "colorAccent"
     private const val dataFolderName = "dataFolderName"
+    private const val title = "title"
 
 
     fun withRecreate(downloaded: Boolean): Intent {
@@ -172,4 +173,11 @@ object IntentUtil {
     }
 
     fun getDataFolderName(intent: Intent?) = intent!!.getStringExtra(dataFolderName)!!
+
+    fun putTitle(intent: Intent?, value: String?): Intent {
+        if (value != null) intent!!.putExtra(title, value)
+        return intent!!
+    }
+
+    fun getTitle(intent: Intent?) = intent!!.getStringExtra(title)!!
 }

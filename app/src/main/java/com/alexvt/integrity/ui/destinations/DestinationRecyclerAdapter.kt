@@ -15,9 +15,12 @@ import com.alexvt.integrity.lib.FolderLocation
 import com.alexvt.integrity.lib.IntegrityEx
 import kotlinx.android.synthetic.main.folder_location_list_item.view.*
 
-class FolderLocationRecyclerAdapter(val items: ArrayList<Pair<FolderLocation, Boolean>>,
-                                    val folderLocationsActivity: FolderLocationsActivity)
-    : RecyclerView.Adapter<FolderLocationViewHolder>() {
+class DestinationRecyclerAdapter(private val items: ArrayList<Pair<FolderLocation, Boolean>>,
+                                 private val isSelectMode: Boolean,
+                                 private val destinationsActivity: DestinationsActivity,
+                                 private val onItemClickListener: (FolderLocation) -> Unit,
+                                 private val onItemLongClickListener: (FolderLocation) -> Unit)
+    : RecyclerView.Adapter<DestinationViewHolder>() {
 
     fun setItems(newItems: List<Pair<FolderLocation, Boolean>>) {
         items.clear()
@@ -29,17 +32,17 @@ class FolderLocationRecyclerAdapter(val items: ArrayList<Pair<FolderLocation, Bo
         return items.size
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FolderLocationViewHolder {
-        return FolderLocationViewHolder(LayoutInflater.from(folderLocationsActivity)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DestinationViewHolder {
+        return DestinationViewHolder(LayoutInflater.from(destinationsActivity)
                 .inflate(R.layout.folder_location_list_item, parent, false))
     }
 
-    override fun onBindViewHolder(holder: FolderLocationViewHolder, position: Int) {
-        val folderLocation = items.get(position).first
-        val isSelected = items.get(position).second
+    override fun onBindViewHolder(holder: DestinationViewHolder, position: Int) {
+        val folderLocation = items[position].first
+        val isSelected = items[position].second
         holder.tvName?.text = IntegrityEx.getFolderLocationName(folderLocation)
 
-        if (folderLocationsActivity.isSelectMode()) {
+        if (isSelectMode) {
             if (isSelected) {
                 holder.tvSelected.visibility = View.VISIBLE
             } else {
@@ -49,22 +52,16 @@ class FolderLocationRecyclerAdapter(val items: ArrayList<Pair<FolderLocation, Bo
             holder.tvSelected.visibility = View.GONE
         }
 
-        holder.llItem.setOnClickListener { _ ->
-            if (folderLocationsActivity.isSelectMode()) {
-                folderLocationsActivity.toggleSelection(folderLocation)
-            } else {
-                folderLocationsActivity.viewFolderLocation(folderLocation.title)
-            }
-        }
+        holder.llItem.setOnClickListener { onItemClickListener.invoke(folderLocation) }
 
         holder.llItem.setOnLongClickListener {
-            folderLocationsActivity.askRemoveFolderLocation(folderLocation.title)
+            onItemLongClickListener.invoke(folderLocation)
             false
         }
     }
 }
 
-class FolderLocationViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+class DestinationViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     val llItem = view.llItem
     val tvName = view.tvName
     val tvSelected = view.tvSelected

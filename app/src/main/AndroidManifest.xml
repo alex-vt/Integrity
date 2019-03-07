@@ -63,7 +63,7 @@
 
         <activity
             android:exported="true"
-            android:name="com.alexvt.integrity.ui.destinations.FolderLocationsActivity"
+            android:name="com.alexvt.integrity.ui.destinations.DestinationsActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 

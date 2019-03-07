@@ -28,7 +28,7 @@ import com.alexvt.integrity.ui.util.SingleLiveEvent
 
 class MainScreenViewModelFactory(
         val packageName: String,
-        val folderLocationsScreenClass: String,
+        val destinationsScreenClass: String,
         val tagsScreenClass: String,
         val logScreenClass: String,
         val settingsClass: String,
@@ -38,7 +38,7 @@ class MainScreenViewModelFactory(
 ) : ViewModelProvider.Factory {
     // Pass type parameter to instance if needed for initial state
     override fun <T : ViewModel> create(modelClass: Class<T>)
-            = MainScreenViewModel(packageName, folderLocationsScreenClass, tagsScreenClass,
+            = MainScreenViewModel(packageName, destinationsScreenClass, tagsScreenClass,
             logScreenClass, settingsClass, recoveryScreenClass, helpInfoScreenClass,
             legalInfoScreenClass) as T
 }
@@ -83,7 +83,7 @@ data class NavigationEvent(
 class MainScreenViewModel(
         // for navigation
         private val packageName: String,
-        private val folderLocationsScreenClass: String,
+        private val destinationsScreenClass: String,
         private val tagsScreenClass: String,
         private val logScreenClass: String,
         private val settingsScreenClass: String,
@@ -412,7 +412,7 @@ class MainScreenViewModel(
 
     fun viewArchiveLocations() {
         navigationEventData.value = NavigationEvent(targetPackage = packageName,
-                targetClass = folderLocationsScreenClass)
+                targetClass = destinationsScreenClass)
     }
 
     fun viewTags() {

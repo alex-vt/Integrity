@@ -11,11 +11,10 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsMultiChoice
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.FontUtil
+import com.alexvt.integrity.lib.util.FontUtil
 import com.alexvt.integrity.core.util.Initializable
-import com.alexvt.integrity.core.util.ThemedActivity
-import com.alexvt.integrity.core.util.ViewExternalUtil
-import com.alexvt.integrity.lib.util.DataCacheFolderUtil
+import com.alexvt.integrity.lib.util.ThemedActivity
+import com.alexvt.integrity.lib.util.ViewExternalUtil
 import com.alexvt.integrity.lib.util.IntentUtil
 import kotlinx.android.synthetic.main.activity_recovery.*
 
@@ -67,7 +66,7 @@ class RecoveryActivity : ThemedActivity() {
                 .negativeButton(text = "Cancel")
                 .positiveButton(text = "Clear now") {
                     namedRepositoriesToClear.map { it.first }
-                            .forEach { it.init(this, true) }
+                            .forEach { it.init(true) }
                 }.show()
     }
 
@@ -79,7 +78,7 @@ class RecoveryActivity : ThemedActivity() {
                         "$dataFolderName \nwith all downloaded snapshots")
                 .negativeButton(text = "Cancel")
                 .positiveButton(text = "Delete now") {
-                    DataCacheFolderUtil.deleteFolder(this, dataFolderName)
+                    IntegrityCore.dataFolderManager.deleteFolder(dataFolderName)
                 }.show()
     }
 

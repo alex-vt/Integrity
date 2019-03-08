@@ -9,10 +9,14 @@ package com.alexvt.integrity.lib
 import android.app.Activity
 import android.content.Intent
 import androidx.core.app.JobIntentService
-import com.alexvt.integrity.core.job.RunningJobManager
-import com.alexvt.integrity.lib.util.DataCacheFolderUtil
+import com.alexvt.integrity.lib.filesystem.AndroidFilesystemManager
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
+import com.alexvt.integrity.lib.metadata.Snapshot
+import com.alexvt.integrity.lib.metadata.TypeMetadata
+import com.alexvt.integrity.lib.operations.SnapshotDownloadReporter
 import com.alexvt.integrity.lib.util.IntentUtil
-import com.alexvt.integrity.core.util.JsonSerializerUtil
+import com.alexvt.integrity.lib.util.JsonSerializerUtil
+import com.alexvt.integrity.lib.util.TypeSpecificMetadataConverter
 
 /**
  * Data manipulation contract for a data type, based on Android services (and activities).
@@ -23,6 +27,10 @@ import com.alexvt.integrity.core.util.JsonSerializerUtil
  * Generic parameter defines the type dependent metadata model type which this service works with
  */
 abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
+
+    protected val dataFolderManager: DataFolderManager by lazy {
+        DataFolderManager(AndroidFilesystemManager(this))
+    }
 
     /**
      * Gets data type name visible for user
@@ -68,24 +76,24 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
      * Downloads snapshot data and creates corresponding files and a metadata file.
      */
     private fun createSnapshotFiles(dataFolderName: String, snapshot: Snapshot) {
-        IntegrityEx.reportSnapshotDownloadProgress(applicationContext, snapshot.artifactId,
+        SnapshotDownloadReporter.reportSnapshotDownloadProgress(applicationContext, snapshot.artifactId,
                 snapshot.date, "Saving snapshot")
-        RunningJobManager.putJob(snapshot)
+        IntegrityLib.runningJobManager.putJob(snapshot)
 
         val dataFolderPath = downloadData(dataFolderName, snapshot.artifactId, snapshot.date,
                 getTypeMetadata(snapshot))
         writeMetadataFile(dataFolderPath, snapshot)
 
-        if (!IntegrityEx.isSnapshotDownloadRunning(snapshot.artifactId, snapshot.date)) {
+        if (!IntegrityLib.runningJobManager.isRunning(snapshot.artifactId, snapshot.date)) {
             return
         }
-        IntegrityEx.reportSnapshotDownloadProgress(applicationContext, snapshot.artifactId,
+        SnapshotDownloadReporter.reportSnapshotDownloadProgress(applicationContext, snapshot.artifactId,
                 snapshot.date, "Saving preview")
         generateOfflinePreview(dataFolderName, snapshot.artifactId, snapshot.date,
                 getTypeMetadata(snapshot))
 
         // RunningJobManager job shouldn't be removed because job may continue in same process.
-        IntegrityEx.reportSnapshotDownloaded(applicationContext, snapshot.artifactId, snapshot.date)
+        SnapshotDownloadReporter.reportSnapshotDownloaded(applicationContext, snapshot.artifactId, snapshot.date)
     }
 
 
@@ -96,8 +104,8 @@ abstract class DataTypeService<T: TypeMetadata>: JobIntentService() {
 
     private fun writeMetadataFile(dataFolderPath: String, snapshot: Snapshot) {
         val metadataFilePath = "$dataFolderPath/_metadata.json.txt"
-        val snapshotMetadata = IntegrityEx.toTypeSpecificMetadata(snapshot)
-        DataCacheFolderUtil.writeTextToFile(applicationContext,
+        val snapshotMetadata = TypeSpecificMetadataConverter.toTypeSpecificMetadata(snapshot)
+        dataFolderManager.writeTextToFile(
                 JsonSerializerUtil.toJson(snapshotMetadata), metadataFilePath)
     }
 }

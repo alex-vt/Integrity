@@ -20,8 +20,7 @@ import com.alexvt.integrity.lib.DataTypeActivity
 import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
 import com.alexvt.integrity.lib.util.WebPageLoader
-import com.alexvt.integrity.lib.IntegrityEx
-import com.alexvt.integrity.lib.SnapshotMetadata
+import com.alexvt.integrity.lib.metadata.SnapshotMetadata
 import com.alexvt.integrity.type.blog.BlogTypeMetadata
 import com.alexvt.integrity.type.blog.IndexedPagination
 import com.alexvt.integrity.type.blog.LinkedPagination
@@ -41,7 +40,6 @@ class BlogTypeActivity : DataTypeActivity() {
     private lateinit var content : BlogTypeContentBinding
     private lateinit var controls : BlogTypeControlsBinding
     private lateinit var filter : BlogTypeFilterBinding
-
 
     // Type implementation
 
@@ -176,10 +174,10 @@ class BlogTypeActivity : DataTypeActivity() {
     override fun snapshotViewModeAction(snapshot: SnapshotMetadata) {
         GlobalScope.launch (Dispatchers.Main) {
             content.webView.stopLoading()
-            val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
+            val snapshotPath = dataFolderManager.getSnapshotFolderPath(
                     getDataFolderName(), snapshot.artifactId, snapshot.date)
-            val linkToArchivePathRedirectMap = WebArchiveFilesUtil
-                    .getPageIndexLinkToArchivePathMap(applicationContext, snapshotPath,
+            val linkToArchivePathRedirectMap = WebArchiveFilesUtil(dataFolderManager)
+                    .getPageIndexLinkToArchivePathMap(snapshotPath,
                             "file://$snapshotPath/")
             (filter.rvOfflineLinkList.adapter as OfflineLinkRecyclerAdapter)
                     .setItems(linkToArchivePathRedirectMap

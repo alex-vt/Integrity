@@ -6,21 +6,21 @@
 
 package com.alexvt.integrity.type.blog
 
-import com.alexvt.integrity.lib.IntegrityEx
+import com.alexvt.integrity.lib.filesystem.AndroidFilesystemManager
+import com.alexvt.integrity.lib.search.SearchIndexManager
+import com.alexvt.integrity.lib.operations.SnapshotDownloadReporter
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
+import com.alexvt.integrity.lib.IntegrityLib
 import com.alexvt.integrity.lib.util.LinkUtil
-import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getArchivePath
-import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexLinks
-import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.saveLinkToIndex
-import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.savePageLinkToIndex
-import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.webArchiveAlreadyDownloaded
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
 import com.alexvt.integrity.lib.util.WebPageLoader
 
-internal abstract class CommonPaginationHelper {
+internal abstract class CommonPaginationHelper(open val webArchiveFilesUtil: WebArchiveFilesUtil) {
 
     abstract fun downloadPages(dl: BlogMetadataDownload): Boolean
 
     protected fun isRunning(dl: BlogMetadataDownload)
-            = IntegrityEx.isSnapshotDownloadRunning(dl.artifactId, dl.date)
+            = IntegrityLib.runningJobManager.isRunning(dl.artifactId, dl.date)
 
     protected fun saveArchivesAndAddToSearchIndex(currentPageLink: String,
                                                   additionalLinksOnPage: Set<String>,
@@ -30,12 +30,12 @@ internal abstract class CommonPaginationHelper {
                 .plus(additionalLinksOnPage)
         linksToArchive.forEachIndexed { linkIndex, link -> run {
             if (!isRunning(dl)) return
-            if (!webArchiveAlreadyDownloaded(dl.context, link, dl.snapshotPath)) {
-                IntegrityEx.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
+            if (!webArchiveFilesUtil.webArchiveAlreadyDownloaded(link, dl.snapshotPath)) {
+                SnapshotDownloadReporter.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
                         "Saving web archive " + (linkIndex + 1) + " of "
                                 + linksToArchive.size + "\n"
                                 + getPaginationProgressText(currentPageLink, dl))
-                val webArchivePath = "${dl.snapshotPath}/${getArchivePath(pageIndex, linkIndex)}"
+                val webArchivePath = "${dl.snapshotPath}/${webArchiveFilesUtil.getArchivePath(pageIndex, linkIndex)}"
                 android.util.Log.v("WebPageLoader", "getHtmlAndSaveArchive, url = $link")
                 val pageHtml = WebPageLoader().getHtmlAndSaveArchive(context = dl.context, url = link,
                         loadImages = dl.metadata.loadImages, desktopSite = dl.metadata.desktopSite,
@@ -43,12 +43,14 @@ internal abstract class CommonPaginationHelper {
                         delayMillis = dl.metadata.loadIntervalMillis)
 
                 if (!isRunning(dl)) return
-                saveLinkToIndex(dl.context, link, dl.snapshotPath, pageIndex, linkIndex)
-                IntegrityEx.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
+                webArchiveFilesUtil.saveLinkToIndex(link, dl.snapshotPath, pageIndex, linkIndex)
+                SnapshotDownloadReporter.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
                         "Indexing page text " + (linkIndex + 1) + " of "
                                 + linksToArchive.size + "\n"
                                 + getPaginationProgressText(currentPageLink, dl))
-                IntegrityEx.addDataForSearchIndex(dl.context, dl.dataFolderName, dl.artifactId, dl.date,
+                SearchIndexManager(DataFolderManager(AndroidFilesystemManager(dl.context)))
+                        .addDataForSearchIndex(
+                        dl.dataFolderName, dl.artifactId, dl.date,
                         LinkUtil.getVisibleTextWithLinks(pageHtml), "${pageIndex}_$linkIndex",
                         "Page archive" to "file://$webArchivePath")
             }
@@ -60,9 +62,9 @@ internal abstract class CommonPaginationHelper {
      */
     protected fun persistPaginationProgress(pageLink: String, dl: BlogMetadataDownload) {
         if (!isRunning(dl)) return
-        val pageIndexLinks = getPageIndexLinks(dl.context, dl.snapshotPath)
+        val pageIndexLinks = webArchiveFilesUtil.getPageIndexLinks(dl.snapshotPath)
         if (!pageIndexLinks.contains(pageLink)) {
-            savePageLinkToIndex(dl.context, pageLink, dl.snapshotPath, pageIndexLinks.size)
+            webArchiveFilesUtil.savePageLinkToIndex(pageLink, dl.snapshotPath, pageIndexLinks.size)
         }
     }
 

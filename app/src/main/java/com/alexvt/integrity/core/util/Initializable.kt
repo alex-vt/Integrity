@@ -6,10 +6,8 @@
 
 package com.alexvt.integrity.core.util
 
-import android.content.Context
-
 interface Initializable {
 
-    fun init(context: Context, clear: Boolean = false)
+    fun init(clear: Boolean = false)
 
 }

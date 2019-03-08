@@ -7,7 +7,7 @@
 package com.alexvt.integrity.type.github
 
 import android.app.Application
-import com.alexvt.integrity.core.util.ThemeUtil
+import com.alexvt.integrity.lib.util.ThemeUtil
 
 class App : Application() {
 

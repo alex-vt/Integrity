@@ -6,8 +6,8 @@
 
 package com.alexvt.integrity.core.operations
 
-import com.alexvt.integrity.lib.Snapshot
-import com.alexvt.integrity.lib.MetadataCollection
+import com.alexvt.integrity.lib.metadata.Snapshot
+import com.alexvt.integrity.lib.metadata.MetadataCollection
 
 object HashUtil {
 

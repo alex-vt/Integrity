@@ -36,7 +36,7 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         updateEnableScheduled(prefEnableScheduled)
         prefEnableScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             val enableScheduled = IntegrityCore.scheduledJobsEnabled()
-            IntegrityCore.updateScheduledJobsOptions(context!!, !enableScheduled)
+            IntegrityCore.updateScheduledJobsOptions(!enableScheduled)
             updateEnableScheduled(prefEnableScheduled)
             true
         }
@@ -47,7 +47,7 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         updateExpandRunning(prefExpandRunning)
         prefExpandRunning.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             val expandRunning = IntegrityCore.settingsRepository.get().jobsExpandRunning
-            IntegrityCore.settingsRepository.set(context!!, IntegrityCore.settingsRepository.get()
+            IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
                     .copy(jobsExpandRunning = !expandRunning))
             updateExpandRunning(prefExpandRunning)
             true
@@ -59,7 +59,7 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         updateExpandScheduled(prefExpandScheduled)
         prefExpandScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             val expandScheduled = IntegrityCore.settingsRepository.get().jobsExpandScheduled
-            IntegrityCore.settingsRepository.set(context!!, IntegrityCore.settingsRepository.get()
+            IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
                     .copy(jobsExpandScheduled = !expandScheduled))
             updateExpandScheduled(prefExpandScheduled)
             true
@@ -78,7 +78,7 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
                                 .indexOf(IntegrityCore.getSortingMethod())
                 ) { _, index, _ ->
                     val sortingMethod = SortingUtil.getSortingMethodNameMap().keys.toList()[index]
-                    IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository
+                    IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository
                             .get().copy(sortingMethod = sortingMethod))
                     updateSorting(prefSorting)
                     activity!!.setResult(Activity.RESULT_OK, IntentUtil.withRefresh(true))
@@ -93,7 +93,7 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         updateFasterFiltering(prefFasterFiltering)
         prefFasterFiltering.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             val fasterFiltering = IntegrityCore.settingsRepository.get().fasterSearchInputs
-            IntegrityCore.settingsRepository.set(context!!, IntegrityCore.settingsRepository.get()
+            IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
                     .copy(fasterSearchInputs = !fasterFiltering))
             updateFasterFiltering(prefFasterFiltering)
             true

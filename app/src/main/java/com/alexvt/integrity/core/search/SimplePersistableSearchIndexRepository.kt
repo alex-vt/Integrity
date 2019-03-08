@@ -7,13 +7,15 @@
 package com.alexvt.integrity.core.search
 
 import android.content.Context
-import com.alexvt.integrity.core.util.JsonSerializerUtil
+import com.alexvt.integrity.lib.search.DataChunk
+import com.alexvt.integrity.lib.search.DataChunks
+import com.alexvt.integrity.lib.util.JsonSerializerUtil
 
 /**
  * Stores text data chunks simply in Java objects
  * and persists them to Android SharedPreferences as JSON string.
  */
-object SimplePersistableSearchIndexRepository : SearchIndexRepository {
+class SimplePersistableSearchIndexRepository(private val context: Context) : SearchIndexRepository {
 
     private lateinit var allDataChunks: DataChunks
 
@@ -21,30 +23,30 @@ object SimplePersistableSearchIndexRepository : SearchIndexRepository {
     /**
      * Prepares database for use
      */
-    override fun init(context: Context, clear: Boolean) {
+    override fun init(clear: Boolean) {
         if (!clear) {
             val dataChunksJson = readJsonFromStorage(context)
             if (dataChunksJson != null) {
                 allDataChunks = JsonSerializerUtil.fromJson(dataChunksJson, DataChunks::class.java)
             }
         }
-        if (clear || !SimplePersistableSearchIndexRepository::allDataChunks.isInitialized) {
+        if (clear || !::allDataChunks.isInitialized) {
             allDataChunks = DataChunks()
             persistAll(context)
         }
     }
 
-    override fun add(context: Context, dataChunks: List<DataChunk>) {
+    override fun add(dataChunks: List<DataChunk>) {
         allDataChunks.chunks.addAll(dataChunks)
         persistAll(context)
     }
 
-    override fun removeForArtifact(context: Context, artifactId: Long) {
+    override fun removeForArtifact(artifactId: Long) {
         allDataChunks.chunks.removeIf { it.artifactId == artifactId }
         persistAll(context)
     }
 
-    override fun removeForSnapshot(context: Context, artifactId: Long, date: String) {
+    override fun removeForSnapshot(artifactId: Long, date: String) {
         allDataChunks.chunks.removeIf { it.artifactId == artifactId && it.date == date }
         persistAll(context)
     }
@@ -55,7 +57,7 @@ object SimplePersistableSearchIndexRepository : SearchIndexRepository {
     override fun searchText(text: String, artifactId: Long) = allDataChunks.chunks
             .filter { it.artifactId == artifactId && it.text.contains(text) }
 
-    override fun clear(context: Context) {
+    override fun clear() {
         allDataChunks.chunks.clear()
         persistAll(context)
     }
@@ -73,10 +75,10 @@ object SimplePersistableSearchIndexRepository : SearchIndexRepository {
 
     // Storage for the JSON string in SharedPreferences
 
-    private const val TAG = "search_index"
+    private val TAG = "search_index"
 
-    private const val preferencesName = "persisted_$TAG"
-    private const val preferenceKey = "${TAG}_json"
+    private val preferencesName = "persisted_$TAG"
+    private val preferenceKey = "${TAG}_json"
 
     private fun readJsonFromStorage(context: Context)
             = getSharedPreferences(context).getString(preferenceKey, null)

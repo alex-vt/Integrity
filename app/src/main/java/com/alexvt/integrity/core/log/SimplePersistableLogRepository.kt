@@ -7,7 +7,9 @@
 package com.alexvt.integrity.core.log
 
 import android.content.Context
-import com.alexvt.integrity.core.util.JsonSerializerUtil
+import com.alexvt.integrity.lib.log.LogEntry
+import com.alexvt.integrity.lib.log.LogEntryType
+import com.alexvt.integrity.lib.util.JsonSerializerUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -15,7 +17,7 @@ import kotlinx.coroutines.launch
 /**
  * Manager of repository of app log entries.
  */
-object SimplePersistableLogRepository : LogRepository {
+class SimplePersistableLogRepository(private val context: Context) : LogRepository {
 
     data class Log(val entries: ArrayList<LogEntry> = arrayListOf()) // Log entry container
 
@@ -24,14 +26,14 @@ object SimplePersistableLogRepository : LogRepository {
     /**
      * Prepares database for use.
      */
-    override fun init(context: Context, clear: Boolean) {
+    override fun init(clear: Boolean) {
         if (!clear) {
             val logJson = readJsonFromStorage(context)
             if (logJson != null) {
                 log = JsonSerializerUtil.fromJson(logJson, Log::class.java)
             }
         }
-        if (clear || !SimplePersistableLogRepository::log.isInitialized) {
+        if (clear || !::log.isInitialized) {
             log = Log()
             saveChanges(context)
         }
@@ -65,7 +67,7 @@ object SimplePersistableLogRepository : LogRepository {
     /**
      * Adds the entry to the log.
      */
-    override fun addEntry(context: Context, logEntry: LogEntry) {
+    override fun addEntry(logEntry: LogEntry) {
         log.entries.add(logEntry)
         saveChanges(context)
     }
@@ -92,7 +94,7 @@ object SimplePersistableLogRepository : LogRepository {
     /**
      * Sets all log entries read.
      */
-    override fun markAllRead(context: Context) {
+    override fun markAllRead() {
         val unreadEntries = log.entries.filter { !it.read }
         log.entries.removeAll(unreadEntries)
         log.entries.addAll(unreadEntries.map { it.copy(read = true) })
@@ -102,7 +104,7 @@ object SimplePersistableLogRepository : LogRepository {
     /**
      * Deletes all log entries from database
      */
-    override fun clear(context: Context) {
+    override fun clear() {
         log.entries.clear()
         saveChanges(context)
     }
@@ -121,10 +123,10 @@ object SimplePersistableLogRepository : LogRepository {
 
     // Storage for the JSON string in SharedPreferences
 
-    private const val TAG = "log"
+    private val TAG = "log"
 
-    private const val preferencesName = "persisted_$TAG"
-    private const val preferenceKey = "${TAG}_json"
+    private val preferencesName = "persisted_$TAG"
+    private val preferenceKey = "${TAG}_json"
 
     private fun readJsonFromStorage(context: Context)
             = getSharedPreferences(context).getString(preferenceKey, null)

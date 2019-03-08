@@ -9,8 +9,8 @@ package com.alexvt.integrity.ui.info
 import android.os.Bundle
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.FontUtil
-import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.lib.util.FontUtil
+import com.alexvt.integrity.lib.util.ThemedActivity
 import kotlinx.android.synthetic.main.activity_info.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope

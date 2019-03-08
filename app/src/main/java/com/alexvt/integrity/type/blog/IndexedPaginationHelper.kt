@@ -7,14 +7,13 @@
 package com.alexvt.integrity.type.blog
 
 import android.content.Context
-import com.alexvt.integrity.lib.IntegrityEx
+import com.alexvt.integrity.lib.operations.SnapshotDownloadReporter
 import com.alexvt.integrity.lib.util.LinkUtil
-import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexArchiveLinks
-import com.alexvt.integrity.lib.util.WebArchiveFilesUtil.getPageIndexLinks
+import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
 import com.alexvt.integrity.lib.util.WebPageLoader
-import kotlinx.coroutines.delay
 
-internal class IndexedPaginationHelper : CommonPaginationHelper() {
+internal class IndexedPaginationHelper(override val webArchiveFilesUtil: WebArchiveFilesUtil)
+    : CommonPaginationHelper(webArchiveFilesUtil) {
 
     /**
      * Indexed pagination or no pagination:
@@ -46,11 +45,11 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
      * progress index equals pagination position.
      */
     override fun getPaginationProgress(dl: BlogMetadataDownload)
-            = getPageIndexArchiveLinks(dl.context, dl.snapshotPath).size
+            = webArchiveFilesUtil.getPageIndexArchiveLinks(dl.snapshotPath).size
 
     private fun getAdditionalLinksOnPage(currentPageLink: String,
                                                  dl: BlogMetadataDownload): Set<String> {
-        IntegrityEx.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
+        SnapshotDownloadReporter.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
                 "Collecting links\n${getPaginationProgressText(currentPageLink, dl)}")
         return if (pageContentsNeeded(dl)) {
             val currentPageHtml = WebPageLoader().getHtml(dl.context, currentPageLink,
@@ -87,6 +86,6 @@ internal class IndexedPaginationHelper : CommonPaginationHelper() {
 
     private fun getNextPageLinks(context: Context, blogMetadata: BlogTypeMetadata, snapshotPath: String)
             = getAllPageLinks(blogMetadata)
-            .minus(getPageIndexLinks(context, snapshotPath))
+            .minus(webArchiveFilesUtil.getPageIndexLinks(snapshotPath))
 
 }

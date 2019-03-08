@@ -12,7 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
-import com.alexvt.integrity.lib.Tag
+import com.alexvt.integrity.lib.metadata.Tag
 import kotlinx.android.synthetic.main.tag_list_item.view.*
 
 class TagRecyclerAdapter(val items: ArrayList<Pair<Tag, Boolean>>,

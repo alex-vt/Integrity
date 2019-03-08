@@ -26,7 +26,7 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
         updateShowErrors(prefShowErrors)
         prefShowErrors.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             val showErrors = IntegrityCore.settingsRepository.get().notificationShowErrors
-            IntegrityCore.settingsRepository.set(context!!, IntegrityCore.settingsRepository.get()
+            IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
                     .copy(notificationShowErrors = !showErrors))
             updateShowErrors(prefShowErrors)
             true
@@ -43,7 +43,7 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
         updateShowForDisabledScheduledJobs(prefShowForDisabledScheduled)
         prefShowForDisabledScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             val show = IntegrityCore.settingsRepository.get().notificationShowDisabledScheduled
-            IntegrityCore.settingsRepository.set(context!!, IntegrityCore.settingsRepository.get()
+            IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
                     .copy(notificationShowDisabledScheduled = !show))
             updateShowForDisabledScheduledJobs(prefShowForDisabledScheduled)
             true

@@ -12,8 +12,8 @@ import android.view.Gravity
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.doOnNextLayout
-import com.alexvt.integrity.core.util.ThemeColors
-import com.alexvt.integrity.core.util.ThemeUtil
+import com.alexvt.integrity.lib.util.ThemeColors
+import com.alexvt.integrity.lib.util.ThemeUtil
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import com.leinardi.android.speeddial.SpeedDialView
 import com.mikepenz.iconics.IconicsDrawable

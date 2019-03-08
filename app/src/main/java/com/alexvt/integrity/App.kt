@@ -7,11 +7,12 @@
 package com.alexvt.integrity
 
 import android.app.Application
-import com.alexvt.integrity.core.*
+import com.alexvt.integrity.lib.*
 import android.app.ActivityManager
 import android.content.Context
-import com.alexvt.integrity.core.util.ThemeUtil
-import com.alexvt.integrity.lib.Log
+import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.util.ThemeUtil
+import com.alexvt.integrity.lib.log.Log
 import java.lang.RuntimeException
 
 
@@ -55,7 +56,8 @@ class App : Application() {
     private fun handleUncaughtExceptions(context: Context) {
         Thread.setDefaultUncaughtExceptionHandler {
             thread, throwable ->
-            Log(context, throwable.message ?: "Uncaught exception (null message)")
+            Log(context, throwable.message
+                    ?: "Uncaught exception (null message)")
                     .thread(thread).logCrash(throwable)
             Runtime.getRuntime().exit(1)
         }

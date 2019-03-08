@@ -7,16 +7,16 @@
 package com.alexvt.integrity.core.credentials
 
 import android.content.Context
-import com.alexvt.integrity.lib.EmptyCredentials
-import com.alexvt.integrity.core.util.JsonSerializerUtil
-import com.alexvt.integrity.lib.Credentials
+import com.alexvt.integrity.lib.metadata.EmptyCredentials
+import com.alexvt.integrity.lib.util.JsonSerializerUtil
+import com.alexvt.integrity.lib.metadata.Credentials
 
 /**
  * Stores credentials simply in Java objects
  * and persists them to Android SharedPreferences as JSON string.
  * todo secure credentials
  */
-object SimplePersistableCredentialsRepository : CredentialsRepository {
+class SimplePersistableCredentialsRepository(private val context: Context) : CredentialsRepository {
 
     /**
      * A collection of folder locations and credentials
@@ -32,20 +32,20 @@ object SimplePersistableCredentialsRepository : CredentialsRepository {
     /**
      * Prepares database for use
      */
-    override fun init(context: Context, clear: Boolean) {
+    override fun init(clear: Boolean) {
         if (!clear) {
             val credentialsSetJson = readJsonFromStorage(context)
             if (credentialsSetJson != null) {
                 credentialsSet = JsonSerializerUtil.fromJson(credentialsSetJson, CredentialsSet::class.java)
             }
         }
-        if (clear || !SimplePersistableCredentialsRepository::credentialsSet.isInitialized) {
+        if (clear || !::credentialsSet.isInitialized) {
             credentialsSet = CredentialsSet()
             persistCredentials(context)
         }
     }
 
-    override fun addCredentials(context: Context, credentials: Credentials) {
+    override fun addCredentials(credentials: Credentials) {
         credentialsSet.items.add(credentials)
         persistCredentials(context)
     }
@@ -55,12 +55,12 @@ object SimplePersistableCredentialsRepository : CredentialsRepository {
             .firstOrNull { it.title == title }
             ?: EmptyCredentials()
 
-    override fun removeCredentials(context: Context, title: String) {
+    override fun removeCredentials(title: String) {
         credentialsSet.items.removeIf { it.title == title }
         persistCredentials(context)
     }
 
-    override fun clear(context: Context) {
+    override fun clear() {
         credentialsSet.items.clear()
         persistCredentials(context)
     }
@@ -78,10 +78,10 @@ object SimplePersistableCredentialsRepository : CredentialsRepository {
 
     // Storage for the JSON string in SharedPreferences
 
-    private const val TAG = "credentials"
+    private val TAG = "credentials"
 
-    private const val preferencesName = "persisted_$TAG"
-    private const val preferenceKey = "${TAG}_json"
+    private val preferencesName = "persisted_$TAG"
+    private val preferenceKey = "${TAG}_json"
 
     private fun readJsonFromStorage(context: Context)
             = getSharedPreferences(context).getString(preferenceKey, null)

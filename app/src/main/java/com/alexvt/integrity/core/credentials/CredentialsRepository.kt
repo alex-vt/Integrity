@@ -6,9 +6,8 @@
 
 package com.alexvt.integrity.core.credentials
 
-import android.content.Context
 import com.alexvt.integrity.core.util.Initializable
-import com.alexvt.integrity.lib.Credentials
+import com.alexvt.integrity.lib.metadata.Credentials
 
 /**
  * Manager of repository of credentials
@@ -18,17 +17,17 @@ interface CredentialsRepository : Initializable {
     /**
      * Adds credentials which are stored separately.
      */
-    fun addCredentials(context: Context, credentials: Credentials)
+    fun addCredentials(credentials: Credentials)
 
     /**
      * Gets credentials by the provided title. If none, returns empty ones.
      */
     fun getCredentials(title: String): Credentials
 
-    fun removeCredentials(context: Context, title: String)
+    fun removeCredentials(title: String)
 
     /**
      * Deletes all folder locations and credentials from database
      */
-    fun clear(context: Context)
+    fun clear()
 }

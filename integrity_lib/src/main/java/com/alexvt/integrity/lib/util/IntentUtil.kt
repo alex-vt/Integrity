@@ -7,9 +7,8 @@
 package com.alexvt.integrity.lib.util
 
 import android.content.Intent
-import com.alexvt.integrity.core.log.LogEntry
-import com.alexvt.integrity.lib.Snapshot
-import com.alexvt.integrity.core.util.JsonSerializerUtil
+import com.alexvt.integrity.lib.log.LogEntry
+import com.alexvt.integrity.lib.metadata.Snapshot
 
 /**
  * Puts and gets data fro intents
@@ -38,7 +37,7 @@ object IntentUtil {
 
     fun withRecreate(downloaded: Boolean): Intent {
         val intent = Intent()
-        intent.putExtra(IntentUtil.recreate, downloaded)
+        intent.putExtra(recreate, downloaded)
         return intent
     }
 
@@ -46,7 +45,7 @@ object IntentUtil {
 
     fun withRefresh(downloaded: Boolean): Intent {
         val intent = Intent()
-        intent.putExtra(IntentUtil.refresh, downloaded)
+        intent.putExtra(refresh, downloaded)
         return intent
     }
 
@@ -122,7 +121,7 @@ object IntentUtil {
     fun getLogEntry(intent: Intent?) = intent!!.getSerializableExtra(logEntry) as LogEntry
 
     fun putViewExtensions(intent: Intent?, value: Boolean?): Intent {
-        if (value != null) intent!!.putExtra(IntentUtil.viewExtensions, value)
+        if (value != null) intent!!.putExtra(viewExtensions, value)
         return intent!!
     }
 
@@ -140,35 +139,35 @@ object IntentUtil {
 
 
     fun putFontName(intent: Intent?, value: String?): Intent {
-        if (value != null) intent!!.putExtra(IntentUtil.fontName, value)
+        if (value != null) intent!!.putExtra(fontName, value)
         return intent!!
     }
 
     fun getFontName(intent: Intent?) = intent!!.getStringExtra(fontName)!!
 
     fun putColorBackground(intent: Intent?, value: String?): Intent {
-        if (value != null) intent!!.putExtra(IntentUtil.colorBackground, value)
+        if (value != null) intent!!.putExtra(colorBackground, value)
         return intent!!
     }
 
     fun getColorBackground(intent: Intent?) = intent!!.getStringExtra(colorBackground)!!
 
     fun putColorPrimary(intent: Intent?, value: String?): Intent {
-        if (value != null) intent!!.putExtra(IntentUtil.colorPrimary, value)
+        if (value != null) intent!!.putExtra(colorPrimary, value)
         return intent!!
     }
 
     fun getColorPrimary(intent: Intent?) = intent!!.getStringExtra(colorPrimary)!!
 
     fun putColorAccent(intent: Intent?, value: String?): Intent {
-        if (value != null) intent!!.putExtra(IntentUtil.colorAccent, value)
+        if (value != null) intent!!.putExtra(colorAccent, value)
         return intent!!
     }
 
     fun getColorAccent(intent: Intent?) = intent!!.getStringExtra(colorAccent)!!
 
     fun putDataFolderName(intent: Intent?, value: String?): Intent {
-        if (value != null) intent!!.putExtra(IntentUtil.dataFolderName, value)
+        if (value != null) intent!!.putExtra(dataFolderName, value)
         return intent!!
     }
 

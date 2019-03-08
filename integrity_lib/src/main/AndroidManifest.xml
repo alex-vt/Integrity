@@ -11,13 +11,13 @@
 
     <application>
 
-        <receiver android:name="com.alexvt.integrity.core.type.SnapshotDownloadStartRequest$PackageWideReceiver">
+        <receiver android:name=".types.SnapshotDownloadStartRequest$PackageWideReceiver">
             <intent-filter>
                 <action android:name="com.alexvt.integrity.SNAPSHOT_DOWNLOAD_START"/>
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.core.type.SnapshotDownloadCancelRequest$PackageWideReceiver">
+        <receiver android:name=".types.SnapshotDownloadCancelRequest$PackageWideReceiver">
             <intent-filter>
                 <action android:name="com.alexvt.integrity.SNAPSHOT_DOWNLOAD_CANCEL"/>
             </intent-filter>

@@ -15,8 +15,9 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.util.FontUtil
-import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.util.FontUtil
+import com.alexvt.integrity.lib.util.ThemedActivity
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.ui.util.SpeedDialUtil
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
@@ -26,7 +27,8 @@ class DestinationsActivity : ThemedActivity() {
 
     private val vm: DestinationsViewModel by lazy {
         ViewModelProviders.of(this, DestinationsViewModelFactory(
-                packageName = packageName,
+                settingsRepository = IntegrityCore.settingsRepository,
+                credentialsRepository = IntegrityCore.credentialsRepository,
                 isSelectMode = IntentUtil.isSelectMode(intent),
                 snapshotWithInitialDestination = IntentUtil.getSnapshot(intent)
         )).get(DestinationsViewModel::class.java)

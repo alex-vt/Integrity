@@ -14,7 +14,7 @@ import android.graphics.PorterDuff
 import android.os.Bundle
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
-import com.alexvt.integrity.lib.Snapshot
+import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.util.IntentUtil
 import io.reactivex.android.schedulers.AndroidSchedulers
 
@@ -37,14 +37,15 @@ import java.util.*
 import co.zsmb.materialdrawerkt.draweritems.badge
 import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
+import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.ui.destinations.DestinationsActivity
 import com.alexvt.integrity.ui.log.LogViewActivity
 import com.alexvt.integrity.ui.tags.TagsActivity
 import com.alexvt.integrity.core.search.SortingUtil
-import com.alexvt.integrity.core.util.FontUtil
-import com.alexvt.integrity.core.util.SearchViewUtil
-import com.alexvt.integrity.core.util.ThemeUtil
-import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.lib.util.FontUtil
+import com.alexvt.integrity.lib.util.SearchViewUtil
+import com.alexvt.integrity.lib.util.ThemeUtil
+import com.alexvt.integrity.lib.util.ThemedActivity
 import com.alexvt.integrity.ui.info.HelpInfoActivity
 import com.alexvt.integrity.ui.info.LegalInfoActivity
 import com.alexvt.integrity.ui.recovery.RecoveryActivity
@@ -62,6 +63,12 @@ class MainActivity : ThemedActivity() {
     private val vm: MainScreenViewModel by lazy {
         ViewModelProviders.of(this, MainScreenViewModelFactory(
                 packageName = packageName,
+                metadataRepository = IntegrityCore.metadataRepository,
+                settingsRepository = IntegrityCore.settingsRepository,
+                logRepository = IntegrityCore.logRepository,
+                snapshotOperationManager = IntegrityCore.snapshotOperationManager,
+                scheduledJobManager = IntegrityCore.scheduledJobManager,
+                dataTypeRepository = IntegrityCore.dataTypeRepository,
                 destinationsScreenClass = DestinationsActivity::class.java.name,
                 tagsScreenClass = TagsActivity::class.java.name,
                 logScreenClass = LogViewActivity::class.java.name,
@@ -351,7 +358,7 @@ class MainActivity : ThemedActivity() {
         } else {
             vm.typeNameData.value!!.forEachIndexed {
                 index, name -> sdAdd.addActionItem(SpeedDialUtil.getActionItem(this, index,
-                    CommunityMaterial.Icon2.cmd_plus, name, vm.getThemeColors()))
+                    CommunityMaterial.Icon2.cmd_plus, "$name Type", vm.getThemeColors()))
             }
             sdAdd.setOnActionSelectedListener {
                 vm.clickFloatingButtonOption(it.id)

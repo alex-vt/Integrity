@@ -6,8 +6,8 @@
 
 package com.alexvt.integrity.core.log
 
-import android.content.Context
 import com.alexvt.integrity.core.util.Initializable
+import com.alexvt.integrity.lib.log.LogEntry
 
 /**
  * Manager of repository of app log entries.
@@ -28,7 +28,7 @@ interface LogRepository : Initializable {
     /**
      * Adds the entry to the log.
      */
-    fun addEntry(context: Context, logEntry: LogEntry)
+    fun addEntry(logEntry: LogEntry)
 
     /**
      * Gets log entries ordered by time descending.
@@ -43,10 +43,10 @@ interface LogRepository : Initializable {
     /**
      * Sets all log entries read.
      */
-    fun markAllRead(context: Context)
+    fun markAllRead()
 
     /**
      * Deletes all log entries from database
      */
-    fun clear(context: Context)
+    fun clear()
 }

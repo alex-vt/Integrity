@@ -7,10 +7,10 @@
 package com.alexvt.integrity.core.settings
 
 import android.content.Context
-import com.alexvt.integrity.core.destinations.local.LocalFolderLocation
-import com.alexvt.integrity.core.util.JsonSerializerUtil
-import com.alexvt.integrity.lib.FolderLocation
-import com.alexvt.integrity.lib.Tag
+import com.alexvt.integrity.lib.destinations.local.LocalFolderLocation
+import com.alexvt.integrity.lib.util.JsonSerializerUtil
+import com.alexvt.integrity.lib.metadata.FolderLocation
+import com.alexvt.integrity.lib.metadata.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -18,14 +18,14 @@ import kotlinx.coroutines.launch
 /**
  * In-memory settings storage persisting to SharedPreferences.
  */
-object SimplePersistableSettingsRepository : SettingsRepository {
+class SimplePersistableSettingsRepository(private val context: Context) : SettingsRepository {
 
     private lateinit var integrityAppSettings: IntegrityAppSettings
 
     /**
      * Prepares database for use.
      */
-    override fun init(context: Context, clear: Boolean) {
+    override fun init(clear: Boolean) {
         if (!clear) {
             val logJson = readJsonFromStorage(context)
             if (logJson != null) {
@@ -57,7 +57,7 @@ object SimplePersistableSettingsRepository : SettingsRepository {
         }
     }
 
-    override fun set(context: Context, integrityAppSettings: IntegrityAppSettings) {
+    override fun set(integrityAppSettings: IntegrityAppSettings) {
         this.integrityAppSettings = integrityAppSettings
         saveChanges(context)
     }
@@ -66,7 +66,7 @@ object SimplePersistableSettingsRepository : SettingsRepository {
         return integrityAppSettings
     }
 
-    override fun resetToDefault(context: Context) {
+    override fun resetToDefault() {
         this.integrityAppSettings = getDefaultSettings()
         saveChanges(context)
     }
@@ -83,31 +83,31 @@ object SimplePersistableSettingsRepository : SettingsRepository {
             )
     )
 
-    override fun addTag(context: Context, tag: Tag) {
+    override fun addTag(tag: Tag) {
         val settings = get()
         settings.dataTags.add(tag)
-        set(context, settings)
+        set(settings)
     }
 
-    override fun removeTag(context: Context, name: String) {
+    override fun removeTag(name: String) {
         val settings = get()
         settings.dataTags.removeIf { it.text == name }
-        set(context, settings)
+        set(settings)
     }
 
     override fun getAllTags() = get().dataTags.reversed() // newest first
 
-    override fun clearTags(context: Context) {
+    override fun clearTags() {
         val settings = get()
         settings.dataTags.clear()
-        SimplePersistableSettingsRepository.set(context, settings)
+        set(settings)
     }
 
 
-    override fun addFolderLocation(context: Context, folderLocation: FolderLocation): String {
+    override fun addFolderLocation(folderLocation: FolderLocation): String {
         val settings = get()
         settings.dataFolderLocations.add(folderLocation)
-        set(context, settings)
+        set(settings)
 
         return folderLocation.title
     }
@@ -116,16 +116,16 @@ object SimplePersistableSettingsRepository : SettingsRepository {
         return get().dataFolderLocations
     }
 
-    override fun removeFolderLocation(context: Context, title: String) {
+    override fun removeFolderLocation(title: String) {
         val settings = get()
         settings.dataFolderLocations.removeIf { it.title == title }
-        set(context, settings)
+        set(settings)
     }
 
-    override fun clearFolderLocations(context: Context) {
+    override fun clearFolderLocations() {
         val settings = get()
         settings.dataFolderLocations.clear()
-        set(context, settings)
+        set(settings)
     }
 
 
@@ -143,10 +143,10 @@ object SimplePersistableSettingsRepository : SettingsRepository {
 
     // Storage for the JSON string in SharedPreferences
 
-    private const val TAG = "app_settings"
+    private val TAG = "app_settings"
 
-    private const val preferencesName = "persisted_$TAG"
-    private const val preferenceKey = "${TAG}_json"
+    private val preferencesName = "persisted_$TAG"
+    private val preferenceKey = "${TAG}_json"
 
     private fun readJsonFromStorage(context: Context)
             = getSharedPreferences(context).getString(preferenceKey, null)

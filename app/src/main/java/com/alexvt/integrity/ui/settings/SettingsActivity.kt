@@ -14,8 +14,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.FontUtil
-import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.lib.util.FontUtil
+import com.alexvt.integrity.lib.util.ThemedActivity
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.ui.recovery.RecoveryActivity
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil

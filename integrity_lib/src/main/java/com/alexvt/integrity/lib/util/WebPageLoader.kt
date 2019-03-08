@@ -15,18 +15,21 @@ import android.webkit.ConsoleMessage
 import kotlinx.coroutines.*
 import android.webkit.WebSettings
 import android.widget.Toast
-import com.alexvt.integrity.lib.Log
+import com.alexvt.integrity.lib.log.Log
 import java.util.*
 import kotlin.concurrent.schedule
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import com.alexvt.integrity.lib.filesystem.AndroidFilesystemManager
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
+import java.io.ByteArrayOutputStream
 
 /**
  * Performs main operations with web pages in the provided WebView.
  */
 class WebPageLoader {
 
-    lateinit var pageLoadListener: (String) -> Unit
+    private lateinit var pageLoadListener: (String) -> Unit
 
     @JavascriptInterface
     fun onWebPageHtmlLoaded(html: String) {
@@ -158,8 +161,8 @@ class WebPageLoader {
                             GlobalScope.launch(Dispatchers.Main) {
                                 delay(delayMillis)
                                 val previewBitmap = getPageBitmap(webView, screenshotSize)
-                                DataCacheFolderUtil.writeImageToFile(webView.context, previewBitmap,
-                                        screenshotSavePath)
+                                DataFolderManager(AndroidFilesystemManager(view.context))
+                                        .writeFile(getBytes(previewBitmap), screenshotSavePath)
                                 this@WebPageLoader.pageLoadListener.invoke("")
                                 android.util.Log.v("WebPageLoader", "captured screenshot")
                             }
@@ -178,6 +181,12 @@ class WebPageLoader {
             }
         }
         webView.loadUrl(startUrl)
+    }
+
+    private fun getBytes(bitmap: Bitmap): ByteArray {
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        return stream.toByteArray()
     }
 
     private fun requestPageContent(webView: WebView) {
@@ -263,7 +272,7 @@ class WebPageLoader {
         val loadingTimeoutMillis = 15000L
         loadingTimeoutTimer = Timer().schedule(loadingTimeoutMillis) {
                     GlobalScope.launch(Dispatchers.Main) {
-                        Log(webView.context,"Web page loading timeout\n" +
+                        Log(webView.context, "Web page loading timeout\n" +
                                 "exceeded $loadingTimeoutMillis ms: ${webView.url}").logError()
                         // todo use; self interrupt download
                     }

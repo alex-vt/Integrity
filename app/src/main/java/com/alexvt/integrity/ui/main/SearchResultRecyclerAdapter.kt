@@ -12,9 +12,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.search.NamedLink
-import com.alexvt.integrity.core.search.SearchResult
-import com.alexvt.integrity.core.util.ViewExternalUtil
+import com.alexvt.integrity.lib.search.NamedLink
+import com.alexvt.integrity.lib.search.SearchResult
+import com.alexvt.integrity.lib.util.ViewExternalUtil
 import android.text.Spannable
 import android.text.style.ForegroundColorSpan
 import android.text.SpannableString

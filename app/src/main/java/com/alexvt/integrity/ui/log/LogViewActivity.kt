@@ -12,7 +12,7 @@ import android.view.MenuItem
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.lib.util.ThemedActivity
 import kotlinx.android.synthetic.main.activity_log_view.*
 
 class LogViewActivity : ThemedActivity() {
@@ -64,7 +64,7 @@ class LogViewActivity : ThemedActivity() {
         MaterialDialog(this)
                 .title(text = "Clear log?")
                 .positiveButton(text = "Yes") {
-                    IntegrityCore.logRepository.clear(this)
+                    IntegrityCore.logRepository.clear()
                 }
                 .negativeButton(text = "Cancel")
                 .show()

@@ -19,10 +19,10 @@ import com.afollestad.materialdialogs.customview.customView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.databinding.ViewTagEditBinding
-import com.alexvt.integrity.lib.Tag
+import com.alexvt.integrity.lib.metadata.Tag
 import com.alexvt.integrity.lib.util.IntentUtil
 import android.widget.RadioGroup
-import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.lib.util.ThemedActivity
 import kotlinx.android.synthetic.main.activity_tags.*
 
 
@@ -116,9 +116,9 @@ class TagsActivity : ThemedActivity() {
         }
         if (oldText != null) {
             // old tag needs to be replaced
-            IntegrityCore.settingsRepository.removeTag(this, oldText)
+            IntegrityCore.settingsRepository.removeTag(oldText)
         }
-        IntegrityCore.settingsRepository.addTag(this, tag)
+        IntegrityCore.settingsRepository.addTag(tag)
         refreshTagList()
     }
 
@@ -136,7 +136,7 @@ class TagsActivity : ThemedActivity() {
                 .title(text = "Delete tag?")
                 .positiveButton(text = "Delete") {
                     dialog ->
-                    IntegrityCore.settingsRepository.removeTag(this, tag.text)
+                    IntegrityCore.settingsRepository.removeTag(tag.text)
                     refreshTagList()
                 }
                 .negativeButton(text = "Cancel")

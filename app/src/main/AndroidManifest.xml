@@ -103,7 +103,7 @@
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
-        <receiver android:name="com.alexvt.integrity.core.operations.SnapshotOperations$SnapshotProgressReceiver" >
+        <receiver android:name="com.alexvt.integrity.core.operations.AndroidSnapshotOperationManager$SnapshotProgressReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.SNAPSHOT_DOWNLOAD_PROGRESS" />
             </intent-filter>
@@ -115,7 +115,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.core.log.LoggingUtil$LogEntryRecoveryReceiver"
+        <receiver android:name="com.alexvt.integrity.lib.log.LoggingUtil$LogEntryRecoveryReceiver"
             android:process=":recovery"
             >
             <intent-filter>
@@ -129,7 +129,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".core.job.ScheduledJobsEnableReceiver" >
+        <receiver android:name=".core.jobs.ScheduledJobsEnableReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.ENABLE_SCHEDULED_JOBS" />
             </intent-filter>

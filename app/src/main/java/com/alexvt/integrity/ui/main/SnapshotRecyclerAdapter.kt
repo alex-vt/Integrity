@@ -13,11 +13,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.FontUtil
-import com.alexvt.integrity.lib.IntegrityEx
-import com.alexvt.integrity.lib.Snapshot
-import com.alexvt.integrity.lib.SnapshotStatus
-import com.alexvt.integrity.lib.util.DataCacheFolderUtil
+import com.alexvt.integrity.lib.util.FontUtil
+import com.alexvt.integrity.lib.metadata.Snapshot
+import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.bumptech.glide.Glide
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.IconicsDrawable
@@ -76,9 +74,9 @@ class SnapshotRecyclerAdapter(private val items: ArrayList<Pair<Snapshot, Int>>,
             false
         }
 
-        val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(context,
+        val snapshotPreviewPath = IntegrityCore.dataFolderManager.getSnapshotPreviewPath(
                 IntegrityCore.getDataFolderName(), snapshot.artifactId, snapshot.date)
-        if (!DataCacheFolderUtil.fileExists(context, snapshotPreviewPath)) {
+        if (!IntegrityCore.dataFolderManager.fileExists(snapshotPreviewPath)) {
             holder.view.ivPreview.setImageDrawable(IconicsDrawable(context)
                     .icon(CommunityMaterial.Icon2.cmd_view_grid)
                     .colorRes(R.color.colorBlueprint)

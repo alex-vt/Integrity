@@ -11,8 +11,8 @@ import android.os.Bundle
 import android.widget.Toast
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.destinations.local.LocalFolderLocation
-import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.lib.destinations.local.LocalFolderLocation
+import com.alexvt.integrity.lib.util.ThemedActivity
 import kotlinx.android.synthetic.main.activity_local_location.*
 
 
@@ -84,8 +84,8 @@ class LocalDestinationActivity : ThemedActivity() {
             return
         }
         // the old one is removed first
-        IntegrityCore.settingsRepository.removeFolderLocation(this, folderLocation.title)
-        IntegrityCore.settingsRepository.addFolderLocation(this, folderLocation)
+        IntegrityCore.settingsRepository.removeFolderLocation(folderLocation.title)
+        IntegrityCore.settingsRepository.addFolderLocation(folderLocation)
         finish()
     }
 

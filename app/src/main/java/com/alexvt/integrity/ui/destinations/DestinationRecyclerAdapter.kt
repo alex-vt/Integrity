@@ -11,8 +11,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
-import com.alexvt.integrity.lib.FolderLocation
-import com.alexvt.integrity.lib.IntegrityEx
+import com.alexvt.integrity.lib.destinations.DestinationNameUtilResolver
+import com.alexvt.integrity.lib.metadata.FolderLocation
 import kotlinx.android.synthetic.main.folder_location_list_item.view.*
 
 class DestinationRecyclerAdapter(private val items: ArrayList<Pair<FolderLocation, Boolean>>,
@@ -40,7 +40,7 @@ class DestinationRecyclerAdapter(private val items: ArrayList<Pair<FolderLocatio
     override fun onBindViewHolder(holder: DestinationViewHolder, position: Int) {
         val folderLocation = items[position].first
         val isSelected = items[position].second
-        holder.tvName?.text = IntegrityEx.getFolderLocationName(folderLocation)
+        holder.tvName?.text = DestinationNameUtilResolver.getFolderLocationName(folderLocation)
 
         if (isSelectMode) {
             if (isSelected) {

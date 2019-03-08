@@ -10,25 +10,34 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.alexvt.integrity.BuildConfig
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.job.RunningJobManager
-import com.alexvt.integrity.core.job.ScheduledJobManager
-import com.alexvt.integrity.core.search.SearchResult
+import com.alexvt.integrity.core.metadata.MetadataRepository
+import com.alexvt.integrity.core.jobs.ScheduledJobManager
+import com.alexvt.integrity.core.log.LogRepository
+import com.alexvt.integrity.lib.search.SearchResult
 import com.alexvt.integrity.core.search.SearchUtil
 import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.core.settings.IntegrityAppSettings
 import com.alexvt.integrity.core.settings.SortingMethod
-import com.alexvt.integrity.core.operations.SnapshotOperations
-import com.alexvt.integrity.core.util.ThrottledFunction
-import com.alexvt.integrity.core.util.ThemeColors
-import com.alexvt.integrity.core.util.ThemeUtil
-import com.alexvt.integrity.lib.Snapshot
-import com.alexvt.integrity.lib.SnapshotStatus
+import com.alexvt.integrity.core.operations.SnapshotOperationManager
+import com.alexvt.integrity.core.settings.SettingsRepository
+import com.alexvt.integrity.core.types.DataTypeRepository
+import com.alexvt.integrity.lib.IntegrityLib
+import com.alexvt.integrity.lib.util.ThrottledFunction
+import com.alexvt.integrity.lib.util.ThemeColors
+import com.alexvt.integrity.lib.util.ThemeUtil
+import com.alexvt.integrity.lib.metadata.Snapshot
+import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 
 
 class MainScreenViewModelFactory(
         val packageName: String,
+        val metadataRepository: MetadataRepository,
+        val settingsRepository: SettingsRepository,
+        val logRepository: LogRepository,
+        val dataTypeRepository: DataTypeRepository,
+        val snapshotOperationManager: SnapshotOperationManager,
+        val scheduledJobManager: ScheduledJobManager,
         val destinationsScreenClass: String,
         val tagsScreenClass: String,
         val logScreenClass: String,
@@ -39,9 +48,10 @@ class MainScreenViewModelFactory(
 ) : ViewModelProvider.Factory {
     // Pass type parameter to instance if needed for initial state
     override fun <T : ViewModel> create(modelClass: Class<T>)
-            = MainScreenViewModel(packageName, destinationsScreenClass, tagsScreenClass,
-            logScreenClass, settingsClass, recoveryScreenClass, helpInfoScreenClass,
-            legalInfoScreenClass) as T
+            = MainScreenViewModel(packageName, metadataRepository, settingsRepository, 
+            logRepository, dataTypeRepository, snapshotOperationManager, scheduledJobManager,
+            destinationsScreenClass, tagsScreenClass, logScreenClass, settingsClass,
+            recoveryScreenClass, helpInfoScreenClass, legalInfoScreenClass) as T
 }
 
 /**
@@ -84,6 +94,12 @@ data class NavigationEvent(
 class MainScreenViewModel(
         // for navigation
         private val packageName: String,
+        private val metadataRepository: MetadataRepository,
+        private val settingsRepository: SettingsRepository,
+        private val logRepository: LogRepository,
+        private val dataTypeRepository: DataTypeRepository,
+        private val snapshotOperationManager: SnapshotOperationManager,
+        private val scheduledJobManager: ScheduledJobManager,
         private val destinationsScreenClass: String,
         private val tagsScreenClass: String,
         private val logScreenClass: String,
@@ -117,35 +133,33 @@ class MainScreenViewModel(
                 jobProgressTitle = "", jobProgressMessage = "")
 
         // settings, jobs, log error count  are listened to in their repositories
-        settingsData.value = IntegrityCore.settingsRepository.get()
-        IntegrityCore.settingsRepository.addChangesListener(this.toString()) {
+        settingsData.value = settingsRepository.get()
+        settingsRepository.addChangesListener(this.toString()) {
             settingsData.value = it
             updateContentData() // snapshots, search results  depend on  settings
         }
         runningJobIdsData.value = emptyList()
-        RunningJobManager.addJobListListener(this.toString()) {
+        IntegrityLib.runningJobManager.addJobListListener(this.toString()) {
             runningJobIdsData.value = it.map {
-                IntegrityCore.metadataRepository.getSnapshotMetadata(it.first, it.second)
+                metadataRepository.getSnapshotMetadata(it.first, it.second)
             }
         }
         scheduledJobIdsData.value = emptyList()
-        ScheduledJobManager.addScheduledJobsListener(this.toString()) {
+        scheduledJobManager.addScheduledJobsListener(this.toString()) {
             scheduledJobIdsData.value = it.map {
-                IntegrityCore.metadataRepository.getSnapshotMetadata(it.first, it.second)
+                metadataRepository.getSnapshotMetadata(it.first, it.second)
             }.map {
-                it to ScheduledJobManager.getNextRunTimestamp(it) - System.currentTimeMillis()
+                it to scheduledJobManager.getNextRunTimestamp(it) - System.currentTimeMillis()
             }
         }
-        logErrorCountData.value = IntegrityCore.logRepository.getUnreadErrors().count()
-        IntegrityCore.logRepository.addChangesListener(this.toString()) {
-            logErrorCountData.value = IntegrityCore.logRepository.getUnreadErrors().count()
+        logErrorCountData.value = logRepository.getUnreadErrors().count()
+        logRepository.addChangesListener(this.toString()) {
+            logErrorCountData.value = logRepository.getUnreadErrors().count()
         }
 
         // version name, snapshot type component names  are static
         versionNameData.value = BuildConfig.VERSION_NAME
-        typeNameData.value = IntegrityCore.getTypeNames().map {
-            it.className.substringAfterLast(".").removeSuffix("TypeActivity")
-        }  // todo names from resources; listen to changes
+        typeNameData.value = dataTypeRepository.getAllDataTypes().map { it.title } // todo add listener to repo
 
         // snapshots, search results initial values
         snapshotsData.value = fetchSnapshots()
@@ -182,8 +196,8 @@ class MainScreenViewModel(
     private fun fetchSnapshots(): List<Pair<Snapshot, Int>> {
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val snapshots = SortingUtil.sortSnapshots(when (filteredArtifactId) {
-            null -> IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(true)
-            else -> IntegrityCore.metadataRepository.getArtifactMetadata(filteredArtifactId)
+            null -> metadataRepository.getAllArtifactLatestMetadata(true)
+            else -> metadataRepository.getArtifactMetadata(filteredArtifactId)
         }.snapshots, getSortingMethod())
         return snapshots.map { Pair(it, getSnapshotCount(it.artifactId)) }.toList()
     }
@@ -198,7 +212,7 @@ class MainScreenViewModel(
         }
     }
 
-    private fun getSnapshotCount(artifactId: Long) = IntegrityCore.metadataRepository
+    private fun getSnapshotCount(artifactId: Long) = metadataRepository
             .getArtifactMetadata(artifactId).snapshots.count()
 
 
@@ -251,7 +265,7 @@ class MainScreenViewModel(
     fun computeArtifactFilterTitle(): String {
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val title = if (filteredArtifactId != null) {
-            IntegrityCore.metadataRepository.getLatestSnapshotMetadata(filteredArtifactId).title
+            metadataRepository.getLatestSnapshotMetadata(filteredArtifactId).title
         } else {
             ""
         }
@@ -277,32 +291,40 @@ class MainScreenViewModel(
     }
 
     private fun viewRunningJobOrOpenSnapshot(artifactId: Long, date: String) {
-        val snapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId, date)
+        val snapshot = metadataRepository.getSnapshotMetadata(artifactId, date)
         if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
             viewRunningJobDialog(artifactId, date)
             return
         }
         // todo ensure snapshot data presence in folder first
-        val activityInfo = IntegrityCore.getDataTypeActivityInfo(snapshot.dataTypeClassName)
+        val dataType = dataTypeRepository.getDataType(snapshot.dataTypeClassName)
         navigationEventData.value = NavigationEvent(
-                targetPackage = activityInfo.packageName,
-                targetClass = activityInfo.name,
+                targetPackage = dataType.packageName,
+                targetClass = dataType.viewerClass,
                 bundledSnapshot = snapshot,
-                bundledDates = IntegrityCore.getCompleteSnapshotDatesOrNull(artifactId),
-                bundledFontName = IntegrityCore.getFont(),
-                bundledColorBackground = IntegrityCore.getColorBackground(),
-                bundledColorPrimary = IntegrityCore.getColorPrimary(),
-                bundledColorAccent = IntegrityCore.getColorAccent(),
-                bundledDataFolderName = IntegrityCore.getDataFolderName()
+                bundledDates = getCompleteSnapshotDatesOrNull(artifactId),
+                bundledFontName = settingsData.value!!.textFont,
+                bundledColorBackground = settingsData.value!!.colorBackground,
+                bundledColorPrimary = settingsData.value!!.colorPrimary,
+                bundledColorAccent = settingsData.value!!.colorAccent,
+                bundledDataFolderName = settingsData.value!!.dataFolderPath
         )
     }
+    
+    private fun getCompleteSnapshotDatesOrNull(artifactId: Long) = metadataRepository
+            .getArtifactMetadata(artifactId).snapshots
+            .filter { it.status == SnapshotStatus.COMPLETE }
+            .map { it.date }
+            .reversed() // in ascending order
+            .ifEmpty { null }
+
 
     private fun viewRunningJobDialog(artifactId: Long, date: String) {
-        val snapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId, date)
+        val snapshot = metadataRepository.getSnapshotMetadata(artifactId, date)
         if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
             updateInputState(inputStateData.value!!.copy(jobProgressArtifactId = artifactId,
                     jobProgressDate = date, jobProgressTitle = snapshot.title))
-            RunningJobManager.setJobProgressListener(snapshot) {
+            IntegrityLib.runningJobManager.setJobProgressListener(snapshot) {
                 if (it.result != null) {
                     hideRunningJobDialog() // done
                 } else if (it.progressMessage != null) {
@@ -334,21 +356,21 @@ class MainScreenViewModel(
     fun selectSortingTypeOption(index: Int) {
         val newSortingMethod = SortingUtil.changeSortingType(settingsData.value!!.sortingMethod,
                 index)
-        IntegrityCore.settingsRepository.set(IntegrityCore.context, IntegrityCore.settingsRepository
+        settingsRepository.set(settingsRepository
                 .get().copy(sortingMethod = newSortingMethod))
     }
 
     fun clickSortingDirectionButton() {
         val newSortingMethod = SortingUtil.revertSortingDirection(settingsData.value!!.sortingMethod)
-        IntegrityCore.settingsRepository.set(IntegrityCore.context, IntegrityCore.settingsRepository
+        settingsRepository.set(settingsRepository
                 .get().copy(sortingMethod = newSortingMethod))
     }
 
     fun removeArtifact(artifactId: Long)
-            = SnapshotOperations.removeArtifact(IntegrityCore.context, artifactId, false)
+            = snapshotOperationManager.removeArtifact(artifactId, false)
 
     fun removeSnapshot(artifactId: Long, date: String)
-            = SnapshotOperations.removeSnapshot(IntegrityCore.context, artifactId, date, false)
+            = snapshotOperationManager.removeSnapshot(artifactId, date, false)
 
     fun addSnapshot(artifactId: Long) {
         openAddSnapshotOfArtifact(artifactId)
@@ -362,15 +384,15 @@ class MainScreenViewModel(
         if (artifactId != null) {
             openAddSnapshotOfArtifact(artifactId)
         } else {
-            val typeName = IntegrityCore.getTypeNames().toList()[index]
+            val dataType = dataTypeRepository.getAllDataTypes()[index]
             navigationEventData.value = NavigationEvent(
-                    targetPackage = typeName.packageName,
-                    targetClass = typeName.className,
-                    bundledFontName = IntegrityCore.getFont(),
-                    bundledColorBackground = IntegrityCore.getColorBackground(),
-                    bundledColorPrimary = IntegrityCore.getColorPrimary(),
-                    bundledColorAccent = IntegrityCore.getColorAccent(),
-                    bundledDataFolderName = IntegrityCore.getDataFolderName()
+                    targetPackage = dataType.packageName,
+                    targetClass = dataType.viewerClass,
+                    bundledFontName = settingsData.value!!.textFont,
+                    bundledColorBackground = settingsData.value!!.colorBackground,
+                    bundledColorPrimary = settingsData.value!!.colorPrimary,
+                    bundledColorAccent = settingsData.value!!.colorAccent,
+                    bundledDataFolderName = settingsData.value!!.dataFolderPath
             )
         }
     }
@@ -379,7 +401,7 @@ class MainScreenViewModel(
     // drawer user actions
 
     fun expandRunningJobsHeader(isExpanded: Boolean) {
-        IntegrityCore.settingsRepository.set(IntegrityCore.context, IntegrityCore.settingsRepository
+        settingsRepository.set(settingsRepository
                 .get().copy(jobsExpandRunning = isExpanded))
     }
 
@@ -388,7 +410,7 @@ class MainScreenViewModel(
     }
 
     fun expandScheduledJobsHeader(isExpanded: Boolean) {
-        IntegrityCore.settingsRepository.set(IntegrityCore.context, IntegrityCore.settingsRepository
+        settingsRepository.set(settingsRepository
                 .get().copy(jobsExpandScheduled = isExpanded))
     }
 
@@ -397,17 +419,17 @@ class MainScreenViewModel(
     }
 
     private fun openAddSnapshotOfArtifact(artifactId: Long) {
-        val snapshot = IntegrityCore.metadataRepository.getLatestSnapshotMetadata(artifactId)
-        val activityInfo = IntegrityCore.getDataTypeActivityInfo(snapshot.dataTypeClassName)
+        val snapshot = metadataRepository.getLatestSnapshotMetadata(artifactId)
+        val dataType = dataTypeRepository.getDataType(snapshot.dataTypeClassName)
         navigationEventData.value = NavigationEvent(
-                targetPackage = activityInfo.packageName,
-                targetClass = activityInfo.name,
+                targetPackage = dataType.packageName,
+                targetClass = dataType.viewerClass,
                 bundledSnapshot = snapshot.copy(status = SnapshotStatus.BLUEPRINT), // as blueprint
-                bundledFontName = IntegrityCore.getFont(),
-                bundledColorBackground = IntegrityCore.getColorBackground(),
-                bundledColorPrimary = IntegrityCore.getColorPrimary(),
-                bundledColorAccent = IntegrityCore.getColorAccent(),
-                bundledDataFolderName = IntegrityCore.getDataFolderName()
+                bundledFontName = settingsData.value!!.textFont,
+                bundledColorBackground = settingsData.value!!.colorBackground,
+                bundledColorPrimary = settingsData.value!!.colorPrimary,
+                bundledColorAccent = settingsData.value!!.colorAccent,
+                bundledDataFolderName = settingsData.value!!.dataFolderPath
         )
     }
 
@@ -437,7 +459,7 @@ class MainScreenViewModel(
     }
 
     fun setScheduledJobsEnabled(enabled: Boolean) {
-        IntegrityCore.settingsRepository.set(IntegrityCore.context, IntegrityCore.settingsRepository
+        settingsRepository.set(settingsRepository
                 .get().copy(jobsEnableScheduled = enabled))
     }
 
@@ -460,7 +482,7 @@ class MainScreenViewModel(
     // dialog
 
     fun cancelSnapshotCreation() {
-        SnapshotOperations.cancelSnapshotCreation(IntegrityCore.context,
+        snapshotOperationManager.cancelSnapshotCreation(
                 inputStateData.value!!.jobProgressArtifactId!!,
                 inputStateData.value!!.jobProgressDate!!)
         hideRunningJobDialog()
@@ -491,9 +513,9 @@ class MainScreenViewModel(
     // lifecycle actions
 
     fun snapshotReturned(snapshot: Snapshot) {
-        val isSaving = SnapshotOperations.saveSnapshot(IntegrityCore.context, snapshot)
+        val isSaving = snapshotOperationManager.saveSnapshot(snapshot)
         if (isSaving) {
-            val snapshotBlueprint = IntegrityCore.metadataRepository
+            val snapshotBlueprint = metadataRepository
                     .getLatestSnapshotMetadata(snapshot.artifactId)
             viewRunningJobDialog(snapshotBlueprint.artifactId, snapshotBlueprint.date)
         }

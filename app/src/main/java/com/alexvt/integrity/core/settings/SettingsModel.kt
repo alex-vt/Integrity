@@ -6,8 +6,8 @@
 
 package com.alexvt.integrity.core.settings
 
-import com.alexvt.integrity.lib.FolderLocation
-import com.alexvt.integrity.lib.Tag
+import com.alexvt.integrity.lib.metadata.FolderLocation
+import com.alexvt.integrity.lib.metadata.Tag
 import java.io.Serializable
 
 /**

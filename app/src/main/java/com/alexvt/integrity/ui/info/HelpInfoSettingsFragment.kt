@@ -12,7 +12,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.util.ViewExternalUtil
+import com.alexvt.integrity.lib.util.ViewExternalUtil
 import com.alexvt.integrity.ui.recovery.RecoveryActivity
 import com.alexvt.integrity.ui.settings.SettingsActivity
 

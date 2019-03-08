@@ -20,8 +20,11 @@ import androidx.databinding.ViewDataBinding
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.list.listItems
-import com.alexvt.integrity.core.util.*
-import com.alexvt.integrity.lib.util.DataCacheFolderUtil
+import com.alexvt.integrity.lib.destinations.DestinationNameUtilResolver
+import com.alexvt.integrity.lib.filesystem.AndroidFilesystemManager
+import com.alexvt.integrity.lib.util.*
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
+import com.alexvt.integrity.lib.metadata.*
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.lib.databinding.ActivityDataTypeBinding
 import com.alexvt.integrity.lib.databinding.ViewColorEditBinding
@@ -41,6 +44,9 @@ abstract class DataTypeActivity : ThemedActivity() {
     // snapshot metadata to view/save related data // todo move to repository, keep state synced
     private lateinit var snapshot: SnapshotMetadata
 
+    protected val dataFolderManager: DataFolderManager by lazy {
+        DataFolderManager(AndroidFilesystemManager(this))
+    }
 
     // Data type methods for implementation
 
@@ -71,7 +77,7 @@ abstract class DataTypeActivity : ThemedActivity() {
 
     protected fun isSnapshotViewMode(): Boolean {
         if (snapshotDataExists()) {
-            val snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
+            val snapshot = TypeSpecificMetadataConverter.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
             if (snapshot.status != SnapshotStatus.BLUEPRINT) {
                 return true
             }
@@ -81,7 +87,7 @@ abstract class DataTypeActivity : ThemedActivity() {
 
     protected fun isSnapshotCreateMode(): Boolean {
         if (snapshotDataExists()) {
-            val snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
+            val snapshot = TypeSpecificMetadataConverter.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
             if (snapshot.status == SnapshotStatus.BLUEPRINT) {
                 return true
             }
@@ -144,7 +150,7 @@ abstract class DataTypeActivity : ThemedActivity() {
         binding.filter.addView(inflateFilterView(this).root)
 
         if (isSnapshotViewMode()) {
-            snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
+            snapshot = TypeSpecificMetadataConverter.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
 
             viewSnapshot(snapshot)
             if (snapshot.status == SnapshotStatus.COMPLETE) {
@@ -152,7 +158,7 @@ abstract class DataTypeActivity : ThemedActivity() {
             }
 
         } else if (isSnapshotCreateMode()) {
-            snapshot = IntegrityEx.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
+            snapshot = TypeSpecificMetadataConverter.toTypeSpecificMetadata(IntentUtil.getSnapshot(intent)!!)
 
             supportActionBar!!.title = "Creating new ${getTypeName()} Type Snapshot"
 
@@ -244,9 +250,9 @@ abstract class DataTypeActivity : ThemedActivity() {
 
     private fun showPreview(snapshot: SnapshotMetadata) {
         binding.ivPreview.visibility = View.VISIBLE
-        val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(applicationContext,
+        val snapshotPreviewPath = dataFolderManager.getSnapshotPreviewPath(
                 getDataFolderName(), snapshot.artifactId, snapshot.date)
-        if (!DataCacheFolderUtil.fileExists(this, snapshotPreviewPath)) {
+        if (!dataFolderManager.fileExists(snapshotPreviewPath)) {
             return
         }
         Glide.with(this)
@@ -262,9 +268,9 @@ abstract class DataTypeActivity : ThemedActivity() {
         binding.hpDates.values = dates
         binding.hpDates.selectedItem = dates.indexOf(snapshot.date)
         binding.hpDates.setOnItemSelectedListener {
-            val snapshotFolderName = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
+            val snapshotFolderName = dataFolderManager.getSnapshotFolderPath(
                     getDataFolderName(), snapshot.artifactId, dates[it])
-            val snapshotJson = DataCacheFolderUtil.getTextFromFile(this,
+            val snapshotJson = dataFolderManager.readTextFromFile(
                     "$snapshotFolderName/_metadata.json.txt")
             snapshot = JsonSerializerUtil.fromJson(snapshotJson, SnapshotMetadata::class.java)
             viewSnapshot(snapshot)
@@ -319,12 +325,12 @@ abstract class DataTypeActivity : ThemedActivity() {
         intent.component = ComponentName("com.alexvt.integrity",
                 "com.alexvt.integrity.ui.destinations.DestinationsActivity") // todo resolve
         IntentUtil.putSelectMode(intent, selectMode)
-        IntentUtil.putSnapshot(intent, IntegrityEx.fromTypeSpecificMetadata(this, snapshot))
+        IntentUtil.putSnapshot(intent, TypeSpecificMetadataConverter.fromTypeSpecificMetadata(this, snapshot))
         startActivityForResult(intent, 0)
     }
 
     private fun updateFolderLocationSelectionInViews(folderLocations: List<FolderLocation>) {
-        binding.tvArchiveLocations.text = IntegrityEx.getFolderLocationNames(folderLocations)
+        binding.tvArchiveLocations.text = DestinationNameUtilResolver.getDestinationNames(folderLocations)
                 .joinToString(separator = ", ")
     }
 
@@ -335,7 +341,7 @@ abstract class DataTypeActivity : ThemedActivity() {
         intent.component = ComponentName("com.alexvt.integrity",
                 "com.alexvt.integrity.ui.tags.TagsActivity") // todo resolve
         IntentUtil.putSelectMode(intent, selectMode)
-        IntentUtil.putSnapshot(intent, IntegrityEx.fromTypeSpecificMetadata(this, snapshot))
+        IntentUtil.putSnapshot(intent, TypeSpecificMetadataConverter.fromTypeSpecificMetadata(this, snapshot))
         startActivityForResult(intent, 0)
     }
 
@@ -442,7 +448,7 @@ abstract class DataTypeActivity : ThemedActivity() {
 
     private fun returnSnapshot(snapshot: SnapshotMetadata) {
         val intent = Intent()
-        IntentUtil.putSnapshot(intent, IntegrityEx.fromTypeSpecificMetadata(this, snapshot))
+        IntentUtil.putSnapshot(intent, TypeSpecificMetadataConverter.fromTypeSpecificMetadata(this, snapshot))
         setResult(Activity.RESULT_OK, intent)
         finish()
     }

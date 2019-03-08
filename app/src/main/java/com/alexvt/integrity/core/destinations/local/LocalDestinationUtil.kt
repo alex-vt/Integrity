@@ -9,6 +9,7 @@ package com.alexvt.integrity.core.destinations.local
 import android.content.ComponentName
 import android.content.Context
 import com.alexvt.integrity.core.destinations.DestinationUtil
+import com.alexvt.integrity.lib.destinations.local.LocalFolderLocation
 import com.snatik.storage.Storage
 import java.io.File
 

@@ -8,7 +8,7 @@ package com.alexvt.integrity.core.destinations
 
 import android.content.ComponentName
 import android.content.Context
-import com.alexvt.integrity.lib.FolderLocation
+import com.alexvt.integrity.lib.metadata.FolderLocation
 
 /**
  * Data archive read/write contract for a type of viewable folder location

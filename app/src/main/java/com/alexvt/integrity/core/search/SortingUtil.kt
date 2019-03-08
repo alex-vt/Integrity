@@ -7,7 +7,8 @@
 package com.alexvt.integrity.core.search
 
 import com.alexvt.integrity.core.settings.SortingMethod
-import com.alexvt.integrity.lib.Snapshot
+import com.alexvt.integrity.lib.metadata.Snapshot
+import com.alexvt.integrity.lib.search.SearchResult
 
 object SortingUtil { // for UI
 
@@ -52,7 +53,7 @@ object SortingUtil { // for UI
 
 
     fun sortSnapshots(snapshots: List<Snapshot>,
-                              sortingMethod: String) = with (snapshots) {
+                      sortingMethod: String) = with (snapshots) {
         if (isByDate(sortingMethod)) {
             if (isAscending(sortingMethod)) {
                 sortedBy { it.date }

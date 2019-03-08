@@ -6,19 +6,19 @@
 
 package com.alexvt.integrity.lib.util
 
-import android.content.Context
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
 
-object WebArchiveFilesUtil {
+class WebArchiveFilesUtil(private val dataFolderManager: DataFolderManager) {
 
-    fun savePageLinkToIndex(context: Context, pageLink: String, snapshotPath: String, pageIndex: Int) {
+    fun savePageLinkToIndex(pageLink: String, snapshotPath: String, pageIndex: Int) {
         android.util.Log.v("WebArchiveFilesUtil", "savePageLinkToIndex: $pageLink")
-        DataCacheFolderUtil.addTextToFile(context, getLocalHtmlLink(pageLink, pageIndex, 0),
+        dataFolderManager.addTextToFile(getLocalHtmlLink(pageLink, pageIndex, 0),
                 getPaginationPath(snapshotPath))
     }
 
-    fun saveLinkToIndex(context: Context, link: String, snapshotPath: String, pageIndex: Int, linkIndex: Int) {
+    fun saveLinkToIndex(link: String, snapshotPath: String, pageIndex: Int, linkIndex: Int) {
         android.util.Log.v("WebArchiveFilesUtil", "saveLinkToIndex: $link")
-        DataCacheFolderUtil.addTextToFile(context, getLocalHtmlLink(link, pageIndex, linkIndex),
+        dataFolderManager.addTextToFile(getLocalHtmlLink(link, pageIndex, linkIndex),
                 getLinksPath(snapshotPath))
     }
 
@@ -28,8 +28,8 @@ object WebArchiveFilesUtil {
     /**
      * Web archive is downloaded when its corresponding link exists in index.
      */
-    fun webArchiveAlreadyDownloaded(context: Context, link: String, snapshotPath: String)
-            = LinkUtil.getLinkTexts(DataCacheFolderUtil.readTextFromFile(context, getLinksPath(snapshotPath)))
+    fun webArchiveAlreadyDownloaded(link: String, snapshotPath: String)
+            = LinkUtil.getLinkTexts(dataFolderManager.readTextFromFile(getLinksPath(snapshotPath)))
             .contains(link)
 
     fun getArchivePath(pageIndex: Int, linkIndex: Int)
@@ -39,23 +39,23 @@ object WebArchiveFilesUtil {
      * Gets map of links for already persisted pagination-to-web-archives index
      * to the corresponding archive links.
      */
-    fun getPageIndexLinkToArchivePathMap(context: Context, snapshotPath: String, archivePathPrefix: String)
-            = LinkUtil.getLinkTexts(DataCacheFolderUtil.readTextFromFile(context, getLinksPath(snapshotPath)))
-            .zip(LinkUtil.getLinks(DataCacheFolderUtil.readTextFromFile(context, getLinksPath(snapshotPath)))
+    fun getPageIndexLinkToArchivePathMap(snapshotPath: String, archivePathPrefix: String)
+            = LinkUtil.getLinkTexts(dataFolderManager.readTextFromFile(getLinksPath(snapshotPath)))
+            .zip(LinkUtil.getLinks(dataFolderManager.readTextFromFile(getLinksPath(snapshotPath)))
                     .map { archivePathPrefix + it })
             .toMap()
 
     /**
      * Gets web archive links for already persisted pagination-to-web-archives index.
      */
-    fun getPageIndexArchiveLinks(context: Context, snapshotPath: String)
-            = LinkUtil.getLinks(DataCacheFolderUtil.readTextFromFile(context, getPaginationPath(snapshotPath)))
+    fun getPageIndexArchiveLinks(snapshotPath: String)
+            = LinkUtil.getLinks(dataFolderManager.readTextFromFile(getPaginationPath(snapshotPath)))
 
     /**
      * Gets page links for already persisted pagination-to-web-archives index.
      */
-    fun getPageIndexLinks(context: Context, snapshotPath: String)
-            = LinkUtil.getLinkTexts(DataCacheFolderUtil.readTextFromFile(context, getPaginationPath(snapshotPath)))
+    fun getPageIndexLinks(snapshotPath: String)
+            = LinkUtil.getLinkTexts(dataFolderManager.readTextFromFile(getPaginationPath(snapshotPath)))
 
     private fun getPaginationPath(snapshotPath: String) = "$snapshotPath/index-pages.html"
 

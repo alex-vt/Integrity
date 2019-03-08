@@ -15,9 +15,9 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.util.FontUtil
-import com.alexvt.integrity.core.util.ThemeUtil
-import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.lib.util.FontUtil
+import com.alexvt.integrity.lib.util.ThemeUtil
+import com.alexvt.integrity.lib.util.ThemedActivity
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
@@ -95,7 +95,7 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
                             initialSelection = currentFontIndex) { dialog, index, text ->
                         val selectedFontName = fontNames[index]
                         if (selectedFontName != currentFontName) {
-                            saveFont(context!!, selectedFontName)
+                            saveFont( selectedFontName)
                             prefTextFont.summary = selectedFontName
                             FontUtil.setFont(activity!!, IntegrityCore.getFont())
                             activity!!.setResult(Activity.RESULT_OK, IntentUtil.withRecreate(true))
@@ -108,21 +108,21 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
 
 
     fun saveAndApplyColorBackground(context: Context, intColor: Int) {
-        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
+        IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get().copy(
                 colorBackground = ThemeUtil.getHexColor(intColor))
         )
         applyColors()
     }
 
     fun saveAndApplyColorPrimary(context: Context, intColor: Int) {
-        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
+        IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get().copy(
                 colorPrimary = ThemeUtil.getHexColor(intColor))
         )
         applyColors()
     }
 
     fun saveAndApplyColorAccent(context: Context, intColor: Int) {
-        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
+        IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get().copy(
                 colorAccent = ThemeUtil.getHexColor(intColor))
         )
         applyColors()
@@ -132,8 +132,8 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
         ThemeUtil.applyThemeAndRecreate(activity as ThemedActivity, IntegrityCore.getColors())
     }
 
-    fun saveFont(context: Context, fontName: String) {
-        IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get().copy(
+    private fun saveFont(fontName: String) {
+        IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get().copy(
                 textFont = fontName)
         )
     }

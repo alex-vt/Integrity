@@ -7,7 +7,6 @@
 package com.alexvt.integrity.type.github
 
 import com.alexvt.integrity.lib.DataTypeService
-import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.type.github.ui.GitHubTypeActivity
 
 class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
@@ -21,7 +20,7 @@ class GitHubTypeService: DataTypeService<GitHubTypeMetadata>() {
 
     override fun downloadData(dataFolderName: String, artifactId: Long, date: String,
                               typeMetadata: GitHubTypeMetadata): String {
-        val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, dataFolderName,
+        val snapshotPath = dataFolderManager.getSnapshotFolderPath(dataFolderName,
                 artifactId, date)
 
         // todo implement

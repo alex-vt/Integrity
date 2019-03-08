@@ -7,6 +7,9 @@
 package com.alexvt.integrity.core.search
 
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.search.DataChunk
+import com.alexvt.integrity.lib.search.NamedLink
+import com.alexvt.integrity.lib.search.SearchResult
 import java.util.regex.Pattern
 
 object SearchUtil {

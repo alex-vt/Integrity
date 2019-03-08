@@ -6,8 +6,8 @@
 
 package com.alexvt.integrity.core.search
 
-import android.content.Context
 import com.alexvt.integrity.core.util.Initializable
+import com.alexvt.integrity.lib.search.DataChunk
 
 /**
  * Manager of repository of text data chunks for search in.
@@ -19,17 +19,17 @@ interface SearchIndexRepository : Initializable {
     /**
      * Adds data chunks
      */
-    fun add(context: Context, dataChunks: List<DataChunk>)
+    fun add(cdataChunks: List<DataChunk>)
 
     /**
      * Removes data chunks for artifact
      */
-    fun removeForArtifact(context: Context, artifactId: Long)
+    fun removeForArtifact(artifactId: Long)
 
     /**
      * Removes data chunks for snapshot
      */
-    fun removeForSnapshot(context: Context, artifactId: Long, date: String)
+    fun removeForSnapshot(artifactId: Long, date: String)
 
     /**
      * Gets all data chunks text of which which contain the given text
@@ -44,5 +44,5 @@ interface SearchIndexRepository : Initializable {
     /**
      * Deletes all tags from database
      */
-    fun clear(context: Context)
+    fun clear()
 }

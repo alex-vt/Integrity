@@ -12,8 +12,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.log.LogEntry
-import com.alexvt.integrity.core.log.LogEntryType
+import com.alexvt.integrity.lib.log.LogEntry
+import com.alexvt.integrity.lib.log.LogEntryType
 import kotlinx.android.synthetic.main.log_list_item.view.*
 
 class LogRecyclerAdapter(val items: ArrayList<LogEntry>, val activity: Activity)

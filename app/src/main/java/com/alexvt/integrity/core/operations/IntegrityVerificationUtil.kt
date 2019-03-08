@@ -6,7 +6,7 @@
 
 package com.alexvt.integrity.core.operations
 
-import com.alexvt.integrity.lib.SnapshotMetadata
+import com.alexvt.integrity.lib.metadata.SnapshotMetadata
 
 object IntegrityVerificationUtil {
 

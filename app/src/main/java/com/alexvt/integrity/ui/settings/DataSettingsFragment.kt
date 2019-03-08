@@ -16,11 +16,11 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.ui.destinations.DestinationsActivity
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.ui.info.LegalInfoActivity
-import com.alexvt.integrity.lib.Log
-import com.alexvt.integrity.lib.util.DataCacheFolderUtil
+import com.alexvt.integrity.lib.log.Log
 import com.alexvt.integrity.ui.recovery.RecoveryActivity
 
 class DataSettingsFragment : PreferenceFragmentCompat() {
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.settings_data, rootKey)
 
@@ -38,8 +38,8 @@ class DataSettingsFragment : PreferenceFragmentCompat() {
                         prefill = IntegrityCore.getDataFolderName()) { _, text ->
                     val oldFolderName = IntegrityCore.getDataFolderName()
                     val newFolderName = text.trim().toString()
-                    DataCacheFolderUtil.moveDataCacheFolder(context, oldFolderName, newFolderName)
-                    IntegrityCore.settingsRepository.set(context, IntegrityCore.settingsRepository.get()
+                    IntegrityCore.dataFolderManager.moveDataCacheFolder(oldFolderName, newFolderName)
+                    IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
                             .copy(dataFolderPath = newFolderName))
                     Log(context, "Moved data downloads folder from $oldFolderName to $newFolderName")
                             .log()

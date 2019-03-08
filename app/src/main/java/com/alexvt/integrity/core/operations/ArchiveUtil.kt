@@ -6,17 +6,17 @@
 
 package com.alexvt.integrity.core.operations
 
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.lib.SnapshotMetadata
+import android.content.Context
+import com.alexvt.integrity.lib.metadata.SnapshotMetadata
 import com.snatik.storage.Storage
 import org.zeroturnaround.zip.ZipUtil
 import java.io.File
 
 object ArchiveUtil {
 
-    fun packSnapshot(dataCacheFolderPath: String): String {
+    fun packSnapshot(context: Context, dataCacheFolderPath: String): String {
         // todo watch job cancellation, split archive
-        val storage = Storage(IntegrityCore.context)
+        val storage = Storage(context)
         storage.createDirectory(dataCacheFolderPath)
 
         val archivePath = "$dataCacheFolderPath.zip"
@@ -29,9 +29,9 @@ object ArchiveUtil {
         return null
     }
 
-    fun addHashToArchivePath(archivePathWithoutHash: String, hash: String): String {
+    fun addHashToArchivePath(context: Context, archivePathWithoutHash: String, hash: String): String {
         val archivePathWithHash = archivePathWithoutHash.replaceLast(".zip", "_" + hash + ".zip")
-        val storage = Storage(IntegrityCore.context)
+        val storage = Storage(context)
         storage.rename(archivePathWithoutHash, archivePathWithHash)
         return archivePathWithHash
     }

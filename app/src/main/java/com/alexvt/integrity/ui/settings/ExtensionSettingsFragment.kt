@@ -6,15 +6,14 @@
 
 package com.alexvt.integrity.ui.settings
 
-import android.content.ComponentName
 import android.os.Bundle
 import androidx.preference.PreferenceFragmentCompat
 import com.alexvt.integrity.R
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
-import com.alexvt.integrity.core.IntegrityCore
 import com.afollestad.materialdialogs.MaterialDialog
-import com.alexvt.integrity.core.util.ViewExternalUtil
+import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.util.ViewExternalUtil
 
 
 class ExtensionSettingsFragment : PreferenceFragmentCompat() {
@@ -34,19 +33,19 @@ class ExtensionSettingsFragment : PreferenceFragmentCompat() {
         }
 
         val category: PreferenceCategory = findPreference("extensions")
-        IntegrityCore.getTypeNames()
+        IntegrityCore.dataTypeRepository.getAllDataTypes()
                 .filter { it.packageName != context!!.packageName } // except the built in types
-                .forEach { addExtensionPreference(category, it) }
+                .forEach { addExtensionPreference(category, it.title, it.packageName) }
     }
 
-    private fun addExtensionPreference(category: PreferenceCategory, typeName: ComponentName) {
+    private fun addExtensionPreference(category: PreferenceCategory, title: String,
+                                       packageName: String) {
         val prefExtension = Preference(context)
-        val name = typeName.className.substringAfterLast(".").removeSuffix("TypeActivity")
-        prefExtension.title = "$name type"
+        prefExtension.title = "$title type"
         prefExtension.summary = "View app info"
 
         prefExtension.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            ViewExternalUtil.viewAppInfo(context!!, typeName.packageName)
+            ViewExternalUtil.viewAppInfo(context!!, packageName)
             true
         }
 

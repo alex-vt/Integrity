@@ -6,10 +6,9 @@
 
 package com.alexvt.integrity.core.settings
 
-import android.content.Context
 import com.alexvt.integrity.core.util.Initializable
-import com.alexvt.integrity.lib.FolderLocation
-import com.alexvt.integrity.lib.Tag
+import com.alexvt.integrity.lib.metadata.FolderLocation
+import com.alexvt.integrity.lib.metadata.Tag
 
 /**
  * Manager of repository of app settings (singleton).
@@ -27,29 +26,29 @@ interface SettingsRepository : Initializable {
      */
     fun removeChangesListener(tag: String)
 
-    fun set(context: Context, integrityAppSettings: IntegrityAppSettings)
+    fun set(integrityAppSettings: IntegrityAppSettings)
 
     fun get(): IntegrityAppSettings
 
     /**
      * Rewrites settings with the default ones.
      */
-    fun resetToDefault(context: Context)
+    fun resetToDefault()
 
-    fun addTag(context: Context, tag: Tag)
+    fun addTag(tag: Tag)
 
-    fun removeTag(context: Context, name: String)
+    fun removeTag(name: String)
 
     fun getAllTags(): List<Tag>
 
-    fun clearTags(context: Context)
+    fun clearTags()
 
 
-    fun addFolderLocation(context: Context, folderLocation: FolderLocation): String
+    fun addFolderLocation(folderLocation: FolderLocation): String
 
     fun getAllFolderLocations(): List<FolderLocation>
 
-    fun removeFolderLocation(context: Context, title: String)
+    fun removeFolderLocation(title: String)
 
-    fun clearFolderLocations(context: Context)
+    fun clearFolderLocations()
 }

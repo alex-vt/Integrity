@@ -11,9 +11,9 @@ import android.os.Bundle
 import android.widget.Toast
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.destinations.samba.SambaFolderLocation
-import com.alexvt.integrity.core.destinations.samba.SambaFolderLocationCredentials
-import com.alexvt.integrity.core.util.ThemedActivity
+import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocation
+import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocationCredentials
+import com.alexvt.integrity.lib.util.ThemedActivity
 import kotlinx.android.synthetic.main.activity_samba_location.*
 
 
@@ -107,10 +107,10 @@ class SambaDestinationActivity : ThemedActivity() {
             return
         }
         // the old one is removed first
-        IntegrityCore.settingsRepository.removeFolderLocation(this, folderLocation.title)
-        IntegrityCore.credentialsRepository.removeCredentials(this, folderLocation.title)
-        IntegrityCore.settingsRepository.addFolderLocation(this, folderLocation)
-        IntegrityCore.credentialsRepository.addCredentials(this, folderLocationCredentials)
+        IntegrityCore.settingsRepository.removeFolderLocation(folderLocation.title)
+        IntegrityCore.credentialsRepository.removeCredentials(folderLocation.title)
+        IntegrityCore.settingsRepository.addFolderLocation(folderLocation)
+        IntegrityCore.credentialsRepository.addCredentials(folderLocationCredentials)
         finish()
     }
 

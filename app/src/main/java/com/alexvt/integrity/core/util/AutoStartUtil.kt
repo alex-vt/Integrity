@@ -9,7 +9,7 @@ package com.alexvt.integrity.core.util
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.alexvt.integrity.lib.Log
+import com.alexvt.integrity.lib.log.Log
 
 /**
  * Enables app running after it was interrupted by system events.

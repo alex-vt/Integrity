@@ -10,19 +10,20 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.log.LogEntry
 import com.alexvt.integrity.lib.util.IntentUtil
 
 object LogEventReceiver {
     // Broadcast receiver for receiving status updates from the IntentService.
     class LogEntryReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            acceptLogEntry(context, IntentUtil.getLogEntry(intent))
+            acceptLogEntry(IntentUtil.getLogEntry(intent))
         }
     }
 
 
-    private fun acceptLogEntry(context: Context, logEntry: LogEntry) {
-        IntegrityCore.logRepository.addEntry(context, logEntry)
+    private fun acceptLogEntry(logEntry: LogEntry) {
+        IntegrityCore.logRepository.addEntry(logEntry)
     }
 
     class LogReadReceiver : BroadcastReceiver() {

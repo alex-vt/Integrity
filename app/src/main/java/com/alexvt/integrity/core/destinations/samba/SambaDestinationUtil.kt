@@ -10,7 +10,9 @@ import android.content.ComponentName
 import android.content.Context
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.destinations.DestinationUtil
-import com.alexvt.integrity.lib.Log
+import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocation
+import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocationCredentials
+import com.alexvt.integrity.lib.log.Log
 import com.snatik.storage.Storage
 import java.io.File
 import jcifs.smb.SmbFile

@@ -8,12 +8,15 @@ package com.alexvt.integrity.type.blog
 
 import android.content.Context
 import com.alexvt.integrity.lib.DataTypeService
-import com.alexvt.integrity.lib.IntegrityEx
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
 import com.alexvt.integrity.lib.util.WebPageLoader
 import com.alexvt.integrity.type.blog.ui.BlogTypeActivity
 
 class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
+
+    private val webArchiveFilesUtil: WebArchiveFilesUtil by lazy {
+        WebArchiveFilesUtil(dataFolderManager)
+    }
 
     override fun getTypeScreenName(): String = "Website (Blog) Pages"
 
@@ -24,8 +27,7 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
 
     override fun downloadData(dataFolderName: String, artifactId: Long, date: String,
                               typeMetadata: BlogTypeMetadata): String {
-        val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, dataFolderName,
-                artifactId, date)
+        val snapshotPath = dataFolderManager.getSnapshotFolderPath(dataFolderName, artifactId, date)
 
         val dl = BlogMetadataDownload(
                 context = applicationContext,
@@ -36,8 +38,8 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
                 snapshotPath = snapshotPath // todo remove as calculable
         )
 
-        if (!LinkedPaginationHelper().downloadPages(dl)) {
-            IndexedPaginationHelper().downloadPages(dl)
+        if (!LinkedPaginationHelper(webArchiveFilesUtil).downloadPages(dl)) {
+            IndexedPaginationHelper(webArchiveFilesUtil).downloadPages(dl)
         }
 
         return snapshotPath
@@ -48,11 +50,11 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
      */
     override fun generateOfflinePreview(dataFolderName: String, artifactId: Long, date: String,
                                         typeMetadata: BlogTypeMetadata) {
-        val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext, dataFolderName,
+        val snapshotPath = dataFolderManager.getSnapshotFolderPath(dataFolderName,
                 artifactId, date)
-        val firstPageArchiveLink = WebArchiveFilesUtil.getPageIndexArchiveLinks(applicationContext,
-                snapshotPath).first()
-        val snapshotPreviewPath = IntegrityEx.getSnapshotPreviewPath(this, dataFolderName,
+        val firstPageArchiveLink = webArchiveFilesUtil
+                .getPageIndexArchiveLinks(snapshotPath).first()
+        val snapshotPreviewPath = dataFolderManager.getSnapshotPreviewPath(dataFolderName,
                 artifactId, date)
 
         WebPageLoader().getHtmlAndSaveScreenshot(applicationContext,

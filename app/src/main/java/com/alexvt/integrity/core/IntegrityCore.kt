@@ -8,57 +8,65 @@ package com.alexvt.integrity.core
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
-import com.alexvt.integrity.core.database.MetadataRepository
-import com.alexvt.integrity.core.database.SimplePersistableMetadataRepository
+import com.alexvt.integrity.core.metadata.MetadataRepository
+import com.alexvt.integrity.core.metadata.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.credentials.CredentialsRepository
 import com.alexvt.integrity.core.credentials.SimplePersistableCredentialsRepository
-import com.alexvt.integrity.core.job.ScheduledJobManager
-import android.content.ComponentName
-import android.content.pm.ActivityInfo
-import com.alexvt.integrity.core.destinations.DestinationUtil
-import com.alexvt.integrity.core.destinations.local.LocalFolderLocation
-import com.alexvt.integrity.core.destinations.samba.SambaFolderLocation
-import com.alexvt.integrity.core.log.*
-import com.alexvt.integrity.core.notification.DisabledScheduledJobsNotifier
-import com.alexvt.integrity.core.notification.ErrorNotifier
+import com.alexvt.integrity.core.jobs.ScheduledJobManager
+import com.alexvt.integrity.lib.filesystem.AndroidFilesystemManager
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
+import com.alexvt.integrity.core.jobs.AndroidScheduledJobManager
+import com.alexvt.integrity.core.log.LogRepository
+import com.alexvt.integrity.core.log.SimplePersistableLogRepository
+import com.alexvt.integrity.lib.log.*
+import com.alexvt.integrity.lib.metadata.SnapshotStatus
+import com.alexvt.integrity.core.notifications.DisabledScheduledJobsNotifier
+import com.alexvt.integrity.core.notifications.ErrorNotifier
+import com.alexvt.integrity.core.operations.AndroidSnapshotOperationManager
+import com.alexvt.integrity.core.operations.SnapshotOperationManager
 import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.search.SimplePersistableSearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.core.settings.SimplePersistableSettingsRepository
-import com.alexvt.integrity.core.util.*
-import com.alexvt.integrity.lib.*
+import com.alexvt.integrity.core.types.AndroidDataTypeRepository
+import com.alexvt.integrity.core.types.DataTypeRepository
+import com.alexvt.integrity.lib.util.*
 
-@SuppressLint("StaticFieldLeak") // context // todo DI
 /**
  * The entry point of business logic, actions on data and metadata in the Integrity app
  */
+@SuppressLint("StaticFieldLeak")
 object IntegrityCore {
     // todo replace early implementations
-    val metadataRepository: MetadataRepository = SimplePersistableMetadataRepository
-    val credentialsRepository: CredentialsRepository = SimplePersistableCredentialsRepository
-    val searchIndexRepository: SearchIndexRepository = SimplePersistableSearchIndexRepository
-    val logRepository: LogRepository = SimplePersistableLogRepository
-    val settingsRepository: SettingsRepository = SimplePersistableSettingsRepository
+    val metadataRepository: MetadataRepository by lazy { SimplePersistableMetadataRepository(context) }
+    val credentialsRepository: CredentialsRepository by lazy { SimplePersistableCredentialsRepository(context) }
+    val searchIndexRepository: SearchIndexRepository by lazy { SimplePersistableSearchIndexRepository(context) }
+    val logRepository: LogRepository by lazy { SimplePersistableLogRepository(context) }
+    val settingsRepository: SettingsRepository by lazy { SimplePersistableSettingsRepository(context) }
+    val dataTypeRepository: DataTypeRepository by lazy { AndroidDataTypeRepository(context) }
 
-    lateinit var context: Context
+    val dataFolderManager: DataFolderManager by lazy { DataFolderManager(AndroidFilesystemManager(context)) }
+    val scheduledJobManager: ScheduledJobManager by lazy { AndroidScheduledJobManager() }
+    val snapshotOperationManager: SnapshotOperationManager by lazy {AndroidSnapshotOperationManager(context) }
+
+    private lateinit var context: Context
 
     /**
      * Should be called before using any other functions.
      */
     fun init(context: Context) {
         IntegrityCore.context = context
-        logRepository.init(context)
-        settingsRepository.init(context)
-        metadataRepository.init(context)
-        credentialsRepository.init(context)
-        searchIndexRepository.init(context)
+        logRepository.init()
+        settingsRepository.init()
+        metadataRepository.init()
+        credentialsRepository.init()
+        searchIndexRepository.init()
 
         resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
 
         settingsRepository.addChangesListener(this.toString()) {
             notifyAboutDisabledScheduledJobs(context)
-            ScheduledJobManager.updateSchedule(context)
+            scheduledJobManager.updateSchedule(context)
         }
 
         logRepository.addChangesListener(this.toString()) {
@@ -72,8 +80,8 @@ object IntegrityCore {
         metadataRepository.getAllArtifactMetadata().snapshots
                 .filter { it.status == SnapshotStatus.IN_PROGRESS }
                 .forEach {
-                    metadataRepository.removeSnapshotMetadata(context, it.artifactId, it.date)
-                    metadataRepository.addSnapshotMetadata(context,
+                    metadataRepository.removeSnapshotMetadata(it.artifactId, it.date)
+                    metadataRepository.addSnapshotMetadata(
                             it.copy(status = SnapshotStatus.INCOMPLETE))
                 }
     }
@@ -93,12 +101,12 @@ object IntegrityCore {
 
     fun markErrorsRead(context: Context) {
         android.util.Log.v("IntegrityCore", "Errors marked read")
-        logRepository.markAllRead(context)
+        logRepository.markAllRead()
         ErrorNotifier.removeNotification(context)
     }
 
-    fun updateScheduledJobsOptions(context: Context, jobsEnabled: Boolean) {
-        settingsRepository.set(context, settingsRepository.get()
+    fun updateScheduledJobsOptions(jobsEnabled: Boolean) {
+        settingsRepository.set(settingsRepository.get()
                 .copy(jobsEnableScheduled = jobsEnabled))
     }
 
@@ -118,74 +126,10 @@ object IntegrityCore {
 
     fun getSortingMethod() = settingsRepository.get().sortingMethod
 
-    fun getCompleteSnapshotDatesOrNull(artifactId: Long) = metadataRepository
-            .getArtifactMetadata(artifactId).snapshots
-            .filter { it.status == SnapshotStatus.COMPLETE }
-            .map { it.date }
-            .reversed() // in ascending order
-            .ifEmpty { null }
-
     fun getColors() = with(settingsRepository.get()) {
         ThemeColors(colorBackground, colorPrimary, colorAccent)
     }
 
     fun getFont() = settingsRepository.get().textFont
-
-    fun getColorBackground() = settingsRepository.get().colorBackground
-
-    fun getColorPrimary() = settingsRepository.get().colorPrimary
-
-    fun getColorAccent() = settingsRepository.get().colorAccent
-
-
-    fun getDestinationComponent(title: String): ComponentName {
-        val folderLocation = settingsRepository.getAllFolderLocations()
-                .first { it.title == title }
-        return getDestinationUtil(folderLocation.javaClass)
-                .getViewMainActivityComponent()
-    }
-
-
-    /**
-     * Gets alphabetically sorted set of names of available data types.
-     */
-    fun getTypeNames() = getDataTypeActivityInfoList()
-            .map { ComponentName(it.packageName, it.name) }
-            .sortedBy { it.className.substringAfterLast(".") } // sorted by simple name
-
-    /**
-     * Gets list of archive destination labels.
-     */
-    fun getDestinationNames() = getDestinationClasses().map {
-        IntegrityEx.getDestinationNameUtil(it).getFolderLocationLabel()
-    }
-
-    fun getDestinationClasses() = listOf(
-            LocalFolderLocation::class.java,
-            SambaFolderLocation::class.java
-    )
-
-    /**
-     * See https://stackoverflow.com/a/41103379
-     */
-    fun <F: FolderLocation> getDestinationUtil(dataArchiveLocationClass: Class<F>): DestinationUtil<F> {
-        val utilClassName = dataArchiveLocationClass.name
-                .replace("FolderLocation", "DestinationUtil")
-        return Class.forName(utilClassName).kotlin.objectInstance as DestinationUtil<F>
-    }
-
-    fun getDataTypeActivityInfo(typeClassName: String): ActivityInfo {
-        val activityInfoList = getDataTypeActivityInfoList()
-        return activityInfoList.first {
-            typeClassName.substringAfterLast(".").removeSuffix("Metadata") ==
-                    it.name.substringAfterLast(".").removeSuffix("Activity")
-        }
-    }
-
-    private fun getDataTypeActivityInfoList() =
-            context.packageManager.queryIntentActivities(
-                    Intent("com.alexvt.integrity.ACTION_VIEW"), 0)
-                    .filter { it?.activityInfo != null }
-                    .map { it.activityInfo }
 
 }

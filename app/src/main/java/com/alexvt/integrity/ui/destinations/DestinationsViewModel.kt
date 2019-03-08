@@ -6,26 +6,32 @@
 
 package com.alexvt.integrity.ui.destinations
 
+import android.content.ComponentName
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.credentials.CredentialsRepository
+import com.alexvt.integrity.lib.destinations.DestinationNameUtilResolver
+import com.alexvt.integrity.core.destinations.DestinationUtilResolver
 import com.alexvt.integrity.core.settings.IntegrityAppSettings
-import com.alexvt.integrity.core.util.ThemeColors
-import com.alexvt.integrity.core.util.ThemeUtil
-import com.alexvt.integrity.lib.FolderLocation
-import com.alexvt.integrity.lib.Snapshot
+import com.alexvt.integrity.core.settings.SettingsRepository
+import com.alexvt.integrity.lib.util.ThemeColors
+import com.alexvt.integrity.lib.util.ThemeUtil
+import com.alexvt.integrity.lib.metadata.FolderLocation
+import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 
 
 class DestinationsViewModelFactory(
-        val packageName: String,
+        val settingsRepository: SettingsRepository,
+        val credentialsRepository: CredentialsRepository,
         val isSelectMode: Boolean,
         val snapshotWithInitialDestination: Snapshot?
 ) : ViewModelProvider.Factory {
     // Pass type parameter to instance if needed for initial state
     override fun <T : ViewModel> create(modelClass: Class<T>)
-            = DestinationsViewModel(packageName, isSelectMode, snapshotWithInitialDestination) as T
+            = DestinationsViewModel(settingsRepository, credentialsRepository, isSelectMode,
+            snapshotWithInitialDestination) as T
 }
 
 /**
@@ -49,7 +55,8 @@ data class NavigationEvent(
 )
 
 class DestinationsViewModel(
-        private val packageName: String,
+        private val settingsRepository: SettingsRepository,
+        private val credentialsRepository: CredentialsRepository,
         private val isSelectMode: Boolean,
         private val snapshotWithInitialDestination: Snapshot?
         ) : ViewModel() {
@@ -70,8 +77,8 @@ class DestinationsViewModel(
         )
 
         // settings (contain preset destinations)  are listened to in their repository
-        settingsData.value = IntegrityCore.settingsRepository.get()
-        IntegrityCore.settingsRepository.addChangesListener(this.toString()) {
+        settingsData.value = settingsRepository.get()
+        settingsRepository.addChangesListener(this.toString()) {
             settingsData.value = it
             updateDestinationList()
         }
@@ -104,7 +111,13 @@ class DestinationsViewModel(
 
     fun isSelectMode() = isSelectMode
 
-    fun getDestinationNames() = IntegrityCore.getDestinationNames()
+    /**
+     * Gets list of archive destination labels.
+     */
+    fun getDestinationNames() = DestinationUtilResolver.getDestinationClasses().map {
+        DestinationNameUtilResolver.getDestinationNameUtil(it).getFolderLocationLabel()
+    }
+
 
     fun getFont() = settingsData.value!!.textFont
 
@@ -140,14 +153,22 @@ class DestinationsViewModel(
     }
 
     private fun viewDestination(destination: FolderLocation) {
-        val component = IntegrityCore.getDestinationComponent(destination.title)
+        val component = getDestinationComponent(destination.title)
         navigationEventData.value = NavigationEvent(targetPackage = component.packageName,
                 targetClass = component.className, bundledTitle = destination.title)
     }
 
+    private fun getDestinationComponent(title: String): ComponentName {
+        val folderLocation = settingsRepository.getAllFolderLocations()
+                .first { it.title == title }
+        return DestinationUtilResolver.get(folderLocation.javaClass)
+                .getViewMainActivityComponent()
+    }
+
+
     fun removeDestination(title: String) {
-        IntegrityCore.settingsRepository.removeFolderLocation(IntegrityCore.context, title)
-        IntegrityCore.credentialsRepository.removeCredentials(IntegrityCore.context, title)
+        settingsRepository.removeFolderLocation(title)
+        credentialsRepository.removeCredentials(title)
     }
 
     fun clickDone() {
@@ -162,8 +183,8 @@ class DestinationsViewModel(
     // floating button user actions
 
     fun clickFloatingSubButton(index: Int) {
-        val destinationClass = IntegrityCore.getDestinationClasses()[index]
-        val viewComponent = IntegrityCore.getDestinationUtil(destinationClass)
+        val destinationClass = DestinationUtilResolver.getDestinationClasses()[index]
+        val viewComponent = DestinationUtilResolver.get(destinationClass)
                 .getViewMainActivityComponent()
         navigationEventData.value = NavigationEvent(viewComponent.packageName,
                 viewComponent.className)

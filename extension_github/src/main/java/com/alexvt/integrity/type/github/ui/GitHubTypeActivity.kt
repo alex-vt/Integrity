@@ -18,8 +18,7 @@ import com.alexvt.integrity.lib.DataTypeActivity
 import com.alexvt.integrity.lib.util.LinkUtil
 import com.alexvt.integrity.lib.util.WebArchiveFilesUtil
 import com.alexvt.integrity.lib.util.WebPageLoader
-import com.alexvt.integrity.lib.IntegrityEx
-import com.alexvt.integrity.lib.SnapshotMetadata
+import com.alexvt.integrity.lib.metadata.SnapshotMetadata
 import com.alexvt.integrity.type.github.GitHubTypeMetadata
 import com.alexvt.integrity.type.github.R
 import kotlinx.coroutines.Dispatchers
@@ -80,10 +79,10 @@ class GitHubTypeActivity : DataTypeActivity() {
     override fun snapshotViewModeAction(snapshot: SnapshotMetadata) {
         GlobalScope.launch (Dispatchers.Main) {
             content.webView.stopLoading()
-            val snapshotPath = IntegrityEx.getSnapshotDataFolderPath(applicationContext,
+            val snapshotPath = dataFolderManager.getSnapshotFolderPath(
                     getDataFolderName(), snapshot.artifactId, snapshot.date)
-            val linkToArchivePathRedirectMap = WebArchiveFilesUtil
-                    .getPageIndexLinkToArchivePathMap(applicationContext, snapshotPath,
+            val linkToArchivePathRedirectMap = WebArchiveFilesUtil(dataFolderManager)
+                    .getPageIndexLinkToArchivePathMap(snapshotPath,
                             "file://$snapshotPath/")
             val firstArchivePath = linkToArchivePathRedirectMap.entries.firstOrNull()?.value
                     ?: "file:blank" // todo replace

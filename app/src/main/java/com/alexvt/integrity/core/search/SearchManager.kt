@@ -6,13 +6,14 @@
 
 package com.alexvt.integrity.core.search
 
-import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.lib.search.DataChunk
 import com.alexvt.integrity.lib.search.NamedLink
 import com.alexvt.integrity.lib.search.SearchResult
 import java.util.regex.Pattern
 
-object SearchUtil {
+class SearchManager(private val metadataRepository: MetadataRepository,
+                    private val searchIndexRepository: SearchIndexRepository) {
 
     fun searchText(searchedText: String, artifactId: Long?)
             = searchTextIfBigEnough(searchedText)
@@ -27,12 +28,12 @@ object SearchUtil {
                     } }
             }.flatMap { it.toList() }
 
-    private const val minSearchTextLength = 3
+    private val minSearchTextLength = 3
 
     private fun isBigEnough(searchText: String) = searchText.length >= minSearchTextLength
 
     private fun searchTextIfBigEnough(searchedText: String) = if (isBigEnough(searchedText)) {
-        IntegrityCore.searchIndexRepository.searchText(searchedText)
+        searchIndexRepository.searchText(searchedText)
     } else {
         emptyList()
     }
@@ -40,7 +41,7 @@ object SearchUtil {
     private fun getLocationsOfSearchedText(text: String, searchedText: String)
             = Pattern.quote(searchedText).toRegex().findAll(text).map { it.range }
 
-    private fun getSearchResultTitle(chunk: DataChunk) = IntegrityCore.metadataRepository
+    private fun getSearchResultTitle(chunk: DataChunk) = metadataRepository
             .getSnapshotMetadata(chunk.artifactId, chunk.date).title
 
     private fun truncateTextRange(text: String, range: IntRange): Pair<String, IntRange> {

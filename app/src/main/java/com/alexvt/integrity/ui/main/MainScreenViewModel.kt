@@ -14,11 +14,12 @@ import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.core.jobs.ScheduledJobManager
 import com.alexvt.integrity.core.log.LogRepository
 import com.alexvt.integrity.lib.search.SearchResult
-import com.alexvt.integrity.core.search.SearchUtil
+import com.alexvt.integrity.core.search.SearchManager
 import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.core.settings.IntegrityAppSettings
 import com.alexvt.integrity.core.settings.SortingMethod
 import com.alexvt.integrity.core.operations.SnapshotOperationManager
+import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.core.types.DataTypeRepository
 import com.alexvt.integrity.lib.IntegrityLib
@@ -33,6 +34,7 @@ import com.alexvt.integrity.ui.util.SingleLiveEvent
 class MainScreenViewModelFactory(
         val packageName: String,
         val metadataRepository: MetadataRepository,
+        val searchIndexRepository: SearchIndexRepository,
         val settingsRepository: SettingsRepository,
         val logRepository: LogRepository,
         val dataTypeRepository: DataTypeRepository,
@@ -48,10 +50,10 @@ class MainScreenViewModelFactory(
 ) : ViewModelProvider.Factory {
     // Pass type parameter to instance if needed for initial state
     override fun <T : ViewModel> create(modelClass: Class<T>)
-            = MainScreenViewModel(packageName, metadataRepository, settingsRepository, 
-            logRepository, dataTypeRepository, snapshotOperationManager, scheduledJobManager,
-            destinationsScreenClass, tagsScreenClass, logScreenClass, settingsClass,
-            recoveryScreenClass, helpInfoScreenClass, legalInfoScreenClass) as T
+            = MainScreenViewModel(packageName, metadataRepository, searchIndexRepository,
+            settingsRepository, logRepository, dataTypeRepository, snapshotOperationManager,
+            scheduledJobManager, destinationsScreenClass, tagsScreenClass, logScreenClass,
+            settingsClass, recoveryScreenClass, helpInfoScreenClass, legalInfoScreenClass) as T
 }
 
 /**
@@ -95,6 +97,7 @@ class MainScreenViewModel(
         // for navigation
         private val packageName: String,
         private val metadataRepository: MetadataRepository,
+        private val searchIndexRepository: SearchIndexRepository,
         private val settingsRepository: SettingsRepository,
         private val logRepository: LogRepository,
         private val dataTypeRepository: DataTypeRepository,
@@ -185,12 +188,14 @@ class MainScreenViewModel(
         }
     }
 
+    private val searchUtil = SearchManager(metadataRepository, searchIndexRepository)
+
     private fun fetchSearchResults(): List<SearchResult> {
         val searchText = inputStateData.value!!.searchViewText
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val sortingMethod = settingsData.value!!.sortingMethod
         return SortingUtil.sortSearchResults(
-                SearchUtil.searchText(searchText, filteredArtifactId), sortingMethod)
+                searchUtil.searchText(searchText, filteredArtifactId), sortingMethod)
     }
 
     private fun fetchSnapshots(): List<Pair<Snapshot, Int>> {

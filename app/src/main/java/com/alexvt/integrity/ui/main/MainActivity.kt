@@ -64,6 +64,7 @@ class MainActivity : ThemedActivity() {
         ViewModelProviders.of(this, MainScreenViewModelFactory(
                 packageName = packageName,
                 metadataRepository = IntegrityCore.metadataRepository,
+                searchIndexRepository = IntegrityCore.searchIndexRepository,
                 settingsRepository = IntegrityCore.settingsRepository,
                 logRepository = IntegrityCore.logRepository,
                 snapshotOperationManager = IntegrityCore.snapshotOperationManager,

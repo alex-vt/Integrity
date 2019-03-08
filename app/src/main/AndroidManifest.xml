@@ -27,9 +27,9 @@
         tools:ignore="GoogleAppIndexingWarning"
         >
 
-        <activity
-            android:name="com.alexvt.integrity.ui.main.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+
+        <activity android:name=".ui.splash.SplashScreenActivity"
+            android:theme="@style/AppTheme.NoActionBar.Splash"
             android:launchMode="singleTop"
             >
             <intent-filter>
@@ -37,7 +37,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
 
+        <activity
+            android:name="com.alexvt.integrity.ui.main.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH"/>
             </intent-filter>

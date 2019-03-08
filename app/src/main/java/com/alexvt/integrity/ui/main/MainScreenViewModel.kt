@@ -128,6 +128,8 @@ class MainScreenViewModel(
     // single events
     val navigationEventData = SingleLiveEvent<NavigationEvent>()
 
+    private val searchUtil = SearchManager(metadataRepository, searchIndexRepository)
+
     init {
         // input state  starts as default
         inputStateData.value = MainScreenInputState(searchViewText = "", filteredArtifactId = null,
@@ -187,8 +189,6 @@ class MainScreenViewModel(
             if (isFasterMethod) requestThrottledLatest() else requestDebounced()
         }
     }
-
-    private val searchUtil = SearchManager(metadataRepository, searchIndexRepository)
 
     private fun fetchSearchResults(): List<SearchResult> {
         val searchText = inputStateData.value!!.searchViewText

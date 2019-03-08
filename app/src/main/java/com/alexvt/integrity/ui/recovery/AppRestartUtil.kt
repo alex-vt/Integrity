@@ -9,8 +9,8 @@ package com.alexvt.integrity.ui.recovery
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.alexvt.integrity.ui.main.MainActivity
 import com.alexvt.integrity.lib.log.Log
+import com.alexvt.integrity.ui.splash.SplashScreenActivity
 
 object AppRestartUtil {
 
@@ -38,7 +38,7 @@ class AppReopenReceiver : BroadcastReceiver() {
 class AppOpenReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Log(context, "App was (re)started explicitly").log()
-        context.startActivity(Intent(context, MainActivity::class.java).apply {
+        context.startActivity(Intent(context, SplashScreenActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
     }

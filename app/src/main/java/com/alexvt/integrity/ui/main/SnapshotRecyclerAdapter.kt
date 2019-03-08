@@ -70,10 +70,10 @@ class SnapshotRecyclerAdapter(private val items: ArrayList<Pair<Snapshot, Int>>,
         }
         holder.view.setOnLongClickListener {
             onLongClickListener.invoke(snapshot.artifactId, snapshot.date, isMultipleSnapshots)
-            // todo popup menu instead
             false
         }
 
+        // todo pass path with item, remove IntegrityCore dependency
         val snapshotPreviewPath = IntegrityCore.dataFolderManager.getSnapshotPreviewPath(
                 IntegrityCore.getDataFolderName(), snapshot.artifactId, snapshot.date)
         if (!IntegrityCore.dataFolderManager.fileExists(snapshotPreviewPath)) {

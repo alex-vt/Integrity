@@ -23,6 +23,7 @@ object DestinationUtilResolver {
     fun <F: FolderLocation> get(dataArchiveLocationClass: Class<F>): DestinationUtil<F> {
         val utilClassName = dataArchiveLocationClass.name
                 .replace("FolderLocation", "DestinationUtil")
+                .replace(".integrity.lib.destinations.", ".integrity.core.destinations.")
         return Class.forName(utilClassName).kotlin.objectInstance as DestinationUtil<F>
     }
 

@@ -57,9 +57,10 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
         val snapshotPreviewPath = dataFolderManager.getSnapshotPreviewPath(dataFolderName,
                 artifactId, date)
 
-        WebPageLoader().getHtmlAndSaveScreenshot(applicationContext,
+        WebPageLoader().getHtml(applicationContext,
                 "file://$snapshotPath/$firstPageArchiveLink", typeMetadata.loadImages,
-                typeMetadata.desktopSite, snapshotPreviewPath, typeMetadata.loadIntervalMillis)
+                typeMetadata.desktopSite, null, snapshotPreviewPath,
+                typeMetadata.loadIntervalMillis)
         }
 }
 

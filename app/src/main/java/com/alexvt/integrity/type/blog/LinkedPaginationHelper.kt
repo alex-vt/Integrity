@@ -60,7 +60,7 @@ internal class LinkedPaginationHelper(override val webArchiveFilesUtil: WebArchi
         SnapshotDownloadReporter.reportSnapshotDownloadProgress(dl.context, dl.artifactId, dl.date,
                 "Looking for links\n${getPaginationProgressText(currentPageLink, dl)}")
         val contents = WebPageLoader().getHtml(dl.context, currentPageLink, dl.metadata.loadImages,
-                dl.metadata.desktopSite, dl.metadata.loadIntervalMillis)
+                dl.metadata.desktopSite, null, null, dl.metadata.loadIntervalMillis)
         return contents
     }
 

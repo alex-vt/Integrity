@@ -36,10 +36,10 @@ internal abstract class CommonPaginationHelper(open val webArchiveFilesUtil: Web
                                 + linksToArchive.size + "\n"
                                 + getPaginationProgressText(currentPageLink, dl))
                 val webArchivePath = "${dl.snapshotPath}/${webArchiveFilesUtil.getArchivePath(pageIndex, linkIndex)}"
-                android.util.Log.v("WebPageLoader", "getHtmlAndSaveArchive, url = $link")
-                val pageHtml = WebPageLoader().getHtmlAndSaveArchive(context = dl.context, url = link,
+                android.util.Log.v("WebPageLoader", "getHtml, url = $link")
+                val pageHtml = WebPageLoader().getHtml(context = dl.context, url = link,
                         loadImages = dl.metadata.loadImages, desktopSite = dl.metadata.desktopSite,
-                        archiveSavePath = webArchivePath,
+                        archiveSavePath = webArchivePath, screenshotSavePath = null,
                         delayMillis = dl.metadata.loadIntervalMillis)
 
                 if (!isRunning(dl)) return

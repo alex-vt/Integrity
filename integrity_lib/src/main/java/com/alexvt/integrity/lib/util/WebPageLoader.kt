@@ -41,50 +41,46 @@ class WebPageLoader {
         }
     }
 
-    fun getHtml(context: Context, url: String, loadImages: Boolean, desktopSite: Boolean,
-                delayMillis: Long): String {
-        var html = ""
-        runBlocking(Dispatchers.Main) { // todo unload main thread
-            html = suspendCoroutine { continuation ->
-                loadPageInternal(WebView(context), url, emptyMap(), loadImages, desktopSite,
-                        null, 0, null) {
-                    continuation.resume(it)
-                }
-            }
-            delay(delayMillis)
-        }
-        return html
-    }
-
+    /**
+     * Async requests web page to be loaded into a given WebView in UI thread.
+     * Invokes the listener with the web page HTML when loaded.
+     */
     fun loadHtml(webView: WebView, startUrl: String, urlRedirectMap: Map<String, String>,
                  loadImages: Boolean, desktopSite: Boolean, pageLoadListener: (String) -> Unit) {
         loadPageInternal(webView, startUrl, urlRedirectMap, loadImages, desktopSite,
                 null, 0, null, pageLoadListener) // just HTML loading
     }
 
-    fun getHtmlAndSaveArchive(context: Context, url: String, loadImages: Boolean,
-                              desktopSite: Boolean, archiveSavePath: String?,
-                              delayMillis: Long): String {
-        var html = ""
-        runBlocking(Dispatchers.Main) {
-            html = suspendCoroutine { continuation ->
-                loadPageInternal(WebView(context), url, emptyMap(), loadImages, desktopSite,
-                        archiveSavePath, delayMillis, null) {
-                    continuation.resume(it)
-                }
-            }
-        }
-        return html
+    /**
+     * Loads web page in any thread.
+     * Returns the web page HTML when loaded.
+     */
+    fun getHtml(context: Context, url: String, loadImages: Boolean,
+                desktopSite: Boolean, archiveSavePath: String?,
+                screenshotSavePath: String?,
+                delayMillis: Long): String {
+        return getPageInternal(getWebView(context), url, emptyMap(), loadImages, desktopSite,
+                archiveSavePath, delayMillis, screenshotSavePath)
     }
 
-    fun getHtmlAndSaveScreenshot(context: Context, url: String, loadImages: Boolean,
-                                 desktopSite: Boolean, screenshotSavePath: String?,
-                                 delayMillis: Long): String {
-        var html = ""
+    private fun getWebView(context: Context): WebView {
+        var webView: WebView? = null
         runBlocking(Dispatchers.Main) {
+            webView = WebView(context)
+        }
+        return webView!!
+    }
+
+    private fun getPageInternal(webView: WebView, startUrl: String,
+                                urlRedirectMap: Map<String, String>,
+                                loadImages: Boolean, desktopSite: Boolean,
+                                archiveSavePath: String?, delayMillis: Long,
+                                screenshotSavePath: String?): String {
+        var html = ""
+        runBlocking(Dispatchers.Main) { // todo unload main thread
             html = suspendCoroutine { continuation ->
-                loadPageInternal(WebView(context), url, emptyMap(), loadImages, desktopSite, null,
-                        delayMillis, screenshotSavePath) {
+                loadPageInternal(webView, startUrl, urlRedirectMap, loadImages,
+                        desktopSite, archiveSavePath, delayMillis, screenshotSavePath) {
                     continuation.resume(it)
                 }
             }

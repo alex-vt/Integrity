@@ -53,7 +53,8 @@ internal class IndexedPaginationHelper(override val webArchiveFilesUtil: WebArch
                 "Collecting links\n${getPaginationProgressText(currentPageLink, dl)}")
         return if (pageContentsNeeded(dl)) {
             val currentPageHtml = WebPageLoader().getHtml(dl.context, currentPageLink,
-                    dl.metadata.loadImages, dl.metadata.desktopSite, dl.metadata.loadIntervalMillis)
+                    dl.metadata.loadImages, dl.metadata.desktopSite, null, null,
+                    dl.metadata.loadIntervalMillis)
             LinkUtil.ccsSelectLinks(currentPageHtml, dl.metadata.relatedPageLinksPattern,
                     dl.metadata.relatedPageLinksFilter, currentPageLink)
                     .keys

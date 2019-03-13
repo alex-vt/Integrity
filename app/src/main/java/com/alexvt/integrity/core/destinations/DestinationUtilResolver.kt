@@ -24,7 +24,9 @@ object DestinationUtilResolver {
         val utilClassName = dataArchiveLocationClass.name
                 .replace("FolderLocation", "DestinationUtil")
                 .replace(".integrity.lib.destinations.", ".integrity.core.destinations.")
-        return Class.forName(utilClassName).kotlin.objectInstance as DestinationUtil<F>
+        val destinationUtil = Class.forName(utilClassName).newInstance() as DestinationUtil<F>
+        android.util.Log.v("DestinationUtilResolver", "Resolved: $destinationUtil")
+        return destinationUtil
     }
 
 }

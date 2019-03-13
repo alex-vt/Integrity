@@ -12,10 +12,12 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
+import dagger.android.support.AndroidSupportInjection
 
 
 class LegalInfoSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        AndroidSupportInjection.inject(this)
         setPreferencesFromResource(R.xml.settings_info_legal, rootKey)
 
         val prefTerms: Preference = findPreference("legal_terms")

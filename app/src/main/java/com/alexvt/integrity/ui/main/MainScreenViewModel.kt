@@ -22,6 +22,7 @@ import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.core.types.DataTypeRepository
 import com.alexvt.integrity.lib.IntegrityLib
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.util.ThrottledFunction
 import com.alexvt.integrity.lib.util.ThemeColors
 import com.alexvt.integrity.lib.util.ThemeUtil
@@ -74,6 +75,7 @@ class MainScreenViewModel @Inject constructor(
         val metadataRepository: MetadataRepository,
         val searchIndexRepository: SearchIndexRepository,
         val settingsRepository: SettingsRepository,
+        val dataFolderManager: DataFolderManager,
         val logRepository: LogRepository,
         val dataTypeRepository: DataTypeRepository,
         val snapshotOperationManager: SnapshotOperationManager,

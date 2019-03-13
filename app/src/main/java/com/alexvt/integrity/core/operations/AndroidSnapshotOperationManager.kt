@@ -9,12 +9,15 @@ package com.alexvt.integrity.core.operations
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.destinations.DestinationUtilResolver
+import com.alexvt.integrity.core.metadata.MetadataRepository
+import com.alexvt.integrity.core.search.SearchIndexRepository
+import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.lib.jobs.JobProgress
-import com.alexvt.integrity.lib.IntegrityLib
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
+import com.alexvt.integrity.lib.jobs.RunningJobManager
 import com.alexvt.integrity.lib.search.DataChunks
 import com.alexvt.integrity.lib.types.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.lib.types.SnapshotDownloadStartRequest
@@ -22,19 +25,24 @@ import com.alexvt.integrity.lib.util.DeviceStateUtil
 import com.alexvt.integrity.lib.util.JsonSerializerUtil
 import com.alexvt.integrity.lib.log.Log
 import com.alexvt.integrity.lib.util.IntentUtil
+import dagger.android.AndroidInjection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import javax.inject.Inject
 
 /**
  * Saves snapshot metadata and data.
  */
-class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOperationManager {
-
-    private val dataFolderManager = IntegrityCore.dataFolderManager
-    private val runningJobManager = IntegrityLib.runningJobManager
-
+class AndroidSnapshotOperationManager @Inject constructor(
+        private val context: Context,
+        private val metadataRepository: MetadataRepository,
+        private val searchIndexRepository: SearchIndexRepository,
+        private val dataFolderManager: DataFolderManager,
+        private val runningJobManager: RunningJobManager,
+        private val settingsRepository: SettingsRepository
+) : SnapshotOperationManager {
 
     /**
      * Saves snapshot data and/or metadata blueprint according to its status.
@@ -47,7 +55,7 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
         }
         if (snapshot.status == SnapshotStatus.IN_PROGRESS
                 || snapshot.status == SnapshotStatus.INCOMPLETE) {
-            val snapshotBlueprint = IntegrityCore.metadataRepository
+            val snapshotBlueprint = metadataRepository
                     .getLatestSnapshotMetadata(snapshot.artifactId)
             if (deviceStateAllowsDownload(snapshot)) {
                 downloadFromBlueprint(snapshotBlueprint)
@@ -61,16 +69,16 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
      * Cancels long running job if it's running. Metadata status changes to Incomplete.
      */
     override fun cancelSnapshotCreation(artifactId: Long, date: String) {
-        val snapshotInProgress = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId,
+        val snapshotInProgress = metadataRepository.getSnapshotMetadata(artifactId,
                 date)
-        SnapshotDownloadCancelRequest().send(context, IntegrityCore.getDataFolderName(),
+        SnapshotDownloadCancelRequest().send(context, getDataFolderPath(),
                 snapshotInProgress)
 
         // Updating snapshot status as incomplete in database.
         val incompleteMetadata = snapshotInProgress.copy(status = SnapshotStatus.INCOMPLETE)
-        IntegrityCore.metadataRepository.removeSnapshotMetadata(
+        metadataRepository.removeSnapshotMetadata(
                 incompleteMetadata.artifactId, incompleteMetadata.date)
-        IntegrityCore.metadataRepository.addSnapshotMetadata(incompleteMetadata)
+        metadataRepository.addSnapshotMetadata(incompleteMetadata)
     }
 
     /**
@@ -78,9 +86,9 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
      * Optionally removes snapshot data as well.
      */
     override fun removeArtifact(artifactId: Long, alsoRemoveData: Boolean) {
-        IntegrityCore.metadataRepository.removeArtifactMetadata(artifactId)
-        IntegrityCore.searchIndexRepository.removeForArtifact(artifactId)
-        dataFolderManager.clear(IntegrityCore.getDataFolderName(), artifactId)
+        metadataRepository.removeArtifactMetadata(artifactId)
+        searchIndexRepository.removeForArtifact(artifactId)
+        dataFolderManager.clear(getDataFolderPath(), artifactId)
         // todo alsoRemoveData if needed
     }
 
@@ -89,9 +97,9 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
      * Optionally removes snapshot data as well.
      */
     override fun removeSnapshot(artifactId: Long, date: String, alsoRemoveData: Boolean) {
-        IntegrityCore.metadataRepository.removeSnapshotMetadata(artifactId, date)
-        IntegrityCore.searchIndexRepository.removeForSnapshot(artifactId, date)
-        dataFolderManager.clear(IntegrityCore.getDataFolderName(), artifactId, date)
+        metadataRepository.removeSnapshotMetadata(artifactId, date)
+        searchIndexRepository.removeForSnapshot(artifactId, date)
+        dataFolderManager.clear(getDataFolderPath(), artifactId, date)
         // todo alsoRemoveData if needed
     }
 
@@ -100,9 +108,9 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
      * Optionally removes snapshot data as well.
      */
     override fun removeAllSnapshots(alsoRemoveData: Boolean) {
-        IntegrityCore.metadataRepository.clear()
-        IntegrityCore.searchIndexRepository.clear()
-        dataFolderManager.clear(IntegrityCore.getDataFolderName())
+        metadataRepository.clear()
+        searchIndexRepository.clear()
+        dataFolderManager.clear(getDataFolderPath())
         // todo alsoRemoveData if needed
     }
 
@@ -130,8 +138,8 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
      */
     private fun saveSnapshotBlueprint(snapshot: Snapshot): String {
         val date = SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(System.currentTimeMillis())
-        IntegrityCore.metadataRepository.cleanupArtifactBlueprints(snapshot.artifactId) // no old ones
-        IntegrityCore.metadataRepository.addSnapshotMetadata(snapshot.copy(
+        metadataRepository.cleanupArtifactBlueprints(snapshot.artifactId) // no old ones
+        metadataRepository.addSnapshotMetadata(snapshot.copy(
                 date = date,
                 status = SnapshotStatus.BLUEPRINT
         ))
@@ -153,32 +161,38 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
     private fun downloadFromBlueprint(blueprintSnapshot: Snapshot) {
         // overwriting the previous snapshot state in database with In Progress
         val snapshotInProgress = blueprintSnapshot.copy(status = SnapshotStatus.IN_PROGRESS)
-        IntegrityCore.metadataRepository.removeSnapshotMetadata(
+        metadataRepository.removeSnapshotMetadata(
                 snapshotInProgress.artifactId, snapshotInProgress.date)
-        IntegrityCore.metadataRepository.addSnapshotMetadata(snapshotInProgress)
+        metadataRepository.addSnapshotMetadata(snapshotInProgress)
 
         // starting download
         runningJobManager.putJob(snapshotInProgress)
         postSnapshotDownloadProgress(snapshotInProgress, "Downloading data")
 
-        dataFolderManager.ensureSnapshotFolder(IntegrityCore.getDataFolderName(),
+        dataFolderManager.ensureSnapshotFolder(getDataFolderPath(),
                 snapshotInProgress.artifactId, snapshotInProgress.date)
         startSnapshotDataTypeDownloader(snapshotInProgress)
     }
 
     private fun startSnapshotDataTypeDownloader(snapshotInProgress: Snapshot) {
-        SnapshotDownloadStartRequest().send(context, IntegrityCore.getDataFolderName(),
+        SnapshotDownloadStartRequest().send(context, getDataFolderPath(),
                 snapshotInProgress)
         // Download of snapshot data files will start in a separate service
         // and will finish with the final response SnapshotProgressReceiver invocation.
     }
 
-    // Broadcast receiver for receiving status updates from the IntentService.
+
+    // Broadcast receiver for receiving status updates from data type services.
     class SnapshotProgressReceiver : BroadcastReceiver() {
+        @Inject
+        lateinit var snapshotOperationManager: SnapshotOperationManager
+        @Inject
+        lateinit var metadataRepository: MetadataRepository
+
         override fun onReceive(context: Context, intent: Intent) {
-            val snapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(
+            AndroidInjection.inject(this, context)
+            val snapshot = metadataRepository.getSnapshotMetadata(
                     IntentUtil.getArtifactId(intent), IntentUtil.getDate(intent))
-            val snapshotOperationManager = IntegrityCore.snapshotOperationManager as AndroidSnapshotOperationManager
             if (IntentUtil.isDownloaded(intent)) {
                 GlobalScope.launch(Dispatchers.IO) {
                     snapshotOperationManager.archiveSnapshot(snapshot)
@@ -190,19 +204,19 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
         }
     }
 
+
     /**
      * Packs snapshot data and metadata,
      * then sends archives to folder locations according to metadata.
      */
-    private fun archiveSnapshot(snapshotInProgress: Snapshot) {
-        if (!IntegrityLib.runningJobManager.isRunning(snapshotInProgress)) {
+    override fun archiveSnapshot(snapshotInProgress: Snapshot) {
+        if (!runningJobManager.isRunning(snapshotInProgress)) {
             return
         }
 
         // Packing downloaded snapshot
-        val dataFolderName = IntegrityCore.getDataFolderName()
         val dataFolderPath = dataFolderManager.ensureSnapshotFolder(
-                dataFolderName, snapshotInProgress.artifactId,
+                getDataFolderPath(), snapshotInProgress.artifactId,
                 snapshotInProgress.date)
         postSnapshotDownloadProgress(snapshotInProgress, "Compressing data")
         val archivePath = ArchiveUtil.packSnapshot(context, dataFolderPath)
@@ -237,23 +251,23 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
 
         postSnapshotDownloadProgress(completeSnapshot, "Saving metadata to database")
         // finally replacing incomplete metadata with complete one in database
-        IntegrityCore.metadataRepository.removeSnapshotMetadata(
+        metadataRepository.removeSnapshotMetadata(
                 snapshotInProgress.artifactId, snapshotInProgress.date)
-        IntegrityCore.metadataRepository.addSnapshotMetadata(completeSnapshot)
-        dataFolderManager.clearFiles(dataFolderName) // folders remain
+        metadataRepository.addSnapshotMetadata(completeSnapshot)
+        dataFolderManager.clearFiles(getDataFolderPath()) // folders remain
         if (!runningJobManager.isRunning(completeSnapshot)) {
             return
         }
 
         if (dataFolderManager.fileExists(dataFolderManager.getSnapshotDataChunksPath(
-                        dataFolderName, completeSnapshot.artifactId, completeSnapshot.date))) {
+                        getDataFolderPath(), completeSnapshot.artifactId, completeSnapshot.date))) {
             postSnapshotDownloadProgress(completeSnapshot, "Updating search index")
             val dataChunkListJson = dataFolderManager.readTextFromFile(
-                    dataFolderManager.getSnapshotDataChunksPath(dataFolderName,
+                    dataFolderManager.getSnapshotDataChunksPath(getDataFolderPath(),
                     completeSnapshot.artifactId, completeSnapshot.date))
             val dataChunks = JsonSerializerUtil.fromJson("{\"chunks\": [$dataChunkListJson]}",
                     DataChunks::class.java).chunks // todo make clean, ensure no duplicates
-            IntegrityCore.searchIndexRepository.add(dataChunks)
+            searchIndexRepository.add(dataChunks)
         }
 
         if (runningJobManager.isRunning(completeSnapshot)) {
@@ -262,10 +276,7 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
         }
     }
 
-
-    // utility methods
-
-    private fun postSnapshotDownloadProgress(snapshot: Snapshot, message: String) {
+    override fun postSnapshotDownloadProgress(snapshot: Snapshot, message: String) {
         logProgress(message, snapshot)
         GlobalScope.launch(Dispatchers.Main) {
             runningJobManager.invokeJobProgressListener(snapshot, JobProgress(
@@ -273,6 +284,11 @@ class AndroidSnapshotOperationManager(private val context: Context) : SnapshotOp
             ))
         }
     }
+
+
+    // utility methods
+
+    private fun getDataFolderPath() = settingsRepository.get().dataFolderPath
 
     private fun postSnapshotDownloadResult(result: Snapshot) {
         logProgress("Snapshot download complete", result)

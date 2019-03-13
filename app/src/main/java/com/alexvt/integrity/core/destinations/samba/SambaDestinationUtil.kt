@@ -18,14 +18,17 @@ import java.io.File
 import jcifs.smb.SmbFile
 import jcifs.smb.NtlmPasswordAuthentication
 import jcifs.smb.SmbFileOutputStream
+import javax.inject.Inject
 
 
-object SambaDestinationUtil : DestinationUtil<SambaFolderLocation> {
+class SambaDestinationUtil : DestinationUtil<SambaFolderLocation> {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
 
     override fun writeArchive(context: Context, sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,
                               archiveFolderLocation: SambaFolderLocation) {
-        val sambaFolderLocationCredentials = IntegrityCore.credentialsRepository
+        val sambaFolderLocationCredentials = integrityCore.credentialsRepository
                 .getCredentials(archiveFolderLocation.title) as SambaFolderLocationCredentials
         val sambaAuth = NtlmPasswordAuthentication(
                 null, sambaFolderLocationCredentials.user,

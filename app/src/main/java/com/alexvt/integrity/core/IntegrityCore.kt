@@ -6,56 +6,39 @@
 
 package com.alexvt.integrity.core
 
-import android.annotation.SuppressLint
 import android.content.Context
 import com.alexvt.integrity.core.metadata.MetadataRepository
-import com.alexvt.integrity.core.metadata.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.credentials.CredentialsRepository
-import com.alexvt.integrity.core.credentials.SimplePersistableCredentialsRepository
 import com.alexvt.integrity.core.jobs.ScheduledJobManager
-import com.alexvt.integrity.lib.filesystem.AndroidFilesystemManager
-import com.alexvt.integrity.lib.filesystem.DataFolderManager
-import com.alexvt.integrity.core.jobs.AndroidScheduledJobManager
 import com.alexvt.integrity.core.log.LogRepository
-import com.alexvt.integrity.core.log.SimplePersistableLogRepository
 import com.alexvt.integrity.lib.log.*
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.core.notifications.DisabledScheduledJobsNotifier
 import com.alexvt.integrity.core.notifications.ErrorNotifier
-import com.alexvt.integrity.core.operations.AndroidSnapshotOperationManager
-import com.alexvt.integrity.core.operations.SnapshotOperationManager
 import com.alexvt.integrity.core.search.SearchIndexRepository
-import com.alexvt.integrity.core.search.SimplePersistableSearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
-import com.alexvt.integrity.core.settings.SimplePersistableSettingsRepository
-import com.alexvt.integrity.core.types.AndroidDataTypeRepository
-import com.alexvt.integrity.core.types.DataTypeRepository
 import com.alexvt.integrity.lib.util.*
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * The entry point of business logic, actions on data and metadata in the Integrity app
  */
-@SuppressLint("StaticFieldLeak")
-object IntegrityCore {
-    // todo replace early implementations
-    val metadataRepository: MetadataRepository by lazy { SimplePersistableMetadataRepository(context) }
-    val credentialsRepository: CredentialsRepository by lazy { SimplePersistableCredentialsRepository(context) }
-    val searchIndexRepository: SearchIndexRepository by lazy { SimplePersistableSearchIndexRepository(context) }
-    val logRepository: LogRepository by lazy { SimplePersistableLogRepository(context) }
-    val settingsRepository: SettingsRepository by lazy { SimplePersistableSettingsRepository(context) }
-    val dataTypeRepository: DataTypeRepository by lazy { AndroidDataTypeRepository(context) }
-
-    val dataFolderManager: DataFolderManager by lazy { DataFolderManager(AndroidFilesystemManager(context)) }
-    val scheduledJobManager: ScheduledJobManager by lazy { AndroidScheduledJobManager() }
-    val snapshotOperationManager: SnapshotOperationManager by lazy {AndroidSnapshotOperationManager(context) }
-
-    private lateinit var context: Context
+@Singleton
+class IntegrityCore @Inject constructor(
+        private val context: Context,
+        val metadataRepository: MetadataRepository,
+        val credentialsRepository: CredentialsRepository,
+        val searchIndexRepository: SearchIndexRepository,
+        val logRepository: LogRepository,
+        val settingsRepository: SettingsRepository,
+        private val scheduledJobManager: ScheduledJobManager
+) {
 
     /**
      * Should be called before using any other functions.
      */
-    fun init(context: Context) {
-        IntegrityCore.context = context
+    fun init() {
         logRepository.init()
         settingsRepository.init()
         metadataRepository.init()

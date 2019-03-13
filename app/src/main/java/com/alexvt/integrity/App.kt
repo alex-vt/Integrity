@@ -9,23 +9,38 @@ package com.alexvt.integrity
 import android.app.Activity
 import android.app.Application
 import android.app.ActivityManager
+import android.content.BroadcastReceiver
 import android.content.Context
+import androidx.fragment.app.Fragment
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.ThemeUtil
 import com.alexvt.integrity.lib.log.Log
-import dagger.android.AndroidInjector
-import dagger.android.DispatchingAndroidInjector
-import dagger.android.HasActivityInjector
+import dagger.android.*
+import dagger.android.support.HasSupportFragmentInjector
 import java.lang.RuntimeException
 import javax.inject.Inject
 
 
-class App : Application(), HasActivityInjector {
+class App : Application(), HasActivityInjector, HasSupportFragmentInjector, HasBroadcastReceiverInjector {
 
     @Inject
     lateinit var activityInjector : DispatchingAndroidInjector<Activity>
 
     override fun activityInjector(): AndroidInjector<Activity> = activityInjector
+
+    @Inject
+    lateinit var broadcastReceiverInjector: DispatchingAndroidInjector<BroadcastReceiver>
+
+    override fun broadcastReceiverInjector(): AndroidInjector<BroadcastReceiver> = broadcastReceiverInjector
+
+    @Inject
+    lateinit var fragmentInjector: DispatchingAndroidInjector<Fragment>
+
+    override fun supportFragmentInjector(): AndroidInjector<Fragment> = fragmentInjector
+
+
+    @Inject
+    lateinit var integrityCore: IntegrityCore
 
     override fun onCreate() {
         super.onCreate()
@@ -37,12 +52,15 @@ class App : Application(), HasActivityInjector {
             return // recovery process is only used to restart the main one, doesn't init anything
         }
 
-        AppDependencies.createDependencyGraph(this)
+        DaggerAppDependenciesComponent.builder()
+                .appContext(this)
+                .create(this)
+                .inject(this)
 
         try {
-            IntegrityCore.init(this)
+            integrityCore.init()
             ThemeUtil.initThemeSupport(this)
-            ThemeUtil.applyTheme(IntegrityCore.getColors())
+            ThemeUtil.applyTheme(integrityCore.getColors())
         } catch (throwable: Throwable) {
             Log(this, "Failed to start Integrity app").logError(throwable)
             throw throwable

@@ -13,17 +13,22 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.destinations.local.LocalFolderLocation
 import com.alexvt.integrity.lib.util.ThemedActivity
+import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_local_location.*
+import javax.inject.Inject
 
 
 class LocalDestinationActivity : ThemedActivity() {
 
     private val TAG = LocalDestinationActivity::class.java.simpleName
+    @Inject
+    lateinit var integrityCore: IntegrityCore
 
     // folder location to view/edit
     private lateinit var folderLocation: LocalFolderLocation
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_local_location)
         setSupportActionBar(toolbar)
@@ -31,7 +36,7 @@ class LocalDestinationActivity : ThemedActivity() {
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         if (editMode(intent)) {
-            folderLocation = IntegrityCore.settingsRepository.getAllFolderLocations()
+            folderLocation = integrityCore.settingsRepository.getAllFolderLocations()
                     .first { it.title == getTitleFromIntent(intent) } as LocalFolderLocation
 
         } else {
@@ -76,7 +81,7 @@ class LocalDestinationActivity : ThemedActivity() {
             return
         }
         // when creating new location, it must have unique title
-        val titleAlreadyExists = IntegrityCore.settingsRepository.getAllFolderLocations()
+        val titleAlreadyExists = integrityCore.settingsRepository.getAllFolderLocations()
                 .any { it.title == folderLocation.title }
         if (!editMode(intent) && titleAlreadyExists) {
             Toast.makeText(this, "Location with this title already exists",
@@ -84,8 +89,8 @@ class LocalDestinationActivity : ThemedActivity() {
             return
         }
         // the old one is removed first
-        IntegrityCore.settingsRepository.removeFolderLocation(folderLocation.title)
-        IntegrityCore.settingsRepository.addFolderLocation(folderLocation)
+        integrityCore.settingsRepository.removeFolderLocation(folderLocation.title)
+        integrityCore.settingsRepository.addFolderLocation(folderLocation)
         finish()
     }
 

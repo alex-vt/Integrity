@@ -10,9 +10,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.alexvt.integrity.core.IntegrityCore
+import javax.inject.Inject
 
 class ScheduledJobsEnableReceiver : BroadcastReceiver() {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
     override fun onReceive(context: Context, intent: Intent) {
-        IntegrityCore.updateScheduledJobsOptions(true)
+        integrityCore.updateScheduledJobsOptions(true)
     }
 }

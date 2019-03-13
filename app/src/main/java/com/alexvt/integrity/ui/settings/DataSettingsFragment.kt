@@ -15,13 +15,21 @@ import com.afollestad.materialdialogs.input.input
 import com.alexvt.integrity.R
 import com.alexvt.integrity.ui.destinations.DestinationsActivity
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
 import com.alexvt.integrity.ui.info.LegalInfoActivity
 import com.alexvt.integrity.lib.log.Log
 import com.alexvt.integrity.ui.recovery.RecoveryActivity
+import dagger.android.support.AndroidSupportInjection
+import javax.inject.Inject
 
 class DataSettingsFragment : PreferenceFragmentCompat() {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
+    @Inject
+    lateinit var dataFolderManager: DataFolderManager
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        AndroidSupportInjection.inject(this)
         setPreferencesFromResource(R.xml.settings_data, rootKey)
 
         val prefDownloadsLocation: Preference = findPreference("data_downloads_location")
@@ -35,11 +43,11 @@ class DataSettingsFragment : PreferenceFragmentCompat() {
             MaterialDialog(context!!).show {
                 title(text = "Snapshots downloads folder path")
                 input(hint = "Enter path on device storage",
-                        prefill = IntegrityCore.getDataFolderName()) { _, text ->
-                    val oldFolderName = IntegrityCore.getDataFolderName()
+                        prefill = integrityCore.getDataFolderName()) { _, text ->
+                    val oldFolderName = integrityCore.getDataFolderName()
                     val newFolderName = text.trim().toString()
-                    IntegrityCore.dataFolderManager.moveDataCacheFolder(oldFolderName, newFolderName)
-                    IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
+                    dataFolderManager.moveDataCacheFolder(oldFolderName, newFolderName)
+                    integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
                             .copy(dataFolderPath = newFolderName))
                     Log(context, "Moved data downloads folder from $oldFolderName to $newFolderName")
                             .log()
@@ -65,6 +73,6 @@ class DataSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun showDownloadLocationSummary(prefDownloadsLocation: Preference) {
-        prefDownloadsLocation.summary = "\uD83D\uDCF1/${IntegrityCore.getDataFolderName()}"
+        prefDownloadsLocation.summary = "\uD83D\uDCF1/${integrityCore.getDataFolderName()}"
     }
 }

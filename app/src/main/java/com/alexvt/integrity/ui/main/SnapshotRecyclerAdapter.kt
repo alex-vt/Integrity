@@ -12,7 +12,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.settings.SettingsRepository
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.util.FontUtil
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
@@ -23,11 +24,12 @@ import kotlinx.android.synthetic.main.snapshot_list_item.view.*
 
 class SnapshotRecyclerAdapter(private val items: ArrayList<Pair<Snapshot, Int>>,
                               private val context: Context,
+                              private val settingsRepository: SettingsRepository,
+                              private val dataFolderManager: DataFolderManager,
                               private val onClickListener: (Long, String) -> Unit,
                               private val onLongClickListener: (Long, String, Boolean) -> Unit,
                               private val onClickMoreListener: (Long, String, Boolean) -> Unit)
     : RecyclerView.Adapter<SnapshotViewHolder>() {
-
     private var showMoreButton: Boolean = false
 
     fun setItems(newItems: List<Pair<Snapshot, Int>>, showMoreButton: Boolean) {
@@ -41,7 +43,7 @@ class SnapshotRecyclerAdapter(private val items: ArrayList<Pair<Snapshot, Int>>,
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SnapshotViewHolder {
         val view = LayoutInflater.from(context).inflate(R.layout.snapshot_list_item, parent, false)
-        FontUtil.setFont(context, view, IntegrityCore.getFont())
+        FontUtil.setFont(context, view, settingsRepository.get().textFont)
         return SnapshotViewHolder(view)
     }
 
@@ -73,10 +75,10 @@ class SnapshotRecyclerAdapter(private val items: ArrayList<Pair<Snapshot, Int>>,
             false
         }
 
-        // todo pass path with item, remove IntegrityCore dependency
-        val snapshotPreviewPath = IntegrityCore.dataFolderManager.getSnapshotPreviewPath(
-                IntegrityCore.getDataFolderName(), snapshot.artifactId, snapshot.date)
-        if (!IntegrityCore.dataFolderManager.fileExists(snapshotPreviewPath)) {
+        // todo pass path with item
+        val snapshotPreviewPath = dataFolderManager.getSnapshotPreviewPath(
+                settingsRepository.get().dataFolderPath, snapshot.artifactId, snapshot.date)
+        if (!dataFolderManager.fileExists(snapshotPreviewPath)) {
             holder.view.ivPreview.setImageDrawable(IconicsDrawable(context)
                     .icon(CommunityMaterial.Icon2.cmd_view_grid)
                     .colorRes(R.color.colorBlueprint)

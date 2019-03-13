@@ -13,11 +13,16 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.ThemedActivity
+import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_log_view.*
+import javax.inject.Inject
 
 class LogViewActivity : ThemedActivity() {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log_view)
         setSupportActionBar(toolbar)
@@ -25,23 +30,23 @@ class LogViewActivity : ThemedActivity() {
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         rvLogList.adapter = LogRecyclerAdapter(ArrayList(), this)
-        IntegrityCore.markErrorsRead(this)
+        integrityCore.markErrorsRead(this)
     }
 
     override fun onStart() {
         super.onStart()
-        IntegrityCore.logRepository.addChangesListener(this.toString()) {
+        integrityCore.logRepository.addChangesListener(this.toString()) {
             refreshLogList()
         }
     }
 
     override fun onStop() {
-        IntegrityCore.logRepository.removeChangesListener(this.toString())
+        integrityCore.logRepository.removeChangesListener(this.toString())
         super.onStop()
     }
 
     private fun refreshLogList() {
-        (rvLogList.adapter as LogRecyclerAdapter).setItems(IntegrityCore
+        (rvLogList.adapter as LogRecyclerAdapter).setItems(integrityCore
                 .logRepository.getRecentEntries(1000))
     }
 
@@ -64,7 +69,7 @@ class LogViewActivity : ThemedActivity() {
         MaterialDialog(this)
                 .title(text = "Clear log?")
                 .positiveButton(text = "Yes") {
-                    IntegrityCore.logRepository.clear()
+                    integrityCore.logRepository.clear()
                 }
                 .negativeButton(text = "Cancel")
                 .show()

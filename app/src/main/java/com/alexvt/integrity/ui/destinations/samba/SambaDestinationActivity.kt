@@ -14,18 +14,23 @@ import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocation
 import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocationCredentials
 import com.alexvt.integrity.lib.util.ThemedActivity
+import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_samba_location.*
+import javax.inject.Inject
 
 
 class SambaDestinationActivity : ThemedActivity() {
 
     private val TAG = SambaDestinationActivity::class.java.simpleName
+    @Inject
+    lateinit var integrityCore: IntegrityCore
 
     // folder location to view/edit
     private lateinit var folderLocation: SambaFolderLocation
     private lateinit var folderLocationCredentials: SambaFolderLocationCredentials
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_samba_location)
         setSupportActionBar(toolbar)
@@ -33,9 +38,9 @@ class SambaDestinationActivity : ThemedActivity() {
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         if (editMode(intent)) {
-            folderLocation = IntegrityCore.settingsRepository.getAllFolderLocations()
+            folderLocation = integrityCore.settingsRepository.getAllFolderLocations()
                     .first { it.title == getTitleFromIntent(intent) } as SambaFolderLocation
-            folderLocationCredentials = IntegrityCore.credentialsRepository
+            folderLocationCredentials = integrityCore.credentialsRepository
                     .getCredentials(folderLocation.title) as SambaFolderLocationCredentials
 
         } else {
@@ -99,7 +104,7 @@ class SambaDestinationActivity : ThemedActivity() {
             return
         }
         // when creating new location, it must have unique title
-        val titleAlreadyExists = IntegrityCore.settingsRepository.getAllFolderLocations()
+        val titleAlreadyExists = integrityCore.settingsRepository.getAllFolderLocations()
                 .any { it.title == folderLocation.title }
         if (!editMode(intent) && titleAlreadyExists) {
             Toast.makeText(this, "Location with this title already exists",
@@ -107,10 +112,10 @@ class SambaDestinationActivity : ThemedActivity() {
             return
         }
         // the old one is removed first
-        IntegrityCore.settingsRepository.removeFolderLocation(folderLocation.title)
-        IntegrityCore.credentialsRepository.removeCredentials(folderLocation.title)
-        IntegrityCore.settingsRepository.addFolderLocation(folderLocation)
-        IntegrityCore.credentialsRepository.addCredentials(folderLocationCredentials)
+        integrityCore.settingsRepository.removeFolderLocation(folderLocation.title)
+        integrityCore.credentialsRepository.removeCredentials(folderLocation.title)
+        integrityCore.settingsRepository.addFolderLocation(folderLocation)
+        integrityCore.credentialsRepository.addCredentials(folderLocationCredentials)
         finish()
     }
 

@@ -8,22 +8,13 @@ package com.alexvt.integrity
 
 import android.content.Context
 import com.alexvt.integrity.core.IntegrityCoreDependenciesModule
+import com.alexvt.integrity.core.log.LogEventReceiver
 import com.alexvt.integrity.ui.UiDependenciesModule
 import dagger.*
 import dagger.android.AndroidInjectionModule
 import javax.inject.Singleton
 import dagger.android.AndroidInjector
-
-object AppDependencies {
-
-    fun createDependencyGraph(app: App) {
-        DaggerAppComponent.builder()
-                .appContext(app)
-                .create(app)
-                .inject(app)
-    }
-
-}
+import dagger.android.ContributesAndroidInjector
 
 @Singleton
 @Component(modules = [
@@ -31,7 +22,7 @@ object AppDependencies {
     IntegrityCoreDependenciesModule::class,
     UiDependenciesModule::class
 ])
-interface AppComponent : AndroidInjector<App> {
+interface AppDependenciesComponent : AndroidInjector<App> {
     @Component.Builder
     abstract class Builder : AndroidInjector.Builder<App>() {
         @BindsInstance abstract fun appContext(appContext: Context): Builder

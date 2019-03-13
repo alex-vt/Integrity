@@ -6,8 +6,28 @@
 
 package com.alexvt.integrity.core
 
+import android.content.Context
+import com.alexvt.integrity.core.credentials.CredentialsRepository
+import com.alexvt.integrity.core.credentials.SimplePersistableCredentialsRepository
+import com.alexvt.integrity.core.jobs.AndroidScheduledJobManager
+import com.alexvt.integrity.core.jobs.ScheduledJobManager
+import com.alexvt.integrity.core.log.LogEventReceiver
+import com.alexvt.integrity.core.log.LogRepository
+import com.alexvt.integrity.core.log.SimplePersistableLogRepository
 import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.core.metadata.SimplePersistableMetadataRepository
+import com.alexvt.integrity.core.operations.AndroidSnapshotOperationManager
+import com.alexvt.integrity.core.operations.SnapshotOperationManager
+import com.alexvt.integrity.core.search.SearchIndexRepository
+import com.alexvt.integrity.core.search.SimplePersistableSearchIndexRepository
+import com.alexvt.integrity.core.settings.SettingsRepository
+import com.alexvt.integrity.core.settings.SimplePersistableSettingsRepository
+import com.alexvt.integrity.core.types.AndroidDataTypeRepository
+import com.alexvt.integrity.core.types.DataTypeRepository
+import com.alexvt.integrity.lib.IntegrityLib
+import com.alexvt.integrity.lib.filesystem.AndroidFilesystemManager
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
+import com.alexvt.integrity.lib.jobs.RunningJobManager
 import com.alexvt.integrity.ui.destinations.DestinationsActivity
 import com.alexvt.integrity.ui.info.HelpInfoActivity
 import com.alexvt.integrity.ui.info.LegalInfoActivity
@@ -17,11 +37,25 @@ import com.alexvt.integrity.ui.settings.SettingsActivity
 import com.alexvt.integrity.ui.tags.TagsActivity
 import dagger.Module
 import dagger.Provides
+import dagger.android.ContributesAndroidInjector
 import javax.inject.Named
 import javax.inject.Singleton
 
-@Module
+@Module(includes = [IntegrityCoreDependenciesModule.ActionReceiverModule::class])
 class IntegrityCoreDependenciesModule {
+
+    @Module
+    abstract class ActionReceiverModule {
+        @ContributesAndroidInjector
+        abstract fun contributesLogEntryReceiver(): LogEventReceiver.LogEntryReceiver
+
+        @ContributesAndroidInjector
+        abstract fun contributesLogReadReceiver(): LogEventReceiver.LogReadReceiver
+
+        @ContributesAndroidInjector
+        abstract fun contributesSnapshotProgressReceiver(): AndroidSnapshotOperationManager.SnapshotProgressReceiver
+    }
+
     @Provides
     @Singleton
     @Named("packageName")
@@ -29,31 +63,64 @@ class IntegrityCoreDependenciesModule {
 
     @Provides
     @Singleton
-    fun provideMetadataRepository(): MetadataRepository = SimplePersistableMetadataRepository(@Inject context)
+    fun provideMetadataRepository(context: Context): MetadataRepository
+            = SimplePersistableMetadataRepository(context)
 
     @Provides
     @Singleton
-    fun provideSearchIndexRepository() = IntegrityCore.searchIndexRepository
+    fun provideCredentialsRepository(context: Context): CredentialsRepository
+            = SimplePersistableCredentialsRepository(context)
 
     @Provides
     @Singleton
-    fun provideSettingsRepository() = IntegrityCore.settingsRepository
+    fun provideSearchIndexRepository(context: Context): SearchIndexRepository
+            = SimplePersistableSearchIndexRepository(context)
 
     @Provides
     @Singleton
-    fun provideLogRepository() = IntegrityCore.logRepository
+    fun provideSettingsRepository(context: Context): SettingsRepository
+            = SimplePersistableSettingsRepository(context)
 
     @Provides
     @Singleton
-    fun provideDataTypeRepository() = IntegrityCore.dataTypeRepository
+    fun provideLogRepository(context: Context): LogRepository
+            = SimplePersistableLogRepository(context)
 
     @Provides
     @Singleton
-    fun provideSnapshotOperationManager() = IntegrityCore.snapshotOperationManager
+    fun provideDataTypeRepository(context: Context): DataTypeRepository
+            = AndroidDataTypeRepository(context)
 
     @Provides
     @Singleton
-    fun provideScheduledJobManager() = IntegrityCore.scheduledJobManager
+    fun provideDataFolderManager(context: Context): DataFolderManager
+            = DataFolderManager(AndroidFilesystemManager(context))
+
+    @Provides
+    @Singleton
+    fun provideSnapshotOperationManager(
+            context: Context,
+            metadataRepository: MetadataRepository,
+            searchIndexRepository: SearchIndexRepository,
+            dataFolderManager: DataFolderManager,
+            runningJobManager: RunningJobManager,
+            settingsRepository: SettingsRepository
+    ): SnapshotOperationManager = AndroidSnapshotOperationManager(context, metadataRepository,
+            searchIndexRepository, dataFolderManager, runningJobManager,
+            settingsRepository)
+
+    @Provides
+    @Singleton
+    fun provideScheduledJobManager(
+            metadataRepository: MetadataRepository,
+            settingsRepository: SettingsRepository,
+            snapshotOperationManager: SnapshotOperationManager
+    ): ScheduledJobManager = AndroidScheduledJobManager(metadataRepository, settingsRepository,
+            snapshotOperationManager)
+
+    @Provides
+    @Singleton
+    fun provideRunningJobManager(): RunningJobManager = IntegrityLib.runningJobManager
 
     @Provides
     @Singleton

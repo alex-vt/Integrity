@@ -13,21 +13,29 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.FontUtil
 import com.alexvt.integrity.core.util.Initializable
+import com.alexvt.integrity.lib.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.util.ThemedActivity
 import com.alexvt.integrity.lib.util.ViewExternalUtil
 import com.alexvt.integrity.lib.util.IntentUtil
+import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_recovery.*
+import javax.inject.Inject
 
 
 class RecoveryActivity : ThemedActivity() {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
+    @Inject
+    lateinit var dataFolderManager: DataFolderManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recovery)
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
-        FontUtil.setFont(this, IntegrityCore.getFont())
+        FontUtil.setFont(this, integrityCore.getFont())
 
         val issueDescription = IntentUtil.getIssueDescription(intent)
         tvIssueDescription.text = if (issueDescription.isNotBlank()) {
@@ -44,11 +52,11 @@ class RecoveryActivity : ThemedActivity() {
 
     private fun askSelectClearData() {
         val namedRepositories = listOf(
-                IntegrityCore.metadataRepository to "Snapshots metadata",
-                IntegrityCore.logRepository to "Log",
-                IntegrityCore.settingsRepository to "App settings",
-                IntegrityCore.credentialsRepository to "Credentials",
-                IntegrityCore.searchIndexRepository to "Search index"
+                integrityCore.metadataRepository to "Snapshots metadata",
+                integrityCore.logRepository to "Log",
+                integrityCore.settingsRepository to "App settings",
+                integrityCore.credentialsRepository to "Credentials",
+                integrityCore.searchIndexRepository to "Search index"
         )
         MaterialDialog(this)
                 .title(text = "Select data to clear")
@@ -71,14 +79,14 @@ class RecoveryActivity : ThemedActivity() {
     }
 
     private fun askClearSnapshots() {
-        val dataFolderName = IntegrityCore.getDataFolderName()
+        val dataFolderName = integrityCore.getDataFolderName()
         MaterialDialog(this)
                 .title(text = "Are you sure?")
                 .message(text = "About to delete folder from storage: \n\uD83D\uDCF1/" +
                         "$dataFolderName \nwith all downloaded snapshots")
                 .negativeButton(text = "Cancel")
                 .positiveButton(text = "Delete now") {
-                    IntegrityCore.dataFolderManager.deleteFolder(dataFolderName)
+                    dataFolderManager.deleteFolder(dataFolderName)
                 }.show()
     }
 

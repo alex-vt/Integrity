@@ -8,7 +8,9 @@ package com.alexvt.integrity.core.jobs
 
 import android.content.Context
 import androidx.work.*
-import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.metadata.MetadataRepository
+import com.alexvt.integrity.core.operations.SnapshotOperationManager
+import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.log.Log
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
@@ -17,13 +19,18 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 import kotlin.concurrent.schedule
 
 /**
  * Provides info about jobs on snapshots scheduled in the future,
  * and runs these jobs.
  */
-class AndroidScheduledJobManager : ScheduledJobManager {
+class AndroidScheduledJobManager @Inject constructor(
+        private val metadataRepository: MetadataRepository,
+        private val settingsRepository: SettingsRepository,
+        private val snapshotOperationManager: SnapshotOperationManager
+) : ScheduledJobManager {
 
     private var scheduledJobsListenerMap: Map<String, ((List<Pair<Long, String>>) -> Unit)> = emptyMap()
 
@@ -76,8 +83,8 @@ class AndroidScheduledJobManager : ScheduledJobManager {
      *
      * Sorted by time remaining until job starts.
      */
-    private fun getScheduledJobs() = if (IntegrityCore.scheduledJobsEnabled()) {
-        IntegrityCore.metadataRepository.getAllArtifactLatestMetadata(false)
+    private fun getScheduledJobs() = if (settingsRepository.get().jobsEnableScheduled) {
+        metadataRepository.getAllArtifactLatestMetadata(false)
                 .snapshots
                 .filter { it.downloadSchedule.periodSeconds > 0L } // todo also resume jobs interrupted not by user
                 .sortedBy { getNextRunTimestamp(it) }
@@ -113,25 +120,23 @@ class AndroidScheduledJobManager : ScheduledJobManager {
         }
         invokeListenersWithCurrentData()
         Log(context, "Updated future jobs schedule: enabled = " +
-                "${IntegrityCore.scheduledJobsEnabled()}, ${workList.size} jobs scheduled").log()
+                "${settingsRepository.get().jobsEnableScheduled}, ${workList.size} jobs scheduled").log()
     }
 
-}
+    inner class SnapshotDownloadWorker(val context: Context, params: WorkerParameters): Worker(context, params) {
+        override fun doWork(): Result {
+            val artifactId = inputData.getLong("artifactId", -1)
+            val date = inputData.getString("date")!!
+            Log(context, "Beginning scheduled job").snapshot(artifactId, date).log()
 
-class SnapshotDownloadWorker(val context: Context, params: WorkerParameters): Worker(context, params) {
+            // Starting creating snapshot async. Use RunningJobManager to get status
 
-    override fun doWork(): Result {
-        val artifactId = inputData.getLong("artifactId", -1)
-        val date = inputData.getString("date")!!
-        Log(context, "Beginning scheduled job").snapshot(artifactId, date).log()
+            val latestSnapshot = metadataRepository.getSnapshotMetadata(artifactId, date)
+            snapshotOperationManager.saveSnapshot( // todo pass in constructor
+                    latestSnapshot.copy(status = SnapshotStatus.IN_PROGRESS))
 
-        // Starting creating snapshot async. Use RunningJobManager to get status
-
-        val latestSnapshot = IntegrityCore.metadataRepository.getSnapshotMetadata(artifactId, date)
-        IntegrityCore.snapshotOperationManager.saveSnapshot( // todo pass in constructor
-                latestSnapshot.copy(status = SnapshotStatus.IN_PROGRESS))
-
-        return Result.success()
+            return Result.success()
+        }
     }
 
 }

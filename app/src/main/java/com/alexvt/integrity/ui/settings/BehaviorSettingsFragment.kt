@@ -18,9 +18,15 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.lib.util.IntentUtil
+import dagger.android.support.AndroidSupportInjection
+import javax.inject.Inject
 
 class BehaviorSettingsFragment : PreferenceFragmentCompat() {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        AndroidSupportInjection.inject(this)
         setPreferencesFromResource(R.xml.settings_behavior, rootKey)
 
         // todo replace error prone implementation
@@ -35,8 +41,8 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         val prefEnableScheduled: SwitchPreferenceCompat = findPreference("behavior_jobs_enable_scheduled")
         updateEnableScheduled(prefEnableScheduled)
         prefEnableScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val enableScheduled = IntegrityCore.scheduledJobsEnabled()
-            IntegrityCore.updateScheduledJobsOptions(!enableScheduled)
+            val enableScheduled = integrityCore.scheduledJobsEnabled()
+            integrityCore.updateScheduledJobsOptions(!enableScheduled)
             updateEnableScheduled(prefEnableScheduled)
             true
         }
@@ -46,8 +52,8 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         val prefExpandRunning: CheckBoxPreference = findPreference("behavior_jobs_expand_running")
         updateExpandRunning(prefExpandRunning)
         prefExpandRunning.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val expandRunning = IntegrityCore.settingsRepository.get().jobsExpandRunning
-            IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
+            val expandRunning = integrityCore.settingsRepository.get().jobsExpandRunning
+            integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
                     .copy(jobsExpandRunning = !expandRunning))
             updateExpandRunning(prefExpandRunning)
             true
@@ -58,8 +64,8 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         val prefExpandScheduled: CheckBoxPreference = findPreference("behavior_jobs_expand_scheduled")
         updateExpandScheduled(prefExpandScheduled)
         prefExpandScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val expandScheduled = IntegrityCore.settingsRepository.get().jobsExpandScheduled
-            IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
+            val expandScheduled = integrityCore.settingsRepository.get().jobsExpandScheduled
+            integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
                     .copy(jobsExpandScheduled = !expandScheduled))
             updateExpandScheduled(prefExpandScheduled)
             true
@@ -75,10 +81,10 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
                 listItemsSingleChoice(
                         items = SortingUtil.getSortingMethodNameMap().values.toList(),
                         initialSelection = SortingUtil.getSortingMethodNameMap().keys.toList()
-                                .indexOf(IntegrityCore.getSortingMethod())
+                                .indexOf(integrityCore.getSortingMethod())
                 ) { _, index, _ ->
                     val sortingMethod = SortingUtil.getSortingMethodNameMap().keys.toList()[index]
-                    IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository
+                    integrityCore.settingsRepository.set(integrityCore.settingsRepository
                             .get().copy(sortingMethod = sortingMethod))
                     updateSorting(prefSorting)
                     activity!!.setResult(Activity.RESULT_OK, IntentUtil.withRefresh(true))
@@ -92,8 +98,8 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         val prefFasterFiltering: CheckBoxPreference = findPreference("behavior_filtering_faster")
         updateFasterFiltering(prefFasterFiltering)
         prefFasterFiltering.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val fasterFiltering = IntegrityCore.settingsRepository.get().fasterSearchInputs
-            IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
+            val fasterFiltering = integrityCore.settingsRepository.get().fasterSearchInputs
+            integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
                     .copy(fasterSearchInputs = !fasterFiltering))
             updateFasterFiltering(prefFasterFiltering)
             true
@@ -101,26 +107,26 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun updateEnableScheduled(prefEnableScheduled: SwitchPreferenceCompat) {
-        prefEnableScheduled.isChecked = IntegrityCore.scheduledJobsEnabled()
+        prefEnableScheduled.isChecked = integrityCore.scheduledJobsEnabled()
     }
 
     private fun updateExpandScheduled(prefExpandScheduled: CheckBoxPreference) {
-        prefExpandScheduled.isChecked = IntegrityCore.settingsRepository.get()
+        prefExpandScheduled.isChecked = integrityCore.settingsRepository.get()
                 .jobsExpandScheduled
     }
 
     private fun updateExpandRunning(prefExpandRunning: CheckBoxPreference) {
-        prefExpandRunning.isChecked = IntegrityCore.settingsRepository.get()
+        prefExpandRunning.isChecked = integrityCore.settingsRepository.get()
                 .jobsExpandRunning
     }
 
     private fun updateSorting(prefSorting: Preference) {
-        prefSorting.summary = SortingUtil.getSortingMethodNameMap()[IntegrityCore
+        prefSorting.summary = SortingUtil.getSortingMethodNameMap()[integrityCore
                 .settingsRepository.get().sortingMethod]
     }
 
     private fun updateFasterFiltering(prefFasterFiltering: CheckBoxPreference) {
-        prefFasterFiltering.isChecked = IntegrityCore.settingsRepository.get()
+        prefFasterFiltering.isChecked = integrityCore.settingsRepository.get()
                 .fasterSearchInputs
     }
 }

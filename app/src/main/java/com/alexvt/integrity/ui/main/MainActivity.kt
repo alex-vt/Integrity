@@ -268,6 +268,7 @@ class MainActivity : ThemedActivity() {
 
     private fun bindSnapshotList() {
         rvSnapshotList.adapter = SnapshotRecyclerAdapter(ArrayList(), this,
+                vm.settingsRepository, vm.dataFolderManager,
                 onClickListener = { artifactId, date ->
                     vm.viewSnapshot(artifactId, date)
                 },

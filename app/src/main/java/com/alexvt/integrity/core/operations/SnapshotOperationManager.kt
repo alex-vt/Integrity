@@ -43,4 +43,11 @@ interface SnapshotOperationManager {
      */
     fun removeAllSnapshots(alsoRemoveData: Boolean)
 
+    /**
+     * Packs snapshot data and metadata,
+     * then sends archives to folder locations according to metadata.
+     */
+    fun archiveSnapshot(snapshotInProgress: Snapshot)
+
+    fun postSnapshotDownloadProgress(snapshot: Snapshot, message: String)
 }

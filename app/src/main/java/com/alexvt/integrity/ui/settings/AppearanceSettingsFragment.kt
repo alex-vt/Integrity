@@ -21,9 +21,16 @@ import com.alexvt.integrity.lib.util.ThemedActivity
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
+import dagger.android.AndroidInjection
+import dagger.android.support.AndroidSupportInjection
+import javax.inject.Inject
 
 class AppearanceSettingsFragment : PreferenceFragmentCompat() {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        AndroidSupportInjection.inject(this)
         setPreferencesFromResource(R.xml.settings_appearance, rootKey)
 
         val prefColorBackground: Preference = findPreference("appearance_color_background")
@@ -35,7 +42,7 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
             val dialog = ColorPickerDialog.newBuilder()
                     .setAllowCustom(false)
                     .setShowColorShades(false)
-                    .setColor(ThemeUtil.getColorBackground(IntegrityCore.getColors()))
+                    .setColor(ThemeUtil.getColorBackground(integrityCore.getColors()))
                     .setPresets(resources.getIntArray(R.array.colorsBackground))
                     .create()
             dialog.setColorPickerDialogListener(object : ColorPickerDialogListener {
@@ -52,7 +59,7 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
             val dialog = ColorPickerDialog.newBuilder()
                     .setAllowCustom(false)
                     .setShowColorShades(false)
-                    .setColor(ThemeUtil.getColorPrimary(IntegrityCore.getColors()))
+                    .setColor(ThemeUtil.getColorPrimary(integrityCore.getColors()))
                     .setPresets(resources.getIntArray(R.array.colorsPrimary))
                     .create()
             dialog.setColorPickerDialogListener(object : ColorPickerDialogListener {
@@ -69,7 +76,7 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
             val dialog = ColorPickerDialog.newBuilder()
                     .setAllowCustom(false)
                     .setShowColorShades(false)
-                    .setColor(ThemeUtil.getColorAccent(IntegrityCore.getColors()))
+                    .setColor(ThemeUtil.getColorAccent(integrityCore.getColors()))
                     .setPresets(resources.getIntArray(R.array.colorsPrimary))
                     .create()
             dialog.setColorPickerDialogListener(object : ColorPickerDialogListener {
@@ -83,11 +90,11 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        val currentFontName = IntegrityCore.settingsRepository.get().textFont
+        val currentFontName = integrityCore.settingsRepository.get().textFont
         prefTextFont.summary = currentFontName
         prefTextFont.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             val fontNames = listOf("Default").plus(FontUtil.getNames())
-            val currentFontName = IntegrityCore.settingsRepository.get().textFont
+            val currentFontName = integrityCore.settingsRepository.get().textFont
             val currentFontIndex = Math.max(fontNames.indexOf(currentFontName), 0) // default 0
             MaterialDialog(context!!)
                     .title(text = "Select font")
@@ -97,7 +104,7 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
                         if (selectedFontName != currentFontName) {
                             saveFont( selectedFontName)
                             prefTextFont.summary = selectedFontName
-                            FontUtil.setFont(activity!!, IntegrityCore.getFont())
+                            FontUtil.setFont(activity!!, integrityCore.getFont())
                             activity!!.setResult(Activity.RESULT_OK, IntentUtil.withRecreate(true))
                         }
                     }.show()
@@ -108,32 +115,32 @@ class AppearanceSettingsFragment : PreferenceFragmentCompat() {
 
 
     fun saveAndApplyColorBackground(context: Context, intColor: Int) {
-        IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get().copy(
+        integrityCore.settingsRepository.set(integrityCore.settingsRepository.get().copy(
                 colorBackground = ThemeUtil.getHexColor(intColor))
         )
         applyColors()
     }
 
     fun saveAndApplyColorPrimary(context: Context, intColor: Int) {
-        IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get().copy(
+        integrityCore.settingsRepository.set(integrityCore.settingsRepository.get().copy(
                 colorPrimary = ThemeUtil.getHexColor(intColor))
         )
         applyColors()
     }
 
     fun saveAndApplyColorAccent(context: Context, intColor: Int) {
-        IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get().copy(
+        integrityCore.settingsRepository.set(integrityCore.settingsRepository.get().copy(
                 colorAccent = ThemeUtil.getHexColor(intColor))
         )
         applyColors()
     }
 
     private fun applyColors() {
-        ThemeUtil.applyThemeAndRecreate(activity as ThemedActivity, IntegrityCore.getColors())
+        ThemeUtil.applyThemeAndRecreate(activity as ThemedActivity, integrityCore.getColors())
     }
 
     private fun saveFont(fontName: String) {
-        IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get().copy(
+        integrityCore.settingsRepository.set(integrityCore.settingsRepository.get().copy(
                 textFont = fontName)
         )
     }

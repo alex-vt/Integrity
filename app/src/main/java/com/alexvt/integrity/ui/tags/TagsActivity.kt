@@ -23,14 +23,19 @@ import com.alexvt.integrity.lib.metadata.Tag
 import com.alexvt.integrity.lib.util.IntentUtil
 import android.widget.RadioGroup
 import com.alexvt.integrity.lib.util.ThemedActivity
+import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_tags.*
+import javax.inject.Inject
 
 
 class TagsActivity : ThemedActivity() {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
 
     var selectedTags: List<Tag> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tags)
         setSupportActionBar(toolbar)
@@ -60,7 +65,7 @@ class TagsActivity : ThemedActivity() {
     }
 
     private fun getItemSelection()
-            = IntegrityCore.settingsRepository.getAllTags().map {
+            = integrityCore.settingsRepository.getAllTags().map {
                 Pair(it, selectedTags.contains(it))
             }
 
@@ -107,7 +112,7 @@ class TagsActivity : ThemedActivity() {
             return
         }
         // tag must not have name like any existing tag except itself before the change
-        if (IntegrityCore.settingsRepository.getAllTags()
+        if (integrityCore.settingsRepository.getAllTags()
                         .map { it.text }
                         .minus(oldText)
                         .contains(tag.text)) {
@@ -116,9 +121,9 @@ class TagsActivity : ThemedActivity() {
         }
         if (oldText != null) {
             // old tag needs to be replaced
-            IntegrityCore.settingsRepository.removeTag(oldText)
+            integrityCore.settingsRepository.removeTag(oldText)
         }
-        IntegrityCore.settingsRepository.addTag(tag)
+        integrityCore.settingsRepository.addTag(tag)
         refreshTagList()
     }
 
@@ -136,7 +141,7 @@ class TagsActivity : ThemedActivity() {
                 .title(text = "Delete tag?")
                 .positiveButton(text = "Delete") {
                     dialog ->
-                    IntegrityCore.settingsRepository.removeTag(tag.text)
+                    integrityCore.settingsRepository.removeTag(tag.text)
                     refreshTagList()
                 }
                 .negativeButton(text = "Cancel")

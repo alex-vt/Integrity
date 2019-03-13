@@ -12,9 +12,15 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.IntegrityCore
+import dagger.android.support.AndroidSupportInjection
+import javax.inject.Inject
 
 class NotificationSettingsFragment : PreferenceFragmentCompat() {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        AndroidSupportInjection.inject(this)
         setPreferencesFromResource(R.xml.settings_notifications, rootKey)
 
         bindShowErrors()
@@ -25,8 +31,8 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
         val prefShowErrors: SwitchPreferenceCompat = findPreference("notifications_errors_enable")
         updateShowErrors(prefShowErrors)
         prefShowErrors.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val showErrors = IntegrityCore.settingsRepository.get().notificationShowErrors
-            IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
+            val showErrors = integrityCore.settingsRepository.get().notificationShowErrors
+            integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
                     .copy(notificationShowErrors = !showErrors))
             updateShowErrors(prefShowErrors)
             true
@@ -34,7 +40,7 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun updateShowErrors(prefShowErrors: SwitchPreferenceCompat) {
-        prefShowErrors.isChecked = IntegrityCore.settingsRepository.get().notificationShowErrors
+        prefShowErrors.isChecked = integrityCore.settingsRepository.get().notificationShowErrors
     }
 
     private fun bindShowForDisabledScheduledJobs() {
@@ -42,8 +48,8 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
                 = findPreference("notifications_scheduled_jobs_disabled")
         updateShowForDisabledScheduledJobs(prefShowForDisabledScheduled)
         prefShowForDisabledScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val show = IntegrityCore.settingsRepository.get().notificationShowDisabledScheduled
-            IntegrityCore.settingsRepository.set(IntegrityCore.settingsRepository.get()
+            val show = integrityCore.settingsRepository.get().notificationShowDisabledScheduled
+            integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
                     .copy(notificationShowDisabledScheduled = !show))
             updateShowForDisabledScheduledJobs(prefShowForDisabledScheduled)
             true
@@ -52,7 +58,7 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
 
     private fun updateShowForDisabledScheduledJobs(
             prefDisabledScheduledJobs: SwitchPreferenceCompat) {
-        prefDisabledScheduledJobs.isChecked = IntegrityCore.settingsRepository.get()
+        prefDisabledScheduledJobs.isChecked = integrityCore.settingsRepository.get()
                 .notificationShowDisabledScheduled
     }
 }

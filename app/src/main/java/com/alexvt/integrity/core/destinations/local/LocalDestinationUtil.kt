@@ -13,7 +13,7 @@ import com.alexvt.integrity.lib.destinations.local.LocalFolderLocation
 import com.snatik.storage.Storage
 import java.io.File
 
-object LocalDestinationUtil : DestinationUtil<LocalFolderLocation> {
+class LocalDestinationUtil : DestinationUtil<LocalFolderLocation> {
 
     override fun writeArchive(context: Context, sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,

@@ -13,11 +13,18 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.types.DataTypeRepository
 import com.alexvt.integrity.lib.util.ViewExternalUtil
+import dagger.android.support.AndroidSupportInjection
+import javax.inject.Inject
 
 
 class ExtensionSettingsFragment : PreferenceFragmentCompat() {
+    @Inject
+    lateinit var dataTypeRepository: DataTypeRepository
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        AndroidSupportInjection.inject(this)
         setPreferencesFromResource(R.xml.settings_extensions, rootKey)
 
         val prefGetExtensions: Preference = findPreference("extensions_get")
@@ -33,7 +40,7 @@ class ExtensionSettingsFragment : PreferenceFragmentCompat() {
         }
 
         val category: PreferenceCategory = findPreference("extensions")
-        IntegrityCore.dataTypeRepository.getAllDataTypes()
+        dataTypeRepository.getAllDataTypes()
                 .filter { it.packageName != context!!.packageName } // except the built in types
                 .forEach { addExtensionPreference(category, it.title, it.packageName) }
     }

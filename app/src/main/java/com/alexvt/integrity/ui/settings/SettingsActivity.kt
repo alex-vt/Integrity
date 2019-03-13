@@ -22,14 +22,19 @@ import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import kotlinx.android.synthetic.main.activity_settings.*
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
+import dagger.android.AndroidInjection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
 class SettingsActivity : ThemedActivity() {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
         setSupportActionBar(toolbar)
@@ -40,7 +45,7 @@ class SettingsActivity : ThemedActivity() {
 
         bindBottomNavigation()
 
-        FontUtil.setFont(this, IntegrityCore.getFont())
+        FontUtil.setFont(this, integrityCore.getFont())
     }
 
     private fun setBottomNavigationIcons() {
@@ -78,7 +83,7 @@ class SettingsActivity : ThemedActivity() {
                         GlobalScope.launch(Dispatchers.Main) {
                             if (f.view != null) {
                                 FontUtil.setFont(this@SettingsActivity, f.view!!,
-                                        IntegrityCore.getFont())
+                                        integrityCore.getFont())
                             }
                         }
                     }

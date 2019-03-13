@@ -8,18 +8,33 @@ package com.alexvt.integrity.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.alexvt.integrity.ui.destinations.DestinationsDependenciesModule
+import com.alexvt.integrity.ui.destinations.local.LocalDestinationDependenciesModule
+import com.alexvt.integrity.ui.destinations.samba.SambaDestinationDependenciesModule
+import com.alexvt.integrity.ui.info.InfoDependenciesModule
+import com.alexvt.integrity.ui.log.LogViewDependenciesModule
 import com.alexvt.integrity.ui.main.MainScreenDependenciesModule
+import com.alexvt.integrity.ui.recovery.RecoveryDependenciesModule
+import com.alexvt.integrity.ui.settings.SettingsDependenciesModule
+import com.alexvt.integrity.ui.tags.TagsDependenciesModule
 import dagger.Binds
 import dagger.MapKey
 import dagger.Module
-import dagger.android.AndroidInjectionModule
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
 import kotlin.reflect.KClass
 
 @Module(includes = [
-    MainScreenDependenciesModule::class
+    MainScreenDependenciesModule::class,
+    DestinationsDependenciesModule::class,
+    LocalDestinationDependenciesModule::class,
+    SambaDestinationDependenciesModule::class,
+    InfoDependenciesModule::class,
+    LogViewDependenciesModule::class,
+    RecoveryDependenciesModule::class,
+    SettingsDependenciesModule::class,
+    TagsDependenciesModule::class
 ])
 abstract class UiDependenciesModule {
     // see https://brightinventions.pl/blog/injectable-android-viewmodels/

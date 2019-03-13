@@ -15,9 +15,11 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.lib.util.ViewExternalUtil
 import com.alexvt.integrity.ui.recovery.RecoveryActivity
 import com.alexvt.integrity.ui.settings.SettingsActivity
+import dagger.android.support.AndroidSupportInjection
 
 class HelpInfoSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        AndroidSupportInjection.inject(this)
         setPreferencesFromResource(R.xml.settings_info_help, rootKey)
 
         val prefProject: Preference = findPreference("help_project")

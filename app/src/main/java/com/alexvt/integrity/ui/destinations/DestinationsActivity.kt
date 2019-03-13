@@ -21,20 +21,25 @@ import com.alexvt.integrity.lib.util.ThemedActivity
 import com.alexvt.integrity.lib.util.IntentUtil
 import com.alexvt.integrity.ui.util.SpeedDialUtil
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
+import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_folder_locations.*
+import javax.inject.Inject
 
 class DestinationsActivity : ThemedActivity() {
+    @Inject
+    lateinit var integrityCore: IntegrityCore
 
     private val vm: DestinationsViewModel by lazy {
         ViewModelProviders.of(this, DestinationsViewModelFactory(
-                settingsRepository = IntegrityCore.settingsRepository,
-                credentialsRepository = IntegrityCore.credentialsRepository,
+                settingsRepository = integrityCore.settingsRepository,
+                credentialsRepository = integrityCore.credentialsRepository,
                 isSelectMode = IntentUtil.isSelectMode(intent),
                 snapshotWithInitialDestination = IntentUtil.getSnapshot(intent)
         )).get(DestinationsViewModel::class.java)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_folder_locations)
 

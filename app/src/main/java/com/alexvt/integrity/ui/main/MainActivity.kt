@@ -22,7 +22,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import android.view.*
 import androidx.core.view.LayoutInflaterCompat
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.ViewModelProviders
 import co.zsmb.materialdrawerkt.builders.drawer
 import co.zsmb.materialdrawerkt.builders.footer
 import co.zsmb.materialdrawerkt.draweritems.badgeable.primaryItem
@@ -37,53 +36,29 @@ import java.util.*
 import co.zsmb.materialdrawerkt.draweritems.badge
 import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.ui.destinations.DestinationsActivity
-import com.alexvt.integrity.ui.log.LogViewActivity
-import com.alexvt.integrity.ui.tags.TagsActivity
 import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.lib.util.FontUtil
 import com.alexvt.integrity.lib.util.SearchViewUtil
 import com.alexvt.integrity.lib.util.ThemeUtil
 import com.alexvt.integrity.lib.util.ThemedActivity
-import com.alexvt.integrity.ui.info.HelpInfoActivity
-import com.alexvt.integrity.ui.info.LegalInfoActivity
-import com.alexvt.integrity.ui.recovery.RecoveryActivity
-import com.alexvt.integrity.ui.settings.SettingsActivity
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import com.jakewharton.rxbinding3.appcompat.queryTextChanges
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.IIcon
 import com.mikepenz.materialdrawer.model.*
-
+import dagger.android.AndroidInjection
+import javax.inject.Inject
 
 class MainActivity : ThemedActivity() {
 
-    private val vm: MainScreenViewModel by lazy {
-        ViewModelProviders.of(this, MainScreenViewModelFactory(
-                packageName = packageName,
-                metadataRepository = IntegrityCore.metadataRepository,
-                searchIndexRepository = IntegrityCore.searchIndexRepository,
-                settingsRepository = IntegrityCore.settingsRepository,
-                logRepository = IntegrityCore.logRepository,
-                snapshotOperationManager = IntegrityCore.snapshotOperationManager,
-                scheduledJobManager = IntegrityCore.scheduledJobManager,
-                dataTypeRepository = IntegrityCore.dataTypeRepository,
-                destinationsScreenClass = DestinationsActivity::class.java.name,
-                tagsScreenClass = TagsActivity::class.java.name,
-                logScreenClass = LogViewActivity::class.java.name,
-                settingsClass = SettingsActivity::class.java.name,
-                recoveryScreenClass = RecoveryActivity::class.java.name,
-                helpInfoScreenClass = HelpInfoActivity::class.java.name,
-                legalInfoScreenClass = LegalInfoActivity::class.java.name
-        )).get(MainScreenViewModel::class.java)
-    }
+    @Inject lateinit var vm: MainScreenViewModel
 
     private lateinit var drawer: Drawer
     private lateinit var jobProgressDialog: MaterialDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         LayoutInflaterCompat.setFactory2(layoutInflater, IconicsLayoutInflater2(delegate))
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

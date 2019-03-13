@@ -6,17 +6,26 @@
 
 package com.alexvt.integrity
 
+import android.app.Activity
 import android.app.Application
-import com.alexvt.integrity.lib.*
 import android.app.ActivityManager
 import android.content.Context
 import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.ThemeUtil
 import com.alexvt.integrity.lib.log.Log
+import dagger.android.AndroidInjector
+import dagger.android.DispatchingAndroidInjector
+import dagger.android.HasActivityInjector
 import java.lang.RuntimeException
+import javax.inject.Inject
 
 
-class App : Application() {
+class App : Application(), HasActivityInjector {
+
+    @Inject
+    lateinit var activityInjector : DispatchingAndroidInjector<Activity>
+
+    override fun activityInjector(): AndroidInjector<Activity> = activityInjector
 
     override fun onCreate() {
         super.onCreate()
@@ -27,6 +36,8 @@ class App : Application() {
             }
             return // recovery process is only used to restart the main one, doesn't init anything
         }
+
+        AppDependencies.createDependencyGraph(this)
 
         try {
             IntegrityCore.init(this)

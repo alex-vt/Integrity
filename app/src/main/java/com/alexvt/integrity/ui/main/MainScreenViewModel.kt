@@ -8,7 +8,6 @@ package com.alexvt.integrity.ui.main
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.core.jobs.ScheduledJobManager
@@ -29,32 +28,8 @@ import com.alexvt.integrity.lib.util.ThemeUtil
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.ui.util.SingleLiveEvent
-
-
-class MainScreenViewModelFactory(
-        val packageName: String,
-        val metadataRepository: MetadataRepository,
-        val searchIndexRepository: SearchIndexRepository,
-        val settingsRepository: SettingsRepository,
-        val logRepository: LogRepository,
-        val dataTypeRepository: DataTypeRepository,
-        val snapshotOperationManager: SnapshotOperationManager,
-        val scheduledJobManager: ScheduledJobManager,
-        val destinationsScreenClass: String,
-        val tagsScreenClass: String,
-        val logScreenClass: String,
-        val settingsClass: String,
-        val recoveryScreenClass: String,
-        val helpInfoScreenClass: String,
-        val legalInfoScreenClass: String
-) : ViewModelProvider.Factory {
-    // Pass type parameter to instance if needed for initial state
-    override fun <T : ViewModel> create(modelClass: Class<T>)
-            = MainScreenViewModel(packageName, metadataRepository, searchIndexRepository,
-            settingsRepository, logRepository, dataTypeRepository, snapshotOperationManager,
-            scheduledJobManager, destinationsScreenClass, tagsScreenClass, logScreenClass,
-            settingsClass, recoveryScreenClass, helpInfoScreenClass, legalInfoScreenClass) as T
-}
+import javax.inject.Inject
+import javax.inject.Named
 
 /**
  * The minimal set of data about screen state that comes from user input,
@@ -93,24 +68,24 @@ data class NavigationEvent(
         val bundledOptionExtensions: Boolean? = null
 )
 
-class MainScreenViewModel(
+class MainScreenViewModel @Inject constructor(
         // for navigation
-        private val packageName: String,
-        private val metadataRepository: MetadataRepository,
-        private val searchIndexRepository: SearchIndexRepository,
-        private val settingsRepository: SettingsRepository,
-        private val logRepository: LogRepository,
-        private val dataTypeRepository: DataTypeRepository,
-        private val snapshotOperationManager: SnapshotOperationManager,
-        private val scheduledJobManager: ScheduledJobManager,
-        private val destinationsScreenClass: String,
-        private val tagsScreenClass: String,
-        private val logScreenClass: String,
-        private val settingsScreenClass: String,
-        private val recoveryScreenClass: String,
-        private val helpInfoScreenClass: String,
-        private val legalInfoScreenClass: String
-        ) : ViewModel() {
+        @Named("packageName") val packageName: String,
+        val metadataRepository: MetadataRepository,
+        val searchIndexRepository: SearchIndexRepository,
+        val settingsRepository: SettingsRepository,
+        val logRepository: LogRepository,
+        val dataTypeRepository: DataTypeRepository,
+        val snapshotOperationManager: SnapshotOperationManager,
+        val scheduledJobManager: ScheduledJobManager,
+        @Named("destinationsScreenClass") val destinationsScreenClass: String,
+        @Named("tagsScreenClass") val tagsScreenClass: String,
+        @Named("logScreenClass") val logScreenClass: String,
+        @Named("settingsScreenClass") val settingsScreenClass: String,
+        @Named("recoveryScreenClass") val recoveryScreenClass: String,
+        @Named("helpInfoScreenClass") val helpInfoScreenClass: String,
+        @Named("legalInfoScreenClass") val legalInfoScreenClass: String
+    ): ViewModel() {
 
     // primary
     val inputStateData = MutableLiveData<MainScreenInputState>()

@@ -9,6 +9,7 @@ package com.alexvt.integrity.ui.destinations.local
 import androidx.lifecycle.MutableLiveData
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.destinations.local.LocalFolderLocation
+import com.alexvt.integrity.lib.filesystem.FilesystemManager
 import com.alexvt.integrity.ui.ThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
@@ -30,6 +31,7 @@ data class InputState(
 
 class LocalDestinationViewModel @Inject constructor(
         override val settingsRepository: SettingsRepository,
+        private val filesystemManager: FilesystemManager,
         @Named("editedLocalDestinationTitle") val editedDestinationTitle: String?,
         @Named("defaultLocalDestinationTitle") val defaultTitle: String
         ) : ThemedViewModel() {
@@ -44,7 +46,7 @@ class LocalDestinationViewModel @Inject constructor(
         inputStateData.value = if (isEditMode()) {
             with(settingsRepository.getAllFolderLocations()
                     .first { it.title == editedDestinationTitle } as LocalFolderLocation) {
-                InputState(title, folderPath)
+                InputState(title, folderPath.removePrefix(filesystemManager.getRootFolder() + "/"))
             }
         } else {
             InputState(defaultTitle, "")
@@ -98,7 +100,7 @@ class LocalDestinationViewModel @Inject constructor(
 
     private fun saveFolderLocation() {
         val folderLocation = with(inputStateData.value!!) {
-            LocalFolderLocation(title, path)
+            LocalFolderLocation(title, filesystemManager.getRootFolder() + "/" + path)
         }
         // the old one is removed first
         settingsRepository.removeFolderLocation(folderLocation.title)

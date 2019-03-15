@@ -27,6 +27,7 @@ import com.alexvt.integrity.core.types.DataTypeRepository
 import com.alexvt.integrity.lib.IntegrityLib
 import com.alexvt.integrity.lib.filesystem.AndroidFilesystemManager
 import com.alexvt.integrity.lib.filesystem.DataFolderManager
+import com.alexvt.integrity.lib.filesystem.FilesystemManager
 import com.alexvt.integrity.lib.jobs.RunningJobManager
 import com.alexvt.integrity.ui.destinations.DestinationsActivity
 import com.alexvt.integrity.ui.info.HelpInfoActivity
@@ -93,8 +94,13 @@ class IntegrityCoreDependenciesModule {
 
     @Provides
     @Singleton
-    fun provideDataFolderManager(context: Context): DataFolderManager
-            = DataFolderManager(AndroidFilesystemManager(context))
+    fun provideDataFolderManager(filesystemManager: FilesystemManager): DataFolderManager
+            = DataFolderManager(filesystemManager)
+
+    @Provides
+    @Singleton
+    fun provideFilesystemManager(context: Context): FilesystemManager
+            = AndroidFilesystemManager(context)
 
     @Provides
     @Singleton

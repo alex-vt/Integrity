@@ -40,7 +40,7 @@ abstract class LocalDestinationDependenciesModule {
     class ResourcesModule {
         @Provides
         @Named("defaultLocalDestinationTitle")
-        fun providesDefaultLocalDestinationTitle(context: Context) = "Local Folder" // todo from string
+        fun providesDefaultDestinationTitle(context: Context) = "Folder on device" // todo from string
     }
 }
 

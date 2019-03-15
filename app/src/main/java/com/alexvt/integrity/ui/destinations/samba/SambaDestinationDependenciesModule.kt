@@ -6,15 +6,40 @@
 
 package com.alexvt.integrity.ui.destinations.samba
 
+import android.content.Context
+import androidx.lifecycle.ViewModelProvider
+import com.alexvt.integrity.lib.util.IntentUtil
+import com.alexvt.integrity.ui.ViewModelFactory
 import dagger.Module
+import dagger.Provides
 import dagger.android.ContributesAndroidInjector
+import javax.inject.Named
 
 
 @Module
 abstract class SambaDestinationDependenciesModule {
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class, IntentModule::class, ResourcesModule::class])
     abstract fun bindActivity(): SambaDestinationActivity
 
+    @Module
+    class ViewModelFactoryModule {
+        @Provides
+        fun providesVmFactory(vm: SambaDestinationViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+    }
+
+    @Module
+    class IntentModule {
+        @Provides
+        @Named("editedSambaDestinationTitle")
+        fun providesEditedTitle(activity: SambaDestinationActivity) = IntentUtil.getTitle(activity.intent)
+    }
+
+    @Module
+    class ResourcesModule {
+        @Provides
+        @Named("defaultSambaDestinationTitle")
+        fun providesDefaultDestinationTitle(context: Context) = "LAN folder" // todo from string
+    }
 }
 

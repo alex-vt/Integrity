@@ -6,121 +6,92 @@
 
 package com.alexvt.integrity.ui.destinations.samba
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocation
-import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocationCredentials
 import com.alexvt.integrity.lib.util.ThemedActivity
+import com.jakewharton.rxbinding3.widget.textChanges
 import dagger.android.AndroidInjection
+import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_samba_location.*
 import javax.inject.Inject
 
 
 class SambaDestinationActivity : ThemedActivity() {
 
-    private val TAG = SambaDestinationActivity::class.java.simpleName
     @Inject
-    lateinit var integrityCore: IntegrityCore
+    lateinit var vmFactory: ViewModelProvider.Factory
 
-    // folder location to view/edit
-    private lateinit var folderLocation: SambaFolderLocation
-    private lateinit var folderLocationCredentials: SambaFolderLocationCredentials
+    private val vm by lazy {
+        ViewModelProviders.of(this, vmFactory)[SambaDestinationViewModel::class.java]
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_samba_location)
+
+        bindToolbar()
+        bindContent()
+        bindNavigation()
+    }
+
+    private fun bindToolbar() {
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
-
-        if (editMode(intent)) {
-            folderLocation = integrityCore.settingsRepository.getAllFolderLocations()
-                    .first { it.title == getTitleFromIntent(intent) } as SambaFolderLocation
-            folderLocationCredentials = integrityCore.credentialsRepository
-                    .getCredentials(folderLocation.title) as SambaFolderLocationCredentials
-
-        } else {
-            folderLocation = SambaFolderLocation(
-                    title = etTitle.text.toString().trim(),
-                    fullPath = etPath.text.toString().trim()
-            )
-            folderLocationCredentials = SambaFolderLocationCredentials(
-                    title = etTitle.text.toString().trim(),
-                    user = etUser.text.toString().trim(),
-                    password = etPassword.text.toString().trim()
-            )
-        }
-
-        fillInOptions(editMode(intent))
     }
 
-    fun getTitleFromIntent(intent: Intent?): String {
-        var title: String? = intent?.getStringExtra("title")
-        if (title == null) {
-            title = ""
-        }
-        return title
+    private fun bindContent() {
+        etTitle.isEnabled = !vm.isEditMode()
+        etTitle.append(vm.inputStateData.value!!.title)
+        etTitle.textChanges()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { vm.onNewTitle(it.toString()) }
+
+        etPath.append(vm.inputStateData.value!!.path)
+        etPath.textChanges()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { vm.onNewPath(it.toString()) }
+
+        etUser.append(vm.inputStateData.value!!.user)
+        etUser.textChanges()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { vm.onNewUser(it.toString()) }
+
+        etPassword.append(vm.inputStateData.value!!.password)
+        etPassword.textChanges()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { vm.onNewPassword(it.toString()) }
+
+        bSave.setOnClickListener { vm.clickSave() }
     }
 
-    fun editMode(intent: Intent?) = getTitleFromIntent(intent).isNotEmpty()
-
-    fun fillInOptions(editing: Boolean) {
-        etTitle.setText(folderLocation.title)
-        etTitle.isEnabled = !editing
-        etPath.setText(folderLocation.fullPath)
-        etUser.setText(folderLocationCredentials.user)
-        etPassword.setText("") // user should enter password again
-        bSave.setOnClickListener { checkDataAndSave() }
-    }
-
-    fun checkDataAndSave() {
-        folderLocation = folderLocation.copy(
-                title = etTitle.text.toString().trim(),
-                fullPath = etPath.text.toString().trim()
-        )
-        folderLocationCredentials = folderLocationCredentials.copy(
-                title = etTitle.text.toString().trim(),
-                user = etUser.text.toString().trim(),
-                password = etPassword.text.toString().trim()
-        )
-        if (folderLocation.title.isEmpty()) {
-            Toast.makeText(this, "Please enter title", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (!folderLocation.fullPath.startsWith("smb://")) {
-            Toast.makeText(this, "Please enter Samba folder path", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (folderLocationCredentials.user.isEmpty()) {
-            Toast.makeText(this, "Please enter user name", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (folderLocationCredentials.password.isEmpty()) {
-            Toast.makeText(this, "Please enter password", Toast.LENGTH_SHORT).show()
-            return
-        }
-        // when creating new location, it must have unique title
-        val titleAlreadyExists = integrityCore.settingsRepository.getAllFolderLocations()
-                .any { it.title == folderLocation.title }
-        if (!editMode(intent) && titleAlreadyExists) {
-            Toast.makeText(this, "Location with this title already exists",
-                    Toast.LENGTH_SHORT).show()
-            return
-        }
-        // the old one is removed first
-        integrityCore.settingsRepository.removeFolderLocation(folderLocation.title)
-        integrityCore.credentialsRepository.removeCredentials(folderLocation.title)
-        integrityCore.settingsRepository.addFolderLocation(folderLocation)
-        integrityCore.credentialsRepository.addCredentials(folderLocationCredentials)
-        finish()
+    private fun bindNavigation() {
+        vm.navigationEventData.observe(this, androidx.lifecycle.Observer {
+            if (it.goBack) {
+                super.onBackPressed()
+            } else {
+                val errorText = when (it.inputError) {
+                    InputError.EMPTY_NAME -> "Please enter title"
+                    InputError.EMPTY_PATH -> "Please enter path"
+                    InputError.EMPTY_USER -> "Please enter user name"
+                    InputError.EMPTY_PASSWORD -> "Please enter password"
+                    InputError.ALREADY_EXISTS -> "Destination with this title already exists"
+                    else -> "Error" // shouldn't happen
+                }
+                Toast.makeText(this, errorText, Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        super.onBackPressed()
+        vm.pressBackButton()
         return true
     }
+
+    override fun onBackPressed() = vm.pressBackButton()
+
 }

@@ -6,15 +6,41 @@
 
 package com.alexvt.integrity.ui.destinations.local
 
+import android.content.Context
+import androidx.lifecycle.ViewModelProvider
+import com.alexvt.integrity.lib.util.IntentUtil
+import com.alexvt.integrity.ui.ViewModelFactory
 import dagger.Module
+import dagger.Provides
 import dagger.android.ContributesAndroidInjector
+import javax.inject.Named
+import javax.inject.Singleton
 
 
 @Module
 abstract class LocalDestinationDependenciesModule {
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class, IntentModule::class, ResourcesModule::class])
     abstract fun bindActivity(): LocalDestinationActivity
 
+    @Module
+    class ViewModelFactoryModule {
+        @Provides
+        fun providesVmFactory(vm: LocalDestinationViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+    }
+
+    @Module
+    class IntentModule {
+        @Provides
+        @Named("editedLocalDestinationTitle")
+        fun providesEditedTitle(activity: LocalDestinationActivity) = IntentUtil.getTitle(activity.intent)
+    }
+
+    @Module
+    class ResourcesModule {
+        @Provides
+        @Named("defaultLocalDestinationTitle")
+        fun providesDefaultLocalDestinationTitle(context: Context) = "Local Folder" // todo from string
+    }
 }
 

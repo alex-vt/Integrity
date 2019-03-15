@@ -5,13 +5,12 @@
   ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   -->
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    >
+    android:layout_height="match_parent">
 
     <!-- Toolbar -->
     <com.google.android.material.appbar.AppBarLayout
@@ -55,24 +54,41 @@
                 android:id="@+id/etTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Local Folder"
+                tools:hint="Enter name"
+                tools:text="Local Folder"
                 android:inputType="text"
                 />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Full path:"
+                android:text="Path:"
                 />
 
-            <EditText
-                android:id="@+id/etPath"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="/storage/emulated/0/Integrity"
-                android:text="/storage/emulated/0/Integrity"
-                android:inputType="text"
-                />
+                android:orientation="horizontal"
+                >
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📱/"
+                    android:background="@color/colorNone"
+                    android:enabled="false"
+                    />
+
+                <EditText
+                    android:id="@+id/etPath"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:hint="Enter path"
+                    tools:text="IntegrityArchive"
+                    android:inputType="text"
+                    />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/bSave"

@@ -111,7 +111,7 @@ class DestinationsActivity : ThemedActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        super.onBackPressed()
+        vm.pressBackButton()
         return true
     }
 

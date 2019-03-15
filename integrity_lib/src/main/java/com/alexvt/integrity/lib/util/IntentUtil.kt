@@ -178,5 +178,5 @@ object IntentUtil {
         return intent!!
     }
 
-    fun getTitle(intent: Intent?) = intent!!.getStringExtra(title)!!
+    fun getTitle(intent: Intent?) = intent?.getStringExtra(title)
 }

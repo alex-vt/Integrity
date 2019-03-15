@@ -57,7 +57,7 @@ class MainActivity : ThemedActivity() {
     @Inject
     lateinit var vmFactory: ViewModelProvider.Factory
 
-    private val vm: MainScreenViewModel by lazy {
+    private val vm by lazy {
         ViewModelProviders.of(this, vmFactory)[MainScreenViewModel::class.java]
     }
 

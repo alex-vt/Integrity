@@ -30,7 +30,7 @@ class DestinationsActivity : ThemedActivity() {
     @Inject
     lateinit var vmFactory: ViewModelProvider.Factory
 
-    private val vm: DestinationsViewModel by lazy {
+    private val vm by lazy {
         ViewModelProviders.of(this, vmFactory)[DestinationsViewModel::class.java]
     }
 

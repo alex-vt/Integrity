@@ -7,7 +7,6 @@
 package com.alexvt.integrity.ui.main
 
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.core.jobs.ScheduledJobManager
@@ -24,10 +23,9 @@ import com.alexvt.integrity.core.types.DataTypeRepository
 import com.alexvt.integrity.lib.IntegrityLib
 import com.alexvt.integrity.lib.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.util.ThrottledFunction
-import com.alexvt.integrity.lib.util.ThemeColors
-import com.alexvt.integrity.lib.util.ThemeUtil
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
+import com.alexvt.integrity.ui.ThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
 import javax.inject.Named
@@ -74,7 +72,7 @@ class MainScreenViewModel @Inject constructor(
         @Named("packageName") val packageName: String,
         val metadataRepository: MetadataRepository,
         val searchIndexRepository: SearchIndexRepository,
-        val settingsRepository: SettingsRepository,
+        override val settingsRepository: SettingsRepository,
         val dataFolderManager: DataFolderManager,
         val logRepository: LogRepository,
         val dataTypeRepository: DataTypeRepository,
@@ -87,7 +85,7 @@ class MainScreenViewModel @Inject constructor(
         @Named("recoveryScreenClass") val recoveryScreenClass: String,
         @Named("helpInfoScreenClass") val helpInfoScreenClass: String,
         @Named("legalInfoScreenClass") val legalInfoScreenClass: String
-    ): ViewModel() {
+    ): ThemedViewModel() {
 
     // primary
     val inputStateData = MutableLiveData<MainScreenInputState>()
@@ -228,22 +226,6 @@ class MainScreenViewModel @Inject constructor(
         return "$scopeTitle$sortingTitleSuffix"
     }
 
-    fun getFont() = settingsData.value!!.textFont
-
-    fun computeColorPrimaryDark() = ThemeUtil.getColorPrimaryDark(getThemeColors())
-
-    fun computeTextColorPrimary() = ThemeUtil.getTextColorPrimary(getThemeColors())
-
-    fun computeTextColorSecondary() = ThemeUtil.getTextColorSecondary(getThemeColors())
-
-    fun computeColorAccent() = ThemeUtil.getColorAccent(getThemeColors())
-
-    fun computeColorBackground() = ThemeUtil.getColorBackground(getThemeColors())
-
-    fun computeColorBackgroundSecondary() = ThemeUtil.getColorBackgroundSecondary(getThemeColors())
-
-    fun computeColorBackgroundBleached() = ThemeUtil.getColorBackgroundBleached(getThemeColors())
-
     fun computeArtifactFilterTitle(): String {
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val title = if (filteredArtifactId != null) {
@@ -254,10 +236,6 @@ class MainScreenViewModel @Inject constructor(
         val isSearching = inputStateData.value!!.searchViewText.isNotBlank()
         val prefix = if (isSearching) "in: " else ""
         return "$prefix$title"
-    }
-
-    fun getThemeColors() = with(settingsData.value!!) {
-        ThemeColors(colorBackground, colorPrimary, colorAccent)
     }
 
     fun getSortingTypeNames() = SortingUtil.getSortingTypeNames()

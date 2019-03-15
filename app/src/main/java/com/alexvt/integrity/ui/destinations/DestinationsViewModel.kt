@@ -8,16 +8,14 @@ package com.alexvt.integrity.ui.destinations
 
 import android.content.ComponentName
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.alexvt.integrity.core.credentials.CredentialsRepository
 import com.alexvt.integrity.lib.destinations.DestinationNameUtilResolver
 import com.alexvt.integrity.core.destinations.DestinationUtilResolver
 import com.alexvt.integrity.core.settings.IntegrityAppSettings
 import com.alexvt.integrity.core.settings.SettingsRepository
-import com.alexvt.integrity.lib.util.ThemeColors
-import com.alexvt.integrity.lib.util.ThemeUtil
 import com.alexvt.integrity.lib.metadata.FolderLocation
 import com.alexvt.integrity.lib.metadata.Snapshot
+import com.alexvt.integrity.ui.ThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
 import javax.inject.Named
@@ -43,11 +41,11 @@ data class NavigationEvent(
 )
 
 class DestinationsViewModel @Inject constructor(
-        val settingsRepository: SettingsRepository,
+        override val settingsRepository: SettingsRepository,
         val credentialsRepository: CredentialsRepository,
         @Named("selectMode") val selectMode: Boolean,
         @Named("snapshotWithInitialDestination") val snapshotWithInitialDestination: Snapshot?
-        ) : ViewModel() {
+        ) : ThemedViewModel() {
 
     private val inputStateData = MutableLiveData<DestinationsInputState>()
     private val settingsData = MutableLiveData<IntegrityAppSettings>()
@@ -104,27 +102,6 @@ class DestinationsViewModel @Inject constructor(
      */
     fun getDestinationNames() = DestinationUtilResolver.getDestinationClasses().map {
         DestinationNameUtilResolver.getDestinationNameUtil(it).getFolderLocationLabel()
-    }
-
-
-    fun getFont() = settingsData.value!!.textFont
-
-    fun computeColorPrimaryDark() = ThemeUtil.getColorPrimaryDark(getThemeColors())
-
-    fun computeTextColorPrimary() = ThemeUtil.getTextColorPrimary(getThemeColors())
-
-    fun computeTextColorSecondary() = ThemeUtil.getTextColorSecondary(getThemeColors())
-
-    fun computeColorAccent() = ThemeUtil.getColorAccent(getThemeColors())
-
-    fun computeColorBackground() = ThemeUtil.getColorBackground(getThemeColors())
-
-    fun computeColorBackgroundSecondary() = ThemeUtil.getColorBackgroundSecondary(getThemeColors())
-
-    fun computeColorBackgroundBleached() = ThemeUtil.getColorBackgroundBleached(getThemeColors())
-
-    fun getThemeColors() = with(settingsData.value!!) {
-        ThemeColors(colorBackground, colorPrimary, colorAccent)
     }
 
 

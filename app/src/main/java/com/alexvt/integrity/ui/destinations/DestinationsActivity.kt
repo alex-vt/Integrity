@@ -12,10 +12,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.FontUtil
 import com.alexvt.integrity.lib.util.ThemedActivity
 import com.alexvt.integrity.lib.util.IntentUtil
@@ -26,16 +26,12 @@ import kotlinx.android.synthetic.main.activity_folder_locations.*
 import javax.inject.Inject
 
 class DestinationsActivity : ThemedActivity() {
+
     @Inject
-    lateinit var integrityCore: IntegrityCore
+    lateinit var vmFactory: ViewModelProvider.Factory
 
     private val vm: DestinationsViewModel by lazy {
-        ViewModelProviders.of(this, DestinationsViewModelFactory(
-                settingsRepository = integrityCore.settingsRepository,
-                credentialsRepository = integrityCore.credentialsRepository,
-                isSelectMode = IntentUtil.isSelectMode(intent),
-                snapshotWithInitialDestination = IntentUtil.getSnapshot(intent)
-        )).get(DestinationsViewModel::class.java)
+        ViewModelProviders.of(this, vmFactory)[DestinationsViewModel::class.java]
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

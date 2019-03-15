@@ -17,13 +17,9 @@ import com.alexvt.integrity.ui.main.MainScreenDependenciesModule
 import com.alexvt.integrity.ui.recovery.RecoveryDependenciesModule
 import com.alexvt.integrity.ui.settings.SettingsDependenciesModule
 import com.alexvt.integrity.ui.tags.TagsDependenciesModule
-import dagger.Binds
-import dagger.MapKey
 import dagger.Module
+import dagger.Lazy
 import javax.inject.Inject
-import javax.inject.Provider
-import javax.inject.Singleton
-import kotlin.reflect.KClass
 
 @Module(includes = [
     MainScreenDependenciesModule::class,
@@ -36,28 +32,17 @@ import kotlin.reflect.KClass
     SettingsDependenciesModule::class,
     TagsDependenciesModule::class
 ])
-abstract class UiDependenciesModule {
-    // see https://brightinventions.pl/blog/injectable-android-viewmodels/
+abstract class UiDependenciesModule
 
-    @Binds
-    abstract fun bindViewModelFactory(factory: InjectingViewModelFactory): ViewModelProvider.Factory
+class ViewModelFactory<VM : ViewModel>(
+        private val viewModel: dagger.Lazy<VM>
+) : ViewModelProvider.Factory {
 
-    @Target(AnnotationTarget.FUNCTION)
-    @Retention(AnnotationRetention.RUNTIME)
-    @MapKey
-    annotation class ViewModelKey(val value: KClass<out ViewModel>)
+    @Inject
+    constructor(viewModel: VM) : this(Lazy { viewModel })
 
-    @Singleton
-    class InjectingViewModelFactory @Inject constructor(
-            private val viewModelProviders: Map<Class<out ViewModel>, @JvmSuppressWildcards Provider<ViewModel>>
-    ) : ViewModelProvider.Factory {
-
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            val provider = viewModelProviders[modelClass]
-                    ?: viewModelProviders.entries.first { modelClass.isAssignableFrom(it.key) }.value
-
-            return provider.get() as T
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return viewModel.get() as T
     }
 }

@@ -6,33 +6,23 @@
 
 package com.alexvt.integrity.ui.main
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
-import com.alexvt.integrity.ui.UiDependenciesModule
-import dagger.Binds
+import com.alexvt.integrity.ui.ViewModelFactory
 import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
-import dagger.multibindings.IntoMap
 
 
 @Module
 abstract class MainScreenDependenciesModule {
 
-    @Binds
-    @IntoMap
-    @UiDependenciesModule.ViewModelKey(MainScreenViewModel::class)
-    abstract fun bindViewModel(viewModel: MainScreenViewModel): ViewModel
-
-    @ContributesAndroidInjector(modules = [InjectViewModelModule::class])
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class])
     abstract fun bindActivity(): MainActivity
 
     @Module
-    class InjectViewModelModule {
+    class ViewModelFactoryModule {
         @Provides
-        fun provideViewModel(factory: ViewModelProvider.Factory, target: MainActivity)
-                = ViewModelProviders.of(target, factory).get(MainScreenViewModel::class.java)
+        fun providesVmFactory(vm: MainScreenViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
     }
 }
 

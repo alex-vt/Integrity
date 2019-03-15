@@ -9,7 +9,6 @@ package com.alexvt.integrity.ui.destinations
 import android.content.ComponentName
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.alexvt.integrity.core.credentials.CredentialsRepository
 import com.alexvt.integrity.lib.destinations.DestinationNameUtilResolver
 import com.alexvt.integrity.core.destinations.DestinationUtilResolver
@@ -20,19 +19,8 @@ import com.alexvt.integrity.lib.util.ThemeUtil
 import com.alexvt.integrity.lib.metadata.FolderLocation
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.ui.util.SingleLiveEvent
-
-
-class DestinationsViewModelFactory(
-        val settingsRepository: SettingsRepository,
-        val credentialsRepository: CredentialsRepository,
-        val isSelectMode: Boolean,
-        val snapshotWithInitialDestination: Snapshot?
-) : ViewModelProvider.Factory {
-    // Pass type parameter to instance if needed for initial state
-    override fun <T : ViewModel> create(modelClass: Class<T>)
-            = DestinationsViewModel(settingsRepository, credentialsRepository, isSelectMode,
-            snapshotWithInitialDestination) as T
-}
+import javax.inject.Inject
+import javax.inject.Named
 
 /**
  * The minimal set of data about screen state that comes from user input,
@@ -54,11 +42,11 @@ data class NavigationEvent(
         val bundledTitle: String? = null
 )
 
-class DestinationsViewModel(
-        private val settingsRepository: SettingsRepository,
-        private val credentialsRepository: CredentialsRepository,
-        private val isSelectMode: Boolean,
-        private val snapshotWithInitialDestination: Snapshot?
+class DestinationsViewModel @Inject constructor(
+        val settingsRepository: SettingsRepository,
+        val credentialsRepository: CredentialsRepository,
+        @Named("selectMode") val selectMode: Boolean,
+        @Named("snapshotWithInitialDestination") val snapshotWithInitialDestination: Snapshot?
         ) : ViewModel() {
 
     private val inputStateData = MutableLiveData<DestinationsInputState>()
@@ -109,7 +97,7 @@ class DestinationsViewModel(
     }
 
 
-    fun isSelectMode() = isSelectMode
+    fun isSelectMode() = selectMode
 
     /**
      * Gets list of archive destination labels.

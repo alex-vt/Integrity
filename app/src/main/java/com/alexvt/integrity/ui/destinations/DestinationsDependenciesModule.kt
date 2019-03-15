@@ -6,15 +6,36 @@
 
 package com.alexvt.integrity.ui.destinations
 
+import androidx.lifecycle.ViewModelProvider
+import com.alexvt.integrity.lib.util.IntentUtil
+import com.alexvt.integrity.ui.ViewModelFactory
 import dagger.Module
+import dagger.Provides
 import dagger.android.ContributesAndroidInjector
+import javax.inject.Named
 
 
 @Module
 abstract class DestinationsDependenciesModule {
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class, IntentModule::class])
     abstract fun bindActivity(): DestinationsActivity
 
+    @Module
+    class ViewModelFactoryModule {
+        @Provides
+        fun providesVmFactory(vm: DestinationsViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+    }
+
+    @Module
+    class IntentModule {
+        @Provides
+        @Named("selectMode")
+        fun providesSelectMode(activity: DestinationsActivity) = IntentUtil.isSelectMode(activity.intent)
+
+        @Provides
+        @Named("snapshotWithInitialDestination")
+        fun providesSnapshot(activity: DestinationsActivity) = IntentUtil.getSnapshot(activity.intent)
+    }
 }
 

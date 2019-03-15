@@ -22,6 +22,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 import android.view.*
 import androidx.core.view.LayoutInflaterCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import co.zsmb.materialdrawerkt.builders.drawer
 import co.zsmb.materialdrawerkt.builders.footer
 import co.zsmb.materialdrawerkt.draweritems.badgeable.primaryItem
@@ -52,7 +54,12 @@ import javax.inject.Inject
 
 class MainActivity : ThemedActivity() {
 
-    @Inject lateinit var vm: MainScreenViewModel
+    @Inject
+    lateinit var vmFactory: ViewModelProvider.Factory
+
+    private val vm: MainScreenViewModel by lazy {
+        ViewModelProviders.of(this, vmFactory)[MainScreenViewModel::class.java]
+    }
 
     private lateinit var drawer: Drawer
     private lateinit var jobProgressDialog: MaterialDialog

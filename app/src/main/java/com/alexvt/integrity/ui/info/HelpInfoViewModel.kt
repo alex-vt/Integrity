@@ -6,10 +6,7 @@
 
 package com.alexvt.integrity.ui.info
 
-import androidx.lifecycle.MutableLiveData
 import com.alexvt.integrity.core.settings.SettingsRepository
-import com.alexvt.integrity.lib.destinations.local.LocalFolderLocation
-import com.alexvt.integrity.lib.filesystem.FilesystemManager
 import com.alexvt.integrity.ui.ThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject

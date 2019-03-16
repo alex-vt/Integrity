@@ -6,11 +6,14 @@
 
 package com.alexvt.integrity.ui.info
 
+import android.content.Context
 import androidx.lifecycle.ViewModelProvider
 import com.alexvt.integrity.ui.ViewModelFactory
+import com.alexvt.integrity.R
 import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
+import javax.inject.Named
 
 
 @Module
@@ -28,12 +31,42 @@ abstract class InfoDependenciesModule {
         fun providesVmFactory(vm: HelpInfoViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
     }
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [LegalViewModelFactoryModule::class, ResourcesModule::class])
     abstract fun bindLegalInfoActivity(): LegalInfoActivity
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [LegalViewModelFactoryModule::class, ResourcesModule::class])
     abstract fun bindLegalInfoFragment(): LegalInfoSettingsFragment
 
+    @Module
+    class LegalViewModelFactoryModule {
+        @Provides
+        fun providesVmFactory(vm: LegalInfoViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+    }
 
+    @Module
+    class ResourcesModule {
+        @Provides
+        @Named("termsTitle")
+        fun providesTermsTitle(context: Context) = "Terms & Conditions" // todo from resources
+
+        @Provides
+        @Named("termsText")
+        fun providesTermsText(context: Context) = getTextFromRawResource(context, R.raw.license)
+
+        @Provides
+        @Named("privacyPolicyTitle")
+        fun providesPrivacyPolicyTitle(context: Context) = "Privacy Policy" // todo from resources
+
+        @Provides
+        @Named("privacyPolicyText")
+        fun providesPrivacyPolicyText(context: Context) = getTextFromRawResource(context, R.raw.privacy)
+
+        private fun getTextFromRawResource(context: Context, resId: Int): String {
+            val inputStream = context.resources.openRawResource(resId)
+            val bytes = ByteArray(inputStream.available())
+            inputStream.read(bytes)
+            return String(bytes)
+        }
+    }
 }
 

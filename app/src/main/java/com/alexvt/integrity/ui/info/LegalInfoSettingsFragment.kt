@@ -6,16 +6,25 @@
 
 package com.alexvt.integrity.ui.info
 
-import android.content.Context
 import android.os.Bundle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import dagger.android.support.AndroidSupportInjection
+import javax.inject.Inject
 
 
 class LegalInfoSettingsFragment : PreferenceFragmentCompat() {
+
+    @Inject
+    lateinit var vmFactory: ViewModelProvider.Factory
+
+    private val vm by lazy {
+        ViewModelProviders.of(activity!!, vmFactory)[LegalInfoViewModel::class.java]
+    }
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         AndroidSupportInjection.inject(this)
         setPreferencesFromResource(R.xml.settings_info_legal, rootKey)
@@ -24,27 +33,12 @@ class LegalInfoSettingsFragment : PreferenceFragmentCompat() {
         val prefPrivacy: Preference = findPreference("legal_privacy")
 
         prefTerms.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            MaterialDialog(context!!)
-                    .title(text = "Terms & Conditions")
-                    .message(text = getTextFromRawResource(context!!, R.raw.license))
-                    .positiveButton(text = "OK")
-                    .show()
+            vm.viewTerms()
             true
         }
         prefPrivacy.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            MaterialDialog(context!!)
-                    .title(text = "Privacy Policy")
-                    .message(text = getTextFromRawResource(context!!, R.raw.privacy)) // todo put online
-                    .positiveButton(text = "OK")
-                    .show()
+           vm.viewPrivacyPolicy()
             true
         }
-    }
-
-    private fun getTextFromRawResource(context: Context, resId: Int): String {
-        val inputStream = context.resources.openRawResource(resId)
-        val bytes = ByteArray(inputStream.available())
-        inputStream.read(bytes)
-        return String(bytes)
     }
 }

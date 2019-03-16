@@ -218,7 +218,7 @@ class MainActivity : ThemedActivity() {
                         vm.viewHelp()
                         false
                     }
-                    badge("version ${vm.versionNameData.value}") {
+                    badge("version ${vm.versionName}") {
                         textColor = vm.computeTextColorSecondary().toLong()
                         colorRes = R.color.colorNone
                     }

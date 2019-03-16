@@ -6,18 +6,24 @@
 
 package com.alexvt.integrity.ui.info
 
-import android.content.Intent
 import android.os.Bundle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.R
-import com.alexvt.integrity.lib.util.ViewExternalUtil
-import com.alexvt.integrity.ui.recovery.RecoveryActivity
-import com.alexvt.integrity.ui.settings.SettingsActivity
 import dagger.android.support.AndroidSupportInjection
+import javax.inject.Inject
 
 class HelpInfoSettingsFragment : PreferenceFragmentCompat() {
+
+    @Inject
+    lateinit var vmFactory: ViewModelProvider.Factory
+
+    private val vm by lazy {
+        ViewModelProviders.of(activity!!, vmFactory)[HelpInfoViewModel::class.java]
+    }
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         AndroidSupportInjection.inject(this)
         setPreferencesFromResource(R.xml.settings_info_help, rootKey)
@@ -29,22 +35,21 @@ class HelpInfoSettingsFragment : PreferenceFragmentCompat() {
         val prefVersion: Preference = findPreference("help_version")
 
         prefProject.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            ViewExternalUtil.viewLinkExternal(context!!,
-                    "https://github.com/alex-vt/Integrity/tree/develop") // todo update
+            vm.viewProjectLink()
             true
         }
         prefRestore.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            startActivity(Intent(context!!, RecoveryActivity::class.java))
+            vm.viewRecovery()
             true
         }
         prefSettings.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            startActivity(Intent(context!!, SettingsActivity::class.java))
+            vm.viewSettings()
             true
         }
         prefLegal.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            startActivity(Intent(context!!, LegalInfoActivity::class.java))
+            vm.viewLegal()
             true
         }
-        prefVersion.summary = "Version ${BuildConfig.VERSION_NAME}"
+        prefVersion.summary = "Version ${vm.versionName}"
     }
 }

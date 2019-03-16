@@ -6,18 +6,27 @@
 
 package com.alexvt.integrity.ui.info
 
+import androidx.lifecycle.ViewModelProvider
+import com.alexvt.integrity.ui.ViewModelFactory
 import dagger.Module
+import dagger.Provides
 import dagger.android.ContributesAndroidInjector
 
 
 @Module
 abstract class InfoDependenciesModule {
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [HelpViewModelFactoryModule::class])
     abstract fun bindHelpInfoActivity(): HelpInfoActivity
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [HelpViewModelFactoryModule::class])
     abstract fun bindHelpInfoFragment(): HelpInfoSettingsFragment
+
+    @Module
+    class HelpViewModelFactoryModule {
+        @Provides
+        fun providesVmFactory(vm: HelpInfoViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+    }
 
     @ContributesAndroidInjector
     abstract fun bindLegalInfoActivity(): LegalInfoActivity

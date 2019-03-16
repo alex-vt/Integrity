@@ -7,7 +7,6 @@
 package com.alexvt.integrity.ui.main
 
 import androidx.lifecycle.MutableLiveData
-import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.core.jobs.ScheduledJobManager
 import com.alexvt.integrity.core.log.LogRepository
@@ -70,6 +69,7 @@ data class NavigationEvent(
 class MainScreenViewModel @Inject constructor(
         // for navigation
         @Named("packageName") val packageName: String,
+        @Named("versionName") val versionName: String,
         val metadataRepository: MetadataRepository,
         val searchIndexRepository: SearchIndexRepository,
         override val settingsRepository: SettingsRepository,
@@ -93,7 +93,6 @@ class MainScreenViewModel @Inject constructor(
     val runningJobIdsData = MutableLiveData<List<Snapshot>>()
     val scheduledJobIdsData = MutableLiveData<List<Pair<Snapshot, Long>>>()
     val logErrorCountData = MutableLiveData<Int>()
-    val versionNameData = MutableLiveData<String>()
     val typeNameData = MutableLiveData<List<String>>()
 
     // depends on primary
@@ -138,7 +137,6 @@ class MainScreenViewModel @Inject constructor(
         }
 
         // version name, snapshot type component names  are static
-        versionNameData.value = BuildConfig.VERSION_NAME
         typeNameData.value = dataTypeRepository.getAllDataTypes().map { it.title } // todo add listener to repo
 
         // snapshots, search results initial values

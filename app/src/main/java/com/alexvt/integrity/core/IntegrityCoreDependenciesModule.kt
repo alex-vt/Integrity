@@ -7,6 +7,7 @@
 package com.alexvt.integrity.core
 
 import android.content.Context
+import com.alexvt.integrity.BuildConfig
 import com.alexvt.integrity.core.credentials.CredentialsRepository
 import com.alexvt.integrity.core.credentials.SimplePersistableCredentialsRepository
 import com.alexvt.integrity.core.jobs.AndroidScheduledJobManager
@@ -61,6 +62,16 @@ class IntegrityCoreDependenciesModule {
     @Singleton
     @Named("packageName")
     fun providePackageName() = "com.alexvt.integrity"
+
+    @Provides
+    @Singleton
+    @Named("versionName")
+    fun provideVersionName() = BuildConfig.VERSION_NAME
+
+    @Provides
+    @Singleton
+    @Named("projectLink")
+    fun provideProjectLink() = "https://github.com/alex-vt/Integrity/tree/develop" // todo update
 
     @Provides
     @Singleton

@@ -7,13 +7,13 @@
 package com.alexvt.integrity.ui.recovery
 
 import android.os.Bundle
+import android.text.TextUtils
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsMultiChoice
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.FontUtil
-import com.alexvt.integrity.core.util.Initializable
-import com.alexvt.integrity.lib.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.util.ThemedActivity
 import com.alexvt.integrity.lib.util.ViewExternalUtil
 import com.alexvt.integrity.lib.util.IntentUtil
@@ -23,22 +23,35 @@ import javax.inject.Inject
 
 
 class RecoveryActivity : ThemedActivity() {
+
     @Inject
-    lateinit var integrityCore: IntegrityCore
-    @Inject
-    lateinit var dataFolderManager: DataFolderManager
+    lateinit var vmFactory: ViewModelProvider.Factory
+
+    private val vm by lazy {
+        ViewModelProviders.of(this, vmFactory)[RecoveryViewModel::class.java]
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recovery)
+
+        bindToolbar()
+        bindContent()
+        bindNavigation()
+    }
+
+    private fun bindToolbar() {
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
-        FontUtil.setFont(this, integrityCore.getFont())
+    }
+
+    private fun bindContent() {
+        FontUtil.setFont(this, vm.getFont())
 
         val issueDescription = IntentUtil.getIssueDescription(intent)
-        tvIssueDescription.text = if (issueDescription.isNotBlank()) {
+        tvIssueDescription.text = if (!TextUtils.isEmpty(issueDescription)) {
             "Issue description:\n $issueDescription"
         } else {
             ""
@@ -46,52 +59,58 @@ class RecoveryActivity : ThemedActivity() {
 
         bClearData.setOnClickListener { askSelectClearData() }
         bClearSnapshots.setOnClickListener { askClearSnapshots() }
-        bOpenAppInfo.setOnClickListener { ViewExternalUtil.viewAppInfo(this, packageName) }
-        bRestartApp.setOnClickListener { AppRestartUtil.restartApp(this) }
+        bOpenAppInfo.setOnClickListener { vm.viewAppInfo() }
+        bRestartApp.setOnClickListener { vm.clickRestartApp() }
+    }
+
+    private fun bindNavigation() {
+        vm.navigationEventData.observe(this, androidx.lifecycle.Observer {
+            if (it.goBack) {
+                super.onBackPressed()
+            } else if (it.viewAppInfo) {
+                ViewExternalUtil.viewAppInfo(this, packageName)
+            } else if (it.restartApp) {
+                AppRestartUtil.restartApp(this)
+            }
+        })
     }
 
     private fun askSelectClearData() {
-        val namedRepositories = listOf(
-                integrityCore.metadataRepository to "Snapshots metadata",
-                integrityCore.logRepository to "Log",
-                integrityCore.settingsRepository to "App settings",
-                integrityCore.credentialsRepository to "Credentials",
-                integrityCore.searchIndexRepository to "Search index"
-        )
         MaterialDialog(this)
                 .title(text = "Select data to clear")
                 .positiveButton(text = "Clear selected")
-                .listItemsMultiChoice(items = namedRepositories.map { it.second }) { _, indices, _ ->
-                    askClearData(namedRepositories.filterIndexed { index, _ -> index in indices })
+                .listItemsMultiChoice(items = vm.getRepositoryNames()) { _, indices, _ ->
+                    askClearData(indices)
                 }.show()
     }
 
-    private fun askClearData(namedRepositoriesToClear: List<Pair<Initializable, String>>) {
-        val listedNames = namedRepositoriesToClear.map { it.second }.joinToString(separator = ", ")
+    private fun askClearData(indices: IntArray) {
         MaterialDialog(this)
                 .title(text = "Are you sure?")
-                .message(text = "About to clear $listedNames")
+                .message(text = "About to clear ${vm.getRepositoryNamesAt(indices)}")
                 .negativeButton(text = "Cancel")
                 .positiveButton(text = "Clear now") {
-                    namedRepositoriesToClear.map { it.first }
-                            .forEach { it.init(true) }
+                    vm.clickClearRepositoriesAt(indices)
                 }.show()
     }
 
     private fun askClearSnapshots() {
-        val dataFolderName = integrityCore.getDataFolderName()
         MaterialDialog(this)
                 .title(text = "Are you sure?")
-                .message(text = "About to delete folder from storage: \n\uD83D\uDCF1/" +
-                        "$dataFolderName \nwith all downloaded snapshots")
+                .message(text = "Confirm to delete folder from storage: \n\uD83D\uDCF1/" +
+                        "${vm.getSnapshotsFolderName()}\nwith all downloaded snapshots")
                 .negativeButton(text = "Cancel")
                 .positiveButton(text = "Delete now") {
-                    dataFolderManager.deleteFolder(dataFolderName)
+                    vm.clickDeleteSnapshotsFolder()
                 }.show()
     }
 
     override fun onSupportNavigateUp(): Boolean {
         super.onBackPressed()
         return true
+    }
+
+    override fun onBackPressed() {
+        vm.pressBackButton()
     }
 }

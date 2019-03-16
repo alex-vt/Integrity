@@ -135,7 +135,7 @@ object IntentUtil {
         return intent
     }
 
-    fun getIssueDescription(intent: Intent?) = intent?.getStringExtra(issueDescription) ?: ""
+    fun getIssueDescription(intent: Intent?) = intent?.getStringExtra(issueDescription)
 
 
     fun putFontName(intent: Intent?, value: String?): Intent {

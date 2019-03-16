@@ -18,6 +18,7 @@ import com.alexvt.integrity.core.log.SimplePersistableLogRepository
 import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.core.metadata.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.operations.AndroidSnapshotOperationManager
+import com.alexvt.integrity.core.operations.LogOperationManager
 import com.alexvt.integrity.core.operations.SnapshotOperationManager
 import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.search.SimplePersistableSearchIndexRepository
@@ -134,6 +135,13 @@ class IntegrityCoreDependenciesModule {
             snapshotOperationManager: SnapshotOperationManager
     ): ScheduledJobManager = AndroidScheduledJobManager(metadataRepository, settingsRepository,
             snapshotOperationManager)
+
+    @Provides
+    @Singleton
+    fun provideLogOperationManager(
+            logRepository: LogRepository,
+            context: Context
+    ): LogOperationManager = LogOperationManager(logRepository, context)
 
     @Provides
     @Singleton

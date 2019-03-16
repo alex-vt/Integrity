@@ -9,45 +9,54 @@ package com.alexvt.integrity.ui.log
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.lib.util.ThemedActivity
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_log_view.*
 import javax.inject.Inject
 
 class LogViewActivity : ThemedActivity() {
+
     @Inject
-    lateinit var integrityCore: IntegrityCore
+    lateinit var vmFactory: ViewModelProvider.Factory
+
+    private val vm by lazy {
+        ViewModelProviders.of(this, vmFactory)[LogViewModel::class.java]
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log_view)
+
+        bindToolbar()
+        bindContent()
+        bindNavigation()
+    }
+
+    private fun bindToolbar() {
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
+    }
 
+    private fun bindContent() {
         rvLogList.adapter = LogRecyclerAdapter(ArrayList(), this)
-        integrityCore.markErrorsRead(this)
+        vm.logData.observe(this, Observer {
+            (rvLogList.adapter as LogRecyclerAdapter).setItems(it)
+        })
     }
 
-    override fun onStart() {
-        super.onStart()
-        integrityCore.logRepository.addChangesListener(this.toString()) {
-            refreshLogList()
-        }
-    }
-
-    override fun onStop() {
-        integrityCore.logRepository.removeChangesListener(this.toString())
-        super.onStop()
-    }
-
-    private fun refreshLogList() {
-        (rvLogList.adapter as LogRecyclerAdapter).setItems(integrityCore
-                .logRepository.getRecentEntries(1000))
+    private fun bindNavigation() {
+        vm.navigationEventData.observe(this, androidx.lifecycle.Observer {
+            if (it.goBack) {
+                super.onBackPressed()
+            }
+        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -69,7 +78,7 @@ class LogViewActivity : ThemedActivity() {
         MaterialDialog(this)
                 .title(text = "Clear log?")
                 .positiveButton(text = "Yes") {
-                    integrityCore.logRepository.clear()
+                    vm.clickDeleteAllLog()
                 }
                 .negativeButton(text = "Cancel")
                 .show()
@@ -78,5 +87,9 @@ class LogViewActivity : ThemedActivity() {
     override fun onSupportNavigateUp(): Boolean {
         super.onBackPressed()
         return true
+    }
+
+    override fun onBackPressed() {
+        vm.pressBackButton()
     }
 }

@@ -82,12 +82,6 @@ class IntegrityCore @Inject constructor(
         }
     }
 
-    fun markErrorsRead(context: Context) {
-        android.util.Log.v("IntegrityCore", "Errors marked read")
-        logRepository.markAllRead()
-        ErrorNotifier.removeNotification(context)
-    }
-
     fun updateScheduledJobsOptions(jobsEnabled: Boolean) {
         settingsRepository.set(settingsRepository.get()
                 .copy(jobsEnableScheduled = jobsEnabled))

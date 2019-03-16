@@ -6,15 +6,24 @@
 
 package com.alexvt.integrity.ui.log
 
+import androidx.lifecycle.ViewModelProvider
+import com.alexvt.integrity.ui.ViewModelFactory
 import dagger.Module
+import dagger.Provides
 import dagger.android.ContributesAndroidInjector
 
 
 @Module
 abstract class LogViewDependenciesModule {
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class])
     abstract fun bindActivity(): LogViewActivity
+
+    @Module
+    class ViewModelFactoryModule {
+        @Provides
+        fun providesVmFactory(vm: LogViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+    }
 
 }
 

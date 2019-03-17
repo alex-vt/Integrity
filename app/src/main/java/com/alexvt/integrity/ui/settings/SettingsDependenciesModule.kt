@@ -16,6 +16,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
 import javax.inject.Named
+import javax.inject.Provider
 
 
 @Module
@@ -42,7 +43,7 @@ abstract class SettingsDependenciesModule {
     @Module
     class ViewModelFactoryModule {
         @Provides
-        fun providesVmFactory(vm: SettingsViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+        fun providesVmFactory(vm: Provider<SettingsViewModel>): ViewModelProvider.Factory = ViewModelFactory(vm)
     }
 
     @Module

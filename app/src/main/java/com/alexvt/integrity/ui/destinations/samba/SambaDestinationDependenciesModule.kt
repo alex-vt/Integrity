@@ -14,6 +14,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
 import javax.inject.Named
+import javax.inject.Provider
 
 
 @Module
@@ -25,7 +26,7 @@ abstract class SambaDestinationDependenciesModule {
     @Module
     class ViewModelFactoryModule {
         @Provides
-        fun providesVmFactory(vm: SambaDestinationViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+        fun providesVmFactory(vm: Provider<SambaDestinationViewModel>): ViewModelProvider.Factory = ViewModelFactory(vm)
     }
 
     @Module

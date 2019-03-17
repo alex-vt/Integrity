@@ -14,6 +14,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
 import javax.inject.Named
+import javax.inject.Provider
 import javax.inject.Singleton
 
 
@@ -26,7 +27,7 @@ abstract class LocalDestinationDependenciesModule {
     @Module
     class ViewModelFactoryModule {
         @Provides
-        fun providesVmFactory(vm: LocalDestinationViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+        fun providesVmFactory(vm: Provider<LocalDestinationViewModel>): ViewModelProvider.Factory = ViewModelFactory(vm)
     }
 
     @Module

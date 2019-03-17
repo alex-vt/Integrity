@@ -14,6 +14,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
 import javax.inject.Named
+import javax.inject.Provider
 
 
 @Module
@@ -28,7 +29,7 @@ abstract class InfoDependenciesModule {
     @Module
     class HelpViewModelFactoryModule {
         @Provides
-        fun providesVmFactory(vm: HelpInfoViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+        fun providesVmFactory(vm: Provider<HelpInfoViewModel>): ViewModelProvider.Factory = ViewModelFactory(vm)
     }
 
     @ContributesAndroidInjector(modules = [LegalViewModelFactoryModule::class, ResourcesModule::class])
@@ -40,7 +41,7 @@ abstract class InfoDependenciesModule {
     @Module
     class LegalViewModelFactoryModule {
         @Provides
-        fun providesVmFactory(vm: LegalInfoViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+        fun providesVmFactory(vm: Provider<LegalInfoViewModel>): ViewModelProvider.Factory = ViewModelFactory(vm)
     }
 
     @Module

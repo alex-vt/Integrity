@@ -18,8 +18,7 @@ import com.alexvt.integrity.ui.recovery.RecoveryDependenciesModule
 import com.alexvt.integrity.ui.settings.SettingsDependenciesModule
 import com.alexvt.integrity.ui.tags.TagsDependenciesModule
 import dagger.Module
-import dagger.Lazy
-import javax.inject.Inject
+import javax.inject.Provider
 
 @Module(includes = [
     MainScreenDependenciesModule::class,
@@ -35,12 +34,8 @@ import javax.inject.Inject
 abstract class UiDependenciesModule
 
 class ViewModelFactory<VM : ViewModel>(
-        private val viewModel: dagger.Lazy<VM>
-) : ViewModelProvider.Factory {
-
-    @Inject
-    constructor(viewModel: VM) : this(Lazy { viewModel })
-
+        private val viewModel: Provider<VM>
+): ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return viewModel.get() as T

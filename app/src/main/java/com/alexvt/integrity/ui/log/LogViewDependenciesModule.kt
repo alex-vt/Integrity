@@ -11,6 +11,7 @@ import com.alexvt.integrity.ui.ViewModelFactory
 import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
+import javax.inject.Provider
 
 
 @Module
@@ -22,7 +23,7 @@ abstract class LogViewDependenciesModule {
     @Module
     class ViewModelFactoryModule {
         @Provides
-        fun providesVmFactory(vm: LogViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+        fun providesVmFactory(vm: Provider<LogViewModel>): ViewModelProvider.Factory = ViewModelFactory(vm)
     }
 
 }

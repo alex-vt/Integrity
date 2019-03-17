@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.alexvt.integrity.R
@@ -20,14 +21,17 @@ import com.alexvt.integrity.lib.util.FontUtil
 import com.alexvt.integrity.lib.util.ThemeUtil
 import com.alexvt.integrity.lib.util.ThemedActivity
 import com.alexvt.integrity.lib.util.ViewExternalUtil
+import com.jakewharton.rxbinding3.material.itemSelections
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import kotlinx.android.synthetic.main.activity_settings.*
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import dagger.android.AndroidInjection
+import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
@@ -73,24 +77,29 @@ class SettingsActivity : ThemedActivity() {
                     }
                 }, true)
 
-        bnView.setOnNavigationItemSelectedListener { item ->
-            toolbar.subtitle = item.title
-            val sectionFragment = when (item.itemId) {
-                R.id.action_appearance -> AppearanceSettingsFragment()
-                R.id.action_behavior -> BehaviorSettingsFragment()
-                R.id.action_data -> DataSettingsFragment()
-                R.id.action_notifications -> NotificationSettingsFragment()
-                else -> ExtensionSettingsFragment()
-            }
-            supportFragmentManager.beginTransaction()
-                    .replace(R.id.flSettingSection, sectionFragment)
-                    .commit()
-            true
+        bnView.itemSelections()
+                .debounce(20, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { vm.requestViewTabById(it.itemId) }
+        vm.inputStateData.observe(this, Observer {
+            showTab(bnView.menu.findItem(it.tabId))
+        })
+    }
+
+    private fun showTab(item: MenuItem) {
+        android.util.Log.v("requestViewTabById", "$item")
+        toolbar.subtitle = item.title
+        val sectionFragment = when (item.itemId) {
+            R.id.action_appearance -> AppearanceSettingsFragment()
+            R.id.action_behavior -> BehaviorSettingsFragment()
+            R.id.action_data -> DataSettingsFragment()
+            R.id.action_notifications -> NotificationSettingsFragment()
+            else -> ExtensionSettingsFragment()
         }
-        bnView.selectedItemId = when {
-            vm.startWithExtensions -> R.id.action_extensions
-            else -> R.id.action_appearance
-        }
+        supportFragmentManager.beginTransaction()
+                .replace(R.id.flSettingSection, sectionFragment)
+                .commit()
+        bnView.selectedItemId = item.itemId
     }
 
     private fun bindBottomNavigationIcons() {

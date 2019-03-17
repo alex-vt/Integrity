@@ -49,9 +49,9 @@ abstract class SettingsDependenciesModule {
     @Module
     class IntentModule {
         @Provides
-        @Named("goToExtensions")
-        fun providesStartWithExtensions()
-                = false // todo provide
+        @Named("initialTabId")
+        fun providesInitialTabId()
+                = R.id.action_appearance // todo provide from intent
     }
 
     @Module

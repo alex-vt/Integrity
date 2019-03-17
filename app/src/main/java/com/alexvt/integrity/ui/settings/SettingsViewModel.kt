@@ -19,6 +19,10 @@ import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
 import javax.inject.Named
 
+data class InputState(
+        val tabId: Int
+)
+
 data class NavigationEvent(
         val goBack: Boolean = false,
         val applyTheme: Boolean = false,
@@ -28,7 +32,7 @@ data class NavigationEvent(
 )
 
 class SettingsViewModel @Inject constructor(
-        @Named("goToExtensions") val startWithExtensions: Boolean,
+        @Named("initialTabId") val initialTabId: Int,
         @Named("colorsBackground") val colorsBackground: IntArray,
         @Named("colorsPalette") val colorsPalette: IntArray,
         @Named("packageName") val packageName: String,
@@ -42,6 +46,7 @@ class SettingsViewModel @Inject constructor(
 
     val settingsData = MutableLiveData<IntegrityAppSettings>()
     val navigationEventData = SingleLiveEvent<NavigationEvent>()
+    val inputStateData = MutableLiveData<InputState>()
 
     init {
         settingsData.value = settingsRepository.get()
@@ -55,9 +60,16 @@ class SettingsViewModel @Inject constructor(
                 navigationEventData.value = NavigationEvent(applyTheme = true)
             }
         }
+        inputStateData.value = InputState(tabId = initialTabId)
     }
 
     // user actions
+
+    fun requestViewTabById(tabId: Int) {
+        if (inputStateData.value!!.tabId != tabId) {
+            inputStateData.value = inputStateData.value!!.copy(tabId = tabId)
+        }
+    }
 
     fun saveColorBackground(intColor: Int) {
         settingsRepository.set(settingsRepository.get().copy(colorBackground = ThemeUtil.getHexColor(intColor)))

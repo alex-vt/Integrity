@@ -50,6 +50,7 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.IIcon
 import com.mikepenz.materialdrawer.model.*
 import dagger.android.AndroidInjection
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class MainActivity : ThemedActivity() {
@@ -363,10 +364,11 @@ class MainActivity : ThemedActivity() {
         SearchViewUtil.fixMicIconBackground(svMain)
         svMain.background.setColorFilter(vm.computeColorBackgroundBleached(), PorterDuff.Mode.DARKEN)
         svMain.queryTextChanges()
+                .debounce(20, TimeUnit.MILLISECONDS) // preventing loop between vm and view
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     vm.setSearchText(it.toString())
-                } // todo debounce in vm
+                }
         vm.settingsData.observe(this, androidx.lifecycle.Observer {
             val sortingMethod = it.sortingMethod
             val sortingTypeIcon: IIcon = when {
@@ -395,9 +397,7 @@ class MainActivity : ThemedActivity() {
             llSorting.visibility = if (filterArtifact || searching) View.VISIBLE else View.GONE
             llFilteredArtifact.visibility = if (filterArtifact) View.VISIBLE else View.GONE
 
-            if (it.searchViewText != svMain.query) { // preventing loop between vm and view
-                svMain.setQuery(it.searchViewText, false)
-            }
+            svMain.setQuery(it.searchViewText, false)
         })
 
         // artifact filtering

@@ -16,6 +16,7 @@ import com.jakewharton.rxbinding3.widget.textChanges
 import dagger.android.AndroidInjection
 import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_local_location.*
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
@@ -48,11 +49,13 @@ class LocalDestinationActivity : ThemedActivity() {
         etTitle.isEnabled = !vm.isEditMode()
         etTitle.append(vm.inputStateData.value!!.title)
         etTitle.textChanges()
+                .debounce(20, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { vm.onNewTitle(it.toString()) }
 
         etPath.append(vm.inputStateData.value!!.path)
         etPath.textChanges()
+                .debounce(20, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { vm.onNewPath(it.toString()) }
 

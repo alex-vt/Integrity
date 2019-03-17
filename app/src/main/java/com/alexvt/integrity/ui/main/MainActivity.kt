@@ -583,6 +583,8 @@ class MainActivity : ThemedActivity() {
         vm.navigationEventData.observe(this, androidx.lifecycle.Observer {
             if (it.goBack) {
                 super.onBackPressed()
+            } else if (it.recreate) {
+                recreate()
             } else with (it) {
                 drawer.closeDrawer()
                 val intent = Intent()
@@ -640,9 +642,6 @@ class MainActivity : ThemedActivity() {
         val snapshot = IntentUtil.getSnapshot(data)
         if (snapshot != null) {
             vm.snapshotReturned(snapshot)
-        }
-        if (IntentUtil.isRecreate(data)) {
-            recreate()
         }
     }
 

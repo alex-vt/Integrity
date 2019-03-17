@@ -17,7 +17,6 @@ import com.alexvt.integrity.core.notifications.DisabledScheduledJobsNotifier
 import com.alexvt.integrity.core.notifications.ErrorNotifier
 import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
-import com.alexvt.integrity.lib.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -82,13 +81,8 @@ class IntegrityCore @Inject constructor(
         }
     }
 
-    fun updateScheduledJobsOptions(jobsEnabled: Boolean) {
-        settingsRepository.set(settingsRepository.get()
-                .copy(jobsEnableScheduled = jobsEnabled))
-    }
-
     private fun notifyAboutDisabledScheduledJobs(context: Context) {
-        val showDisabledScheduledJobsNotification = !scheduledJobsEnabled()
+        val showDisabledScheduledJobsNotification = !settingsRepository.get().jobsEnableScheduled
                 && settingsRepository.get().notificationShowDisabledScheduled
         if (showDisabledScheduledJobsNotification) {
             DisabledScheduledJobsNotifier.showNotification(context)
@@ -96,17 +90,5 @@ class IntegrityCore @Inject constructor(
             DisabledScheduledJobsNotifier.removeNotification(context)
         }
     }
-
-    fun scheduledJobsEnabled() = settingsRepository.get().jobsEnableScheduled
-
-    fun getDataFolderName() = settingsRepository.get().dataFolderPath
-
-    fun getSortingMethod() = settingsRepository.get().sortingMethod
-
-    fun getColors() = with(settingsRepository.get()) {
-        ThemeColors(colorBackground, colorPrimary, colorAccent)
-    }
-
-    fun getFont() = settingsRepository.get().textFont
 
 }

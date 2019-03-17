@@ -12,6 +12,7 @@ import com.alexvt.integrity.core.credentials.CredentialsRepository
 import com.alexvt.integrity.core.credentials.SimplePersistableCredentialsRepository
 import com.alexvt.integrity.core.jobs.AndroidScheduledJobManager
 import com.alexvt.integrity.core.jobs.ScheduledJobManager
+import com.alexvt.integrity.core.jobs.ScheduledJobsEnableReceiver
 import com.alexvt.integrity.core.log.LogEventReceiver
 import com.alexvt.integrity.core.log.LogRepository
 import com.alexvt.integrity.core.log.SimplePersistableLogRepository
@@ -57,6 +58,9 @@ class IntegrityCoreDependenciesModule {
 
         @ContributesAndroidInjector
         abstract fun contributesSnapshotProgressReceiver(): AndroidSnapshotOperationManager.SnapshotProgressReceiver
+
+        @ContributesAndroidInjector
+        abstract fun contributesScheduledJobsEnableReceiver(): ScheduledJobsEnableReceiver
     }
 
     @Provides

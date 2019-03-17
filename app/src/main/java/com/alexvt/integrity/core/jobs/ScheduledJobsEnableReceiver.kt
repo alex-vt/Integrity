@@ -9,13 +9,16 @@ package com.alexvt.integrity.core.jobs
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.settings.SettingsRepository
+import dagger.android.AndroidInjection
 import javax.inject.Inject
 
 class ScheduledJobsEnableReceiver : BroadcastReceiver() {
     @Inject
-    lateinit var integrityCore: IntegrityCore
+    lateinit var settingsRepository: SettingsRepository
+
     override fun onReceive(context: Context, intent: Intent) {
-        integrityCore.updateScheduledJobsOptions(true)
+        AndroidInjection.inject(this, context)
+        settingsRepository.set(settingsRepository.get().copy(jobsEnableScheduled = true))
     }
 }

@@ -16,6 +16,8 @@ abstract class ThemedViewModel : ViewModel() {
 
     fun getFont() = settingsRepository.get().textFont
 
+    fun computeColorPrimary() = ThemeUtil.getColorPrimary(getThemeColors())
+
     fun computeColorPrimaryDark() = ThemeUtil.getColorPrimaryDark(getThemeColors())
 
     fun computeTextColorPrimary() = ThemeUtil.getTextColorPrimary(getThemeColors())

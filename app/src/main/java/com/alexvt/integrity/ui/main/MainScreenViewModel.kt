@@ -52,6 +52,7 @@ data class NavigationEvent(
         val targetPackage: String,
         val targetClass: String,
         val goBack: Boolean = false,
+        val recreate: Boolean = false,
 
         // bundled data to attack when goBack is false
         val bundledArtifactId: Long? = null,
@@ -114,8 +115,16 @@ class MainScreenViewModel @Inject constructor(
         // settings, jobs, log error count  are listened to in their repositories
         settingsData.value = settingsRepository.get()
         settingsRepository.addChangesListener(this.toString()) {
+            val themeChanged = settingsData.value!!.textFont != it.textFont
+                    || settingsData.value!!.colorBackground != it.colorBackground
+                    || settingsData.value!!.colorPrimary != it.colorPrimary
+                    || settingsData.value!!.colorAccent != it.colorAccent
             settingsData.value = it
             updateContentData() // snapshots, search results  depend on  settings
+            if (themeChanged) {
+                navigationEventData.value = NavigationEvent(targetPackage = "", targetClass = "",
+                        recreate = true)
+            }
         }
         runningJobIdsData.value = emptyList()
         IntegrityLib.runningJobManager.addJobListListener(this.toString()) {

@@ -13,8 +13,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import androidx.fragment.app.Fragment
 import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.util.ThemeUtil
 import com.alexvt.integrity.lib.log.Log
+import com.alexvt.integrity.lib.util.ThemeColors
 import dagger.android.*
 import dagger.android.support.HasSupportFragmentInjector
 import java.lang.RuntimeException
@@ -41,6 +43,8 @@ class App : Application(), HasActivityInjector, HasSupportFragmentInjector, HasB
 
     @Inject
     lateinit var integrityCore: IntegrityCore
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -60,7 +64,9 @@ class App : Application(), HasActivityInjector, HasSupportFragmentInjector, HasB
         try {
             integrityCore.init()
             ThemeUtil.initThemeSupport(this)
-            ThemeUtil.applyTheme(integrityCore.getColors())
+            ThemeUtil.applyTheme(with(settingsRepository.get()) {
+                ThemeColors(colorBackground, colorPrimary, colorAccent)
+            })
         } catch (throwable: Throwable) {
             Log(this, "Failed to start Integrity app").logError(throwable)
             throw throwable

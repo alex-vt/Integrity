@@ -6,30 +6,62 @@
 
 package com.alexvt.integrity.ui.settings
 
+import android.content.Context
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewModelProvider
+import com.alexvt.integrity.lib.util.IntentUtil
+import com.alexvt.integrity.ui.ViewModelFactory
+import com.alexvt.integrity.R
 import dagger.Module
+import dagger.Provides
 import dagger.android.ContributesAndroidInjector
+import javax.inject.Named
 
 
 @Module
 abstract class SettingsDependenciesModule {
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class, IntentModule::class, ResourcesModule::class])
     abstract fun bindActivity(): SettingsActivity
 
-
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class, IntentModule::class, ResourcesModule::class])
     abstract fun bindAppearanceFragment(): AppearanceSettingsFragment
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class, IntentModule::class, ResourcesModule::class])
     abstract fun bindBehaviorFragment(): BehaviorSettingsFragment
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class, IntentModule::class, ResourcesModule::class])
     abstract fun bindDataFragment(): DataSettingsFragment
 
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class, IntentModule::class, ResourcesModule::class])
+    abstract fun bindNotificationFragment(): NotificationSettingsFragment
+
+    @ContributesAndroidInjector(modules = [ViewModelFactoryModule::class, IntentModule::class, ResourcesModule::class])
     abstract fun bindExtensionFragment(): ExtensionSettingsFragment
 
-    @ContributesAndroidInjector
-    abstract fun bindNotificationFragment(): NotificationSettingsFragment
+    @Module
+    class ViewModelFactoryModule {
+        @Provides
+        fun providesVmFactory(vm: SettingsViewModel): ViewModelProvider.Factory = ViewModelFactory(vm)
+    }
+
+    @Module
+    class IntentModule {
+        @Provides
+        @Named("goToExtensions")
+        fun providesStartWithExtensions()
+                = false // todo provide
+    }
+
+    @Module
+    class ResourcesModule {
+        @Provides
+        @Named("colorsBackground")
+        fun providesColorsBackground(context: Context) = context.resources.getIntArray(R.array.colorsBackground)
+
+        @Provides
+        @Named("colorsPalette")
+        fun providesColorsPalette(context: Context) = context.resources.getIntArray(R.array.colorsPrimary)
+    }
 }
 

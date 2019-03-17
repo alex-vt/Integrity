@@ -6,30 +6,26 @@
 
 package com.alexvt.integrity.ui.settings
 
-import android.app.Activity
 import android.os.Bundle
-import androidx.preference.CheckBoxPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreferenceCompat
-import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.list.listItemsSingleChoice
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.IntegrityCore
-import com.alexvt.integrity.core.search.SortingUtil
-import com.alexvt.integrity.lib.util.IntentUtil
 import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
 
-class BehaviorSettingsFragment : PreferenceFragmentCompat() {
+class BehaviorSettingsFragment : SettingsFragment() {
+
     @Inject
-    lateinit var integrityCore: IntegrityCore
+    lateinit var vmFactory: ViewModelProvider.Factory
+
+    override val vm by lazy {
+        ViewModelProviders.of(activity!!, vmFactory)[SettingsViewModel::class.java]
+    }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         AndroidSupportInjection.inject(this)
         setPreferencesFromResource(R.xml.settings_behavior, rootKey)
 
-        // todo replace error prone implementation
         bindEnableScheduled()
         bindExpandRunning()
         bindExpandScheduled()
@@ -37,96 +33,36 @@ class BehaviorSettingsFragment : PreferenceFragmentCompat() {
         bindFasterFiltering()
     }
 
-    private fun bindEnableScheduled() {
-        val prefEnableScheduled: SwitchPreferenceCompat = findPreference("behavior_jobs_enable_scheduled")
-        updateEnableScheduled(prefEnableScheduled)
-        prefEnableScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val enableScheduled = integrityCore.scheduledJobsEnabled()
-            integrityCore.updateScheduledJobsOptions(!enableScheduled)
-            updateEnableScheduled(prefEnableScheduled)
-            true
-        }
-    }
+    private fun bindEnableScheduled() = bindToggleSetting(
+            key = "behavior_jobs_enable_scheduled",
+            settingSelector = { it.jobsEnableScheduled },
+            toggleAction = { vm.toggleScheduledJobsEnabled() }
+    )
 
-    private fun bindExpandRunning() {
-        val prefExpandRunning: CheckBoxPreference = findPreference("behavior_jobs_expand_running")
-        updateExpandRunning(prefExpandRunning)
-        prefExpandRunning.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val expandRunning = integrityCore.settingsRepository.get().jobsExpandRunning
-            integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
-                    .copy(jobsExpandRunning = !expandRunning))
-            updateExpandRunning(prefExpandRunning)
-            true
-        }
-    }
+    private fun bindExpandRunning() = bindToggleSetting(
+            key = "behavior_jobs_expand_running",
+            settingSelector = { it.jobsExpandRunning },
+            toggleAction = { vm.toggleRunningJobsExpand() }
+    )
 
-    private fun bindExpandScheduled() {
-        val prefExpandScheduled: CheckBoxPreference = findPreference("behavior_jobs_expand_scheduled")
-        updateExpandScheduled(prefExpandScheduled)
-        prefExpandScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val expandScheduled = integrityCore.settingsRepository.get().jobsExpandScheduled
-            integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
-                    .copy(jobsExpandScheduled = !expandScheduled))
-            updateExpandScheduled(prefExpandScheduled)
-            true
-        }
-    }
+    private fun bindExpandScheduled() = bindToggleSetting(
+            key = "behavior_jobs_expand_scheduled",
+            settingSelector = { it.jobsExpandScheduled },
+            toggleAction = { vm.toggleScheduledJobsExpand() }
+    )
 
-    private fun bindSorting() {
-        val prefSorting: Preference = findPreference("behavior_filtering_sorting")
-        updateSorting(prefSorting)
-        prefSorting.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            MaterialDialog(context!!).show {
-                title(text = "Sorting method")
-                listItemsSingleChoice(
-                        items = SortingUtil.getSortingMethodNameMap().values.toList(),
-                        initialSelection = SortingUtil.getSortingMethodNameMap().keys.toList()
-                                .indexOf(integrityCore.getSortingMethod())
-                ) { _, index, _ ->
-                    val sortingMethod = SortingUtil.getSortingMethodNameMap().keys.toList()[index]
-                    integrityCore.settingsRepository.set(integrityCore.settingsRepository
-                            .get().copy(sortingMethod = sortingMethod))
-                    updateSorting(prefSorting)
-                    activity!!.setResult(Activity.RESULT_OK, IntentUtil.withRefresh(true))
-                }
-            }
-            true
-        }
-    }
+    private fun bindSorting() = bindSelectionSetting(
+            key = "behavior_filtering_sorting",
+            title = "Sorting method",
+            items = vm.getAllSortingMethods(),
+            initialSelection = vm.getCurrentSortingMethodIndex(),
+            settingSelector = { it.sortingMethod },
+            selectionAction = { vm.saveSortingMethod(it) }
+    )
 
-    private fun bindFasterFiltering() {
-        val prefFasterFiltering: CheckBoxPreference = findPreference("behavior_filtering_faster")
-        updateFasterFiltering(prefFasterFiltering)
-        prefFasterFiltering.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val fasterFiltering = integrityCore.settingsRepository.get().fasterSearchInputs
-            integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
-                    .copy(fasterSearchInputs = !fasterFiltering))
-            updateFasterFiltering(prefFasterFiltering)
-            true
-        }
-    }
-
-    private fun updateEnableScheduled(prefEnableScheduled: SwitchPreferenceCompat) {
-        prefEnableScheduled.isChecked = integrityCore.scheduledJobsEnabled()
-    }
-
-    private fun updateExpandScheduled(prefExpandScheduled: CheckBoxPreference) {
-        prefExpandScheduled.isChecked = integrityCore.settingsRepository.get()
-                .jobsExpandScheduled
-    }
-
-    private fun updateExpandRunning(prefExpandRunning: CheckBoxPreference) {
-        prefExpandRunning.isChecked = integrityCore.settingsRepository.get()
-                .jobsExpandRunning
-    }
-
-    private fun updateSorting(prefSorting: Preference) {
-        prefSorting.summary = SortingUtil.getSortingMethodNameMap()[integrityCore
-                .settingsRepository.get().sortingMethod]
-    }
-
-    private fun updateFasterFiltering(prefFasterFiltering: CheckBoxPreference) {
-        prefFasterFiltering.isChecked = integrityCore.settingsRepository.get()
-                .fasterSearchInputs
-    }
+    private fun bindFasterFiltering() = bindToggleSetting(
+            key = "behavior_filtering_faster",
+            settingSelector = { it.fasterSearchInputs },
+            toggleAction = { vm.toggleSearchFaster() }
+    )
 }

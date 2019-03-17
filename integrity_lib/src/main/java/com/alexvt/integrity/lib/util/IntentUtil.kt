@@ -15,7 +15,6 @@ import com.alexvt.integrity.lib.metadata.Snapshot
  */
 object IntentUtil {
 
-    private const val recreate = "recreate"
     private const val refresh = "refresh"
     private const val artifactId = "artifactId"
     private const val date = "date"
@@ -34,14 +33,6 @@ object IntentUtil {
     private const val dataFolderName = "dataFolderName"
     private const val title = "title"
 
-
-    fun withRecreate(downloaded: Boolean): Intent {
-        val intent = Intent()
-        intent.putExtra(recreate, downloaded)
-        return intent
-    }
-
-    fun isRecreate(intent: Intent?) = intent?.getBooleanExtra(recreate, false) ?: false
 
     fun withRefresh(downloaded: Boolean): Intent {
         val intent = Intent()

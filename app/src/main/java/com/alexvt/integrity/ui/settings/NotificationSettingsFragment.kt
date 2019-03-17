@@ -7,17 +7,20 @@
 package com.alexvt.integrity.ui.settings
 
 import android.os.Bundle
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreferenceCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.IntegrityCore
 import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
 
-class NotificationSettingsFragment : PreferenceFragmentCompat() {
+class NotificationSettingsFragment : SettingsFragment() {
+
     @Inject
-    lateinit var integrityCore: IntegrityCore
+    lateinit var vmFactory: ViewModelProvider.Factory
+
+    override val vm by lazy {
+        ViewModelProviders.of(activity!!, vmFactory)[SettingsViewModel::class.java]
+    }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         AndroidSupportInjection.inject(this)
@@ -27,38 +30,15 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
         bindShowForDisabledScheduledJobs()
     }
 
-    private fun bindShowErrors() {
-        val prefShowErrors: SwitchPreferenceCompat = findPreference("notifications_errors_enable")
-        updateShowErrors(prefShowErrors)
-        prefShowErrors.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val showErrors = integrityCore.settingsRepository.get().notificationShowErrors
-            integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
-                    .copy(notificationShowErrors = !showErrors))
-            updateShowErrors(prefShowErrors)
-            true
-        }
-    }
+    private fun bindShowErrors() = bindToggleSetting(
+            key = "notifications_errors_enable",
+            settingSelector = { it.notificationShowErrors },
+            toggleAction = { vm.toggleErrorNotificationsEnabled() }
+    )
 
-    private fun updateShowErrors(prefShowErrors: SwitchPreferenceCompat) {
-        prefShowErrors.isChecked = integrityCore.settingsRepository.get().notificationShowErrors
-    }
-
-    private fun bindShowForDisabledScheduledJobs() {
-        val prefShowForDisabledScheduled: SwitchPreferenceCompat
-                = findPreference("notifications_scheduled_jobs_disabled")
-        updateShowForDisabledScheduledJobs(prefShowForDisabledScheduled)
-        prefShowForDisabledScheduled.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val show = integrityCore.settingsRepository.get().notificationShowDisabledScheduled
-            integrityCore.settingsRepository.set(integrityCore.settingsRepository.get()
-                    .copy(notificationShowDisabledScheduled = !show))
-            updateShowForDisabledScheduledJobs(prefShowForDisabledScheduled)
-            true
-        }
-    }
-
-    private fun updateShowForDisabledScheduledJobs(
-            prefDisabledScheduledJobs: SwitchPreferenceCompat) {
-        prefDisabledScheduledJobs.isChecked = integrityCore.settingsRepository.get()
-                .notificationShowDisabledScheduled
-    }
+    private fun bindShowForDisabledScheduledJobs() = bindToggleSetting(
+            key = "notifications_scheduled_jobs_disabled",
+            settingSelector = { it.notificationShowDisabledScheduled },
+            toggleAction = { vm.toggleScheduledJobsDisabledNotification() }
+    )
 }

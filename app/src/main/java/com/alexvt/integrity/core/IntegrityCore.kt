@@ -26,11 +26,11 @@ import javax.inject.Singleton
 @Singleton
 class IntegrityCore @Inject constructor(
         private val context: Context,
-        val metadataRepository: MetadataRepository,
-        val credentialsRepository: CredentialsRepository,
-        val searchIndexRepository: SearchIndexRepository,
-        val logRepository: LogRepository,
-        val settingsRepository: SettingsRepository,
+        private val metadataRepository: MetadataRepository,
+        private val credentialsRepository: CredentialsRepository,
+        private val searchIndexRepository: SearchIndexRepository,
+        private val logRepository: LogRepository,
+        private val settingsRepository: SettingsRepository,
         private val scheduledJobManager: ScheduledJobManager
 ) {
 

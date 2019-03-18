@@ -8,7 +8,7 @@ package com.alexvt.integrity.core.destinations.samba
 
 import android.content.ComponentName
 import android.content.Context
-import com.alexvt.integrity.core.IntegrityCore
+import com.alexvt.integrity.core.credentials.CredentialsRepository
 import com.alexvt.integrity.core.destinations.DestinationUtil
 import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocation
 import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocationCredentials
@@ -23,12 +23,12 @@ import javax.inject.Inject
 
 class SambaDestinationUtil : DestinationUtil<SambaFolderLocation> {
     @Inject
-    lateinit var integrityCore: IntegrityCore
+    lateinit var credentialsRepository: CredentialsRepository
 
     override fun writeArchive(context: Context, sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,
                               archiveFolderLocation: SambaFolderLocation) {
-        val sambaFolderLocationCredentials = integrityCore.credentialsRepository
+        val sambaFolderLocationCredentials = credentialsRepository
                 .getCredentials(archiveFolderLocation.title) as SambaFolderLocationCredentials
         val sambaAuth = NtlmPasswordAuthentication(
                 null, sambaFolderLocationCredentials.user,

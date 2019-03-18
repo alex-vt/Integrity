@@ -15,8 +15,12 @@ import com.alexvt.integrity.R
 import com.alexvt.integrity.lib.metadata.Tag
 import kotlinx.android.synthetic.main.tag_list_item.view.*
 
-class TagRecyclerAdapter(val items: ArrayList<Pair<Tag, Boolean>>,
-                         val tagsActivity: TagsActivity) : RecyclerView.Adapter<TagViewHolder>() {
+class TagRecyclerAdapter(private val items: ArrayList<Pair<Tag, Boolean>>,
+                         private val isSelectMode: Boolean,
+                         private val tagsActivity: TagsActivity,
+                         private val onClickListener: (Tag) -> Unit,
+                         private val onLongClickListener: (Tag) -> Unit
+) : RecyclerView.Adapter<TagViewHolder>() {
 
     fun setItems(newItems: List<Pair<Tag, Boolean>>) {
         items.clear()
@@ -39,7 +43,7 @@ class TagRecyclerAdapter(val items: ArrayList<Pair<Tag, Boolean>>,
         holder.tvName.text = tag.text
         holder.tvName.setBackgroundColor(Color.parseColor(tag.color)) // todo make text black or white
 
-        if (tagsActivity.isSelectMode()) {
+        if (isSelectMode) {
             if (isSelected) {
                 holder.tvSelected.visibility = View.VISIBLE
             } else {
@@ -49,16 +53,12 @@ class TagRecyclerAdapter(val items: ArrayList<Pair<Tag, Boolean>>,
             holder.tvSelected.visibility = View.GONE
         }
 
-        holder.llItem.setOnClickListener { _ ->
-            if (tagsActivity.isSelectMode()) {
-                tagsActivity.toggleSelection(tag)
-            } else {
-                tagsActivity.editTag(tag, tag.text)
-            }
+        holder.llItem.setOnClickListener {
+            onClickListener.invoke(tag)
         }
 
         holder.llItem.setOnLongClickListener {
-            tagsActivity.askRemoveTag(tag)
+            onLongClickListener.invoke(tag)
             false
         }
     }

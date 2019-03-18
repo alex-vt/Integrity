@@ -17,22 +17,34 @@ import androidx.databinding.DataBindingUtil
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
 import com.alexvt.integrity.R
-import com.alexvt.integrity.core.IntegrityCore
 import com.alexvt.integrity.databinding.ViewTagEditBinding
 import com.alexvt.integrity.lib.metadata.Tag
 import com.alexvt.integrity.lib.util.IntentUtil
 import android.widget.RadioGroup
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
+import com.afollestad.materialdialogs.callbacks.onCancel
+import com.afollestad.materialdialogs.customview.getCustomView
 import com.alexvt.integrity.lib.util.ThemedActivity
+import com.jakewharton.rxbinding3.widget.textChanges
 import dagger.android.AndroidInjection
+import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_tags.*
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
 class TagsActivity : ThemedActivity() {
-    @Inject
-    lateinit var integrityCore: IntegrityCore
 
-    var selectedTags: List<Tag> = emptyList()
+    @Inject
+    lateinit var vmFactory: ViewModelProvider.Factory
+
+    private val vm by lazy {
+        ViewModelProviders.of(this, vmFactory)[TagsViewModel::class.java]
+    }
+
+    private val tagEditDialog: MaterialDialog by lazy { bindTagEditDialog() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
@@ -42,128 +54,161 @@ class TagsActivity : ThemedActivity() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
 
-        if (IntentUtil.getSnapshot(intent) != null) {
-            selectedTags = IntentUtil.getSnapshot(intent)!!.tags
+        bindToolbar()
+        bindTagList()
+        bindFloatingButton()
+        bindDoneButton()
+        bindNavigation()
+    }
+
+    private fun bindToolbar() {
+        setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setDisplayShowHomeEnabled(true)
+    }
+
+    private fun bindTagList() {
+        rvTagList.adapter = TagRecyclerAdapter(ArrayList(), vm.selectMode, this,
+                { vm.clickTag(it) }, { askRemoveTag(it) })
+        vm.tagListData.observe(this, Observer {
+            (rvTagList.adapter as TagRecyclerAdapter).setItems(it)
+        })
+        vm.inputStateData.observe(this, Observer {
+            updateTagEditDialog(it.editingTag, it.editTagName, it.editedTagColor)
+        })
+    }
+
+    private fun bindFloatingButton() {
+        fab.setOnClickListener { vm.clickCreateTag() }
+    }
+
+    private fun bindDoneButton() {
+        bDone.visibility = if (vm.isSelectMode()) View.VISIBLE else View.GONE
+        bDone.setOnClickListener { vm.clickDone() }
+    }
+
+    private fun bindNavigation() {
+        vm.navigationEventData.observe(this, androidx.lifecycle.Observer {
+            if (it.goBack) {
+                super.onBackPressed()
+            } else if (it.returnData) {
+                val returnIntent = Intent()
+                IntentUtil.putSnapshot(returnIntent, it.bundledSnapshot)
+                setResult(Activity.RESULT_OK, returnIntent)
+                finish()
+            } else {
+                val errorText = when (it.inputError) {
+                    InputError.EMPTY_NAME -> "Please enter tag name"
+                    InputError.ALREADY_EXISTS -> "This tag already exists"
+                    else -> "Error" // shouldn't happen
+                }
+                Toast.makeText(this, errorText, Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun bindColorButton(buttonGroup: RadioGroup, colorButton: View) {
+        colorButton.setOnClickListener { buttonGroup.check(it.id) }
+    }
+
+    private fun getColorIdMap(tagEditViews: ViewTagEditBinding) = with (tagEditViews) { linkedMapOf(
+            tbColor1.id to "#FFFFFF",
+            tbColor2.id to "#EE8888",
+            tbColor3.id to "#88EE88",
+            tbColor4.id to "#8888EE"
+    )}
+
+    private fun checkColor(tagEditViews: ViewTagEditBinding, color: String) {
+        // unchecking colors first
+        getColorIdMap(tagEditViews).forEach {
+            tagEditViews.toggleGroup.findViewById<ToggleButton>(it.key).isChecked = false
         }
 
-        fab.setOnClickListener { editTag(Tag(text = "", color = "#FFFFFF")) }
-
-        rvTagList.adapter = TagRecyclerAdapter(ArrayList(), this)
-
-        bDone.visibility = if (isSelectMode()) View.VISIBLE else View.GONE
-        bDone.setOnClickListener { returnSelection() }
+        val buttonId = getColorIdMap(tagEditViews).toList()
+                .firstOrNull {it.second == color}?.first
+                ?: getColorIdMap(tagEditViews).toList().first().first
+        tagEditViews.toggleGroup.findViewById<ToggleButton>(buttonId).isChecked = true
     }
 
-    override fun onStart() {
-        super.onStart()
-        refreshTagList() // no other sources of data, no need to listen to changes
-    }
+    private fun getCheckedColor(tagEditViews: ViewTagEditBinding) = getColorIdMap(tagEditViews)
+            .toList()
+            .firstOrNull { tagEditViews.toggleGroup.findViewById<ToggleButton>(it.first).isChecked }?.second
+            ?: getColorIdMap(tagEditViews).toList().first().second // first color
 
-
-    private fun refreshTagList() {
-        (rvTagList.adapter as TagRecyclerAdapter).setItems(getItemSelection())
-    }
-
-    private fun getItemSelection()
-            = integrityCore.settingsRepository.getAllTags().map {
-                Pair(it, selectedTags.contains(it))
-            }
-
-    fun editTag(tagToEdit: Tag, oldTagText: String? = null) {
+    private fun bindTagEditDialog(): MaterialDialog {
         val tagEditViews: ViewTagEditBinding = DataBindingUtil.inflate(LayoutInflater.from(this),
                 R.layout.view_tag_edit, null, false)
-        tagEditViews.etText.setText(tagToEdit.text)
+
+        tagEditViews.etText.textChanges()
+                .debounce(20, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { vm.updateEditTagName(it.toString()) }
+
         // todo color picker
-        tagEditViews.tbColor1.setOnClickListener { (it.parent as RadioGroup).check(it.id) }
-        tagEditViews.tbColor2.setOnClickListener { (it.parent as RadioGroup).check(it.id) }
-        tagEditViews.tbColor3.setOnClickListener { (it.parent as RadioGroup).check(it.id) }
-        tagEditViews.tbColor4.setOnClickListener { (it.parent as RadioGroup).check(it.id) }
-        tagEditViews.toggleGroup.setOnCheckedChangeListener { group, checkedId ->
-            for (j in 0 until group.childCount) {
-                val view = group.getChildAt(j) as ToggleButton
-                view.isChecked = (view.id == checkedId)
+        val toggles = tagEditViews.toggleGroup
+        with (tagEditViews) {
+            bindColorButton(toggles, tbColor1)
+            bindColorButton(toggles, tbColor2)
+            bindColorButton(toggles, tbColor3)
+            bindColorButton(toggles, tbColor4)
+            toggles.setOnCheckedChangeListener { group, checkedId ->
+                for (j in 0 until group.childCount) {
+                    val view = group.getChildAt(j) as ToggleButton
+                    view.isChecked = (view.id == checkedId)
+                    vm.updateEditColor(getCheckedColor(tagEditViews))
+                }
             }
         }
-        when {
-            tagToEdit.color == "#FFFFFF" -> tagEditViews.tbColor1.isChecked = true
-            tagToEdit.color == "#EE8888" -> tagEditViews.tbColor2.isChecked = true
-            tagToEdit.color == "#88EE88" -> tagEditViews.tbColor3.isChecked = true
-            tagToEdit.color == "#8888EE" -> tagEditViews.tbColor4.isChecked = true
-        }
-        MaterialDialog(this)
+
+        return MaterialDialog(this)
                 .customView(view = tagEditViews.llTagEdit)
+                .noAutoDismiss()
                 .positiveButton(text = "Save") {
-                    val color = when {
-                        tagEditViews.tbColor2.isChecked -> "#EE8888"
-                        tagEditViews.tbColor3.isChecked -> "#88EE88"
-                        tagEditViews.tbColor4.isChecked -> "#8888EE"
-                        else -> "#FFFFFF" // color 1
-                    }
-                    val tagFromEditor = Tag(tagEditViews.etText.text.toString().trim(), color)
-                    checkAndAddTag(tagFromEditor, oldTagText)
+                    vm.clickSave()
                 }
-                .negativeButton(text = "Cancel")
-                .show()
+                .negativeButton(text = "Cancel") {
+                    vm.closeViewTag()
+                }
+                .onCancel {
+                    vm.closeViewTag()
+                }
     }
 
-    private fun checkAndAddTag(tag: Tag, oldText: String?) {
-        if (tag.text.isBlank()) {
-            Toast.makeText(this, "Please enter tag name", Toast.LENGTH_SHORT).show()
-            return
-        }
-        // tag must not have name like any existing tag except itself before the change
-        if (integrityCore.settingsRepository.getAllTags()
-                        .map { it.text }
-                        .minus(oldText)
-                        .contains(tag.text)) {
-            Toast.makeText(this, "This tag already exists", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (oldText != null) {
-            // old tag needs to be replaced
-            integrityCore.settingsRepository.removeTag(oldText)
-        }
-        integrityCore.settingsRepository.addTag(tag)
-        refreshTagList()
-    }
-
-    fun toggleSelection(tag: Tag) {
-        if (selectedTags.contains(tag)) {
-            selectedTags = selectedTags.minus(tag)
+    private fun updateTagEditDialog(show: Boolean, text: String?, color: String) {
+        if (show) {
+            tagEditDialog.show()
+            val tagEditViews: ViewTagEditBinding = DataBindingUtil.findBinding(tagEditDialog.getCustomView()!!)!!
+            if (tagEditViews.etText.text.toString() != text) {
+                tagEditViews.etText.setText("")
+                tagEditViews.etText.append(text)
+            }
+            checkColor(tagEditViews, color)
         } else {
-            selectedTags = selectedTags.plus(tag)
+            tagEditDialog.cancel()
         }
-        refreshTagList()
     }
 
-    fun askRemoveTag(tag: Tag) {
+    override fun onDestroy() {
+        tagEditDialog.dismiss()
+        super.onDestroy()
+    }
+
+    private fun askRemoveTag(tag: Tag) {
         MaterialDialog(this)
                 .title(text = "Delete tag?")
                 .positiveButton(text = "Delete") {
-                    dialog ->
-                    integrityCore.settingsRepository.removeTag(tag.text)
-                    refreshTagList()
+                    vm.removeTag(tag.text)
                 }
                 .negativeButton(text = "Cancel")
                 .show()
-    }
-
-    fun isSelectMode() = IntentUtil.isSelectMode(intent)
-
-    private fun returnSelection() {
-        val returnIntent = Intent()
-        if (IntentUtil.getSnapshot(intent) != null) {
-            val snapshot = IntentUtil.getSnapshot(intent)!!.copy(
-                    tags = ArrayList(selectedTags)
-            )
-            IntentUtil.putSnapshot(returnIntent, snapshot)
-        }
-        setResult(Activity.RESULT_OK, returnIntent)
-        finish()
     }
 
     override fun onSupportNavigateUp(): Boolean {
         super.onBackPressed()
         return true
+    }
+
+    override fun onBackPressed() {
+        vm.pressBackButton()
     }
 }

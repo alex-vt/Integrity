@@ -16,12 +16,17 @@ object LinkUtil {
 
     fun ccsSelectLinks(html: String, cssSelector: String, partOfLink: String,
                        pageUrl: String): Map<String, String>
-            = Jsoup.parse(html).select(cssSelector.trim() + " a[href]")
+            = Jsoup.parse(fixHtml(html)).select(cssSelector.trim() + " a[href]")
             // dropping duplicates before putting to map to preserve first
             .distinctBy { it.attr("href").trimEnd('/') }
             .associate { getFullUrl(it.attr("href"), pageUrl) to it.cssSelector() }
             .filter { it.key.isNotEmpty() }
             .filter { it.key.contains(partOfLink) }
+
+    // todo improve fix for links like href="http://&quot;http://www.example.com&quot;"
+    private fun fixHtml(html: String) = html
+            .replace("\"http://&quot;http://", "\"http://")
+            .replace("&quot;", "")
 
     fun getMatchedLinks(html: String, partOfLink: String): Set<String>
             = Jsoup.parse(html).select("a[href]")

@@ -19,21 +19,20 @@ import kotlinx.coroutines.launch
  */
 class SimplePersistableLogRepository(private val context: Context) : LogRepository {
 
-    data class Log(val entries: ArrayList<LogEntry> = arrayListOf()) // Log entry container
+    private data class Log(val entries: ArrayList<LogEntry> = arrayListOf()) // Log entry container
 
-    private lateinit var log: Log
+    private var log: Log
 
-    /**
-     * Prepares database for use.
-     */
-    override fun init(clear: Boolean) {
-        if (!clear) {
-            val logJson = readJsonFromStorage(context)
-            if (logJson != null) {
-                log = JsonSerializerUtil.fromJson(logJson, Log::class.java)
-            }
-        }
-        if (clear || !::log.isInitialized) {
+    // Storage name for the JSON string in SharedPreferences
+    private val TAG = "log"
+    private val preferencesName = "persisted_$TAG"
+    private val preferenceKey = "${TAG}_json"
+
+    init {
+        val logJson = readJsonFromStorage(context)
+        if (logJson != null) {
+            log = JsonSerializerUtil.fromJson(logJson, Log::class.java)
+        } else {
             log = Log()
             saveChanges(context)
         }
@@ -122,11 +121,6 @@ class SimplePersistableLogRepository(private val context: Context) : LogReposito
 
 
     // Storage for the JSON string in SharedPreferences
-
-    private val TAG = "log"
-
-    private val preferencesName = "persisted_$TAG"
-    private val preferenceKey = "${TAG}_json"
 
     private fun readJsonFromStorage(context: Context)
             = getSharedPreferences(context).getString(preferenceKey, null)

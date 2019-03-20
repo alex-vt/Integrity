@@ -6,7 +6,7 @@
 
 package com.alexvt.integrity.core.metadata
 
-import com.alexvt.integrity.core.util.Initializable
+import com.alexvt.integrity.core.util.Clearable
 import com.alexvt.integrity.lib.metadata.MetadataCollection
 import com.alexvt.integrity.lib.metadata.Snapshot
 
@@ -15,7 +15,7 @@ import com.alexvt.integrity.lib.metadata.Snapshot
  *
  * Note: Corresponding data in storage is not managed here.
  */
-interface MetadataRepository : Initializable {
+interface MetadataRepository : Clearable {
 
     /**
      * Registers database contents changes listener with a tag.
@@ -93,5 +93,5 @@ interface MetadataRepository : Initializable {
     /**
      * Deletes all metadata from database
      */
-    fun clear()
+    override fun clear()
 }

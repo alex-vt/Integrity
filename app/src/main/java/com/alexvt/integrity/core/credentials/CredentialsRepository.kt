@@ -6,13 +6,13 @@
 
 package com.alexvt.integrity.core.credentials
 
-import com.alexvt.integrity.core.util.Initializable
+import com.alexvt.integrity.core.util.Clearable
 import com.alexvt.integrity.lib.metadata.Credentials
 
 /**
  * Manager of repository of credentials
  */
-interface CredentialsRepository : Initializable {
+interface CredentialsRepository : Clearable {
 
     /**
      * Adds credentials which are stored separately.
@@ -27,7 +27,7 @@ interface CredentialsRepository : Initializable {
     fun removeCredentials(title: String)
 
     /**
-     * Deletes all folder locations and credentials from database
+     * Deletes all credentials from database
      */
-    fun clear()
+    override fun clear()
 }

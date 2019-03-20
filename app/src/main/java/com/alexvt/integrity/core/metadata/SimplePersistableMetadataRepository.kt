@@ -23,19 +23,18 @@ import kotlinx.coroutines.launch
  */
 class SimplePersistableMetadataRepository(private val context: Context): MetadataRepository {
 
-    private lateinit var allMetadata: MetadataCollection
+    private var allMetadata: MetadataCollection
 
-    /**
-     * Reads metadata from JSON string to Java objects
-     */
-    override fun init(clear: Boolean) {
-        if (!clear) {
-            val fullMetadataJson = readJsonFromStorage(context)
-            if (fullMetadataJson != null) {
-                allMetadata = JsonSerializerUtil.fromJson(fullMetadataJson, MetadataCollection::class.java)
-            }
-        }
-        if (clear || !::allMetadata.isInitialized) {
+    // Storage name for the JSON string in SharedPreferences
+    private val TAG = "snapshots_metadata"
+    private val preferencesName = "persisted_$TAG"
+    private val preferenceKey = "${TAG}_json"
+
+    init {
+        val fullMetadataJson = readJsonFromStorage(context)
+        if (fullMetadataJson != null) {
+            allMetadata = JsonSerializerUtil.fromJson(fullMetadataJson, MetadataCollection::class.java)
+        } else {
             val snapshotMetadataList = arrayListOf<Snapshot>()
             allMetadata = MetadataCollection(snapshotMetadataList,
                     HashUtil.getHash(snapshotMetadataList)) // todo move hash calculations out
@@ -152,11 +151,6 @@ class SimplePersistableMetadataRepository(private val context: Context): Metadat
 
 
     // Storage for the JSON string in SharedPreferences
-
-    private val TAG = "snapshots_metadata"
-
-    private val preferencesName = "persisted_$TAG"
-    private val preferenceKey = "${TAG}_json"
 
     private fun readJsonFromStorage(context: Context)
             = getSharedPreferences(context).getString(preferenceKey, null)

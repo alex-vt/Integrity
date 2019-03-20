@@ -76,7 +76,7 @@ class RecoveryViewModel @Inject constructor(
     fun clickClearRepositoriesAt(indices: IntArray) {
         namedRepositories.filterIndexed { index, _ -> index in indices }
                 .map { it.first }
-                .forEach { it.init(true) }
+                .forEach { it.clear() }
     }
 
     fun clickDeleteSnapshotsFolder() {

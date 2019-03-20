@@ -17,20 +17,18 @@ import com.alexvt.integrity.lib.util.JsonSerializerUtil
  */
 class SimplePersistableSearchIndexRepository(private val context: Context) : SearchIndexRepository {
 
-    private lateinit var allDataChunks: DataChunks
+    private var allDataChunks: DataChunks
 
+    // Storage name for the JSON string in SharedPreferences
+    private val TAG = "search_index"
+    private val preferencesName = "persisted_$TAG"
+    private val preferenceKey = "${TAG}_json"
 
-    /**
-     * Prepares database for use
-     */
-    override fun init(clear: Boolean) {
-        if (!clear) {
-            val dataChunksJson = readJsonFromStorage(context)
-            if (dataChunksJson != null) {
-                allDataChunks = JsonSerializerUtil.fromJson(dataChunksJson, DataChunks::class.java)
-            }
-        }
-        if (clear || !::allDataChunks.isInitialized) {
+    init {
+        val dataChunksJson = readJsonFromStorage(context)
+        if (dataChunksJson != null) {
+            allDataChunks = JsonSerializerUtil.fromJson(dataChunksJson, DataChunks::class.java)
+        } else {
             allDataChunks = DataChunks()
             persistAll(context)
         }
@@ -74,11 +72,6 @@ class SimplePersistableSearchIndexRepository(private val context: Context) : Sea
 
 
     // Storage for the JSON string in SharedPreferences
-
-    private val TAG = "search_index"
-
-    private val preferencesName = "persisted_$TAG"
-    private val preferenceKey = "${TAG}_json"
 
     private fun readJsonFromStorage(context: Context)
             = getSharedPreferences(context).getString(preferenceKey, null)

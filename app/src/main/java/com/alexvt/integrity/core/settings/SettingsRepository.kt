@@ -6,14 +6,14 @@
 
 package com.alexvt.integrity.core.settings
 
-import com.alexvt.integrity.core.util.Initializable
+import com.alexvt.integrity.core.util.Clearable
 import com.alexvt.integrity.lib.metadata.FolderLocation
 import com.alexvt.integrity.lib.metadata.Tag
 
 /**
  * Manager of repository of app settings (singleton).
  */
-interface SettingsRepository : Initializable {
+interface SettingsRepository : Clearable {
 
     /**
      * Registers database contents changes listener with a tag.

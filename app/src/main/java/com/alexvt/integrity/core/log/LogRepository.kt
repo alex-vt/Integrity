@@ -6,13 +6,13 @@
 
 package com.alexvt.integrity.core.log
 
-import com.alexvt.integrity.core.util.Initializable
+import com.alexvt.integrity.core.util.Clearable
 import com.alexvt.integrity.lib.log.LogEntry
 
 /**
  * Manager of repository of app log entries.
  */
-interface LogRepository : Initializable {
+interface LogRepository : Clearable {
 
     /**
      * Registers database contents changes listener with a tag.
@@ -48,5 +48,5 @@ interface LogRepository : Initializable {
     /**
      * Deletes all log entries from database
      */
-    fun clear()
+    override fun clear()
 }

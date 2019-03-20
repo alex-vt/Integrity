@@ -6,8 +6,8 @@
 
 package com.alexvt.integrity.core.util
 
-interface Initializable {
+interface Clearable {
 
-    fun init(clear: Boolean = false)
+    fun clear()
 
 }

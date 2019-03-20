@@ -8,14 +8,12 @@ package com.alexvt.integrity.core
 
 import android.content.Context
 import com.alexvt.integrity.core.metadata.MetadataRepository
-import com.alexvt.integrity.core.credentials.CredentialsRepository
 import com.alexvt.integrity.core.jobs.ScheduledJobManager
 import com.alexvt.integrity.core.log.LogRepository
 import com.alexvt.integrity.lib.log.*
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.core.notifications.DisabledScheduledJobsNotifier
 import com.alexvt.integrity.core.notifications.ErrorNotifier
-import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,8 +25,6 @@ import javax.inject.Singleton
 class IntegrityCore @Inject constructor(
         private val context: Context,
         private val metadataRepository: MetadataRepository,
-        private val credentialsRepository: CredentialsRepository,
-        private val searchIndexRepository: SearchIndexRepository,
         private val logRepository: LogRepository,
         private val settingsRepository: SettingsRepository,
         private val scheduledJobManager: ScheduledJobManager
@@ -38,12 +34,6 @@ class IntegrityCore @Inject constructor(
      * Should be called before using any other functions.
      */
     fun init() {
-        logRepository.init()
-        settingsRepository.init()
-        metadataRepository.init()
-        credentialsRepository.init()
-        searchIndexRepository.init()
-
         resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
 
         settingsRepository.addChangesListener(this.toString()) {

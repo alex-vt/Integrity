@@ -20,22 +20,26 @@ import kotlinx.coroutines.launch
  */
 class SimplePersistableSettingsRepository(private val context: Context) : SettingsRepository {
 
-    private lateinit var integrityAppSettings: IntegrityAppSettings
+    private var integrityAppSettings: IntegrityAppSettings
 
-    /**
-     * Prepares database for use.
-     */
-    override fun init(clear: Boolean) {
-        if (!clear) {
-            val logJson = readJsonFromStorage(context)
-            if (logJson != null) {
-                integrityAppSettings = JsonSerializerUtil.fromJson(logJson, IntegrityAppSettings::class.java)
-            }
-        }
-        if (clear || !::integrityAppSettings.isInitialized) {
+    // Storage name for the JSON string in SharedPreferences
+    private val TAG = "app_settings"
+    private val preferencesName = "persisted_$TAG"
+    private val preferenceKey = "${TAG}_json"
+
+    init {
+        val logJson = readJsonFromStorage(context)
+        if (logJson != null) {
+            integrityAppSettings = JsonSerializerUtil.fromJson(logJson, IntegrityAppSettings::class.java)
+        } else {
             integrityAppSettings = getDefaultSettings()
             saveChanges(context)
         }
+    }
+
+    override fun clear() {
+        integrityAppSettings = getDefaultSettings()
+        saveChanges(context)
     }
 
     private var changesListenerMap: Map<String, ((IntegrityAppSettings) -> Unit)> = mapOf()
@@ -142,11 +146,6 @@ class SimplePersistableSettingsRepository(private val context: Context) : Settin
 
 
     // Storage for the JSON string in SharedPreferences
-
-    private val TAG = "app_settings"
-
-    private val preferencesName = "persisted_$TAG"
-    private val preferenceKey = "${TAG}_json"
 
     private fun readJsonFromStorage(context: Context)
             = getSharedPreferences(context).getString(preferenceKey, null)

@@ -26,20 +26,18 @@ class SimplePersistableCredentialsRepository(private val context: Context) : Cre
             = linkedSetOf()
     )
 
-    private lateinit var credentialsSet: CredentialsSet
+    private var credentialsSet: CredentialsSet
 
+    // Storage name for the JSON string in SharedPreferences
+    private val TAG = "credentials"
+    private val preferencesName = "persisted_$TAG"
+    private val preferenceKey = "${TAG}_json"
 
-    /**
-     * Prepares database for use
-     */
-    override fun init(clear: Boolean) {
-        if (!clear) {
-            val credentialsSetJson = readJsonFromStorage(context)
-            if (credentialsSetJson != null) {
-                credentialsSet = JsonSerializerUtil.fromJson(credentialsSetJson, CredentialsSet::class.java)
-            }
-        }
-        if (clear || !::credentialsSet.isInitialized) {
+    init {
+        val credentialsSetJson = readJsonFromStorage(context)
+        if (credentialsSetJson != null) {
+            credentialsSet = JsonSerializerUtil.fromJson(credentialsSetJson, CredentialsSet::class.java)
+        } else {
             credentialsSet = CredentialsSet()
             persistCredentials(context)
         }
@@ -66,7 +64,7 @@ class SimplePersistableCredentialsRepository(private val context: Context) : Cre
     }
 
     /**
-     * Persists presets to JSON in SharedPreferences.
+     * Persists credentials to JSON in SharedPreferences.
      *
      * Should be called after every presets modification.
      */
@@ -77,11 +75,6 @@ class SimplePersistableCredentialsRepository(private val context: Context) : Cre
 
 
     // Storage for the JSON string in SharedPreferences
-
-    private val TAG = "credentials"
-
-    private val preferencesName = "persisted_$TAG"
-    private val preferenceKey = "${TAG}_json"
 
     private fun readJsonFromStorage(context: Context)
             = getSharedPreferences(context).getString(preferenceKey, null)

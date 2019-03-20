@@ -6,7 +6,7 @@
 
 package com.alexvt.integrity.core.search
 
-import com.alexvt.integrity.core.util.Initializable
+import com.alexvt.integrity.core.util.Clearable
 import com.alexvt.integrity.lib.search.DataChunk
 
 /**
@@ -14,12 +14,12 @@ import com.alexvt.integrity.lib.search.DataChunk
  *
  * A crude unified search index for heterogeneous data. // todo replace with efficient index
  */
-interface SearchIndexRepository : Initializable {
+interface SearchIndexRepository : Clearable {
 
     /**
      * Adds data chunks
      */
-    fun add(cdataChunks: List<DataChunk>)
+    fun add(dataChunks: List<DataChunk>)
 
     /**
      * Removes data chunks for artifact
@@ -44,5 +44,5 @@ interface SearchIndexRepository : Initializable {
     /**
      * Deletes all tags from database
      */
-    fun clear()
+    override fun clear()
 }

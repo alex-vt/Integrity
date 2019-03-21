@@ -85,7 +85,6 @@ class AndroidScheduledJobManager @Inject constructor(
      */
     private fun getScheduledJobs() = if (settingsRepository.get().jobsEnableScheduled) {
         metadataRepository.getAllArtifactLatestMetadata(false)
-                .snapshots
                 .filter { it.downloadSchedule.periodSeconds > 0L } // todo also resume jobs interrupted not by user
                 .sortedBy { getNextRunTimestamp(it) }
     } else {

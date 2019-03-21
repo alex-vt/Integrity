@@ -85,33 +85,26 @@ class SimplePersistableMetadataRepository(private val context: Context): Metadat
         saveChanges(context)
     }
 
-    override fun getAllArtifactMetadata(): MetadataCollection {
-        return allMetadata
-    }
+    override fun getAllArtifactMetadata() = allMetadata.snapshots
 
-    override fun getAllArtifactLatestMetadata(deprioritizeBlueprints: Boolean): MetadataCollection {
+    override fun getAllArtifactLatestMetadata(deprioritizeBlueprints: Boolean): List<Snapshot> {
         val snapshotComparator = if (deprioritizeBlueprints) {
             SnapshotCompareUtil.blueprintLowPriorityComparator.thenByDescending { it.date }
         } else {
             compareByDescending { it.date }
         }
-        val artifactSnapshotMetadataList = allMetadata.snapshots
+        return allMetadata.snapshots
                 .groupBy { it.artifactId }
                 .map { it.value
                         .sortedWith(snapshotComparator)
                         .first() }
                 .sortedByDescending { it.date }
-        return MetadataCollection(ArrayList(artifactSnapshotMetadataList),
-                HashUtil.getHash(artifactSnapshotMetadataList))
     }
 
-    override fun getArtifactMetadata(artifactId: Long): MetadataCollection {
-        val artifactSnapshotMetadataList = allMetadata.snapshots
-                .filter { it.artifactId == artifactId }
-                .sortedByDescending { it.date }
-        return MetadataCollection(ArrayList(artifactSnapshotMetadataList),
-                HashUtil.getHash(artifactSnapshotMetadataList))
-    }
+    override fun getArtifactMetadata(artifactId: Long)
+            = allMetadata.snapshots
+            .filter { it.artifactId == artifactId }
+            .sortedByDescending { it.date }
 
     override fun getLatestSnapshotMetadata(artifactId: Long): Snapshot {
         return allMetadata.snapshots

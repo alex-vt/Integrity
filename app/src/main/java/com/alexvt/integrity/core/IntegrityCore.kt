@@ -49,7 +49,7 @@ class IntegrityCore @Inject constructor(
     }
 
     private fun resetInProgressSnapshotStatuses() {
-        metadataRepository.getAllArtifactMetadata().snapshots
+        metadataRepository.getAllArtifactMetadata()
                 .filter { it.status == SnapshotStatus.IN_PROGRESS }
                 .forEach {
                     metadataRepository.removeSnapshotMetadata(it.artifactId, it.date)

@@ -59,7 +59,7 @@ interface MetadataRepository : Clearable {
     /**
      * Returns list of all snapshots of metadata stored in database, for all artifacts.
      */
-    fun getAllArtifactMetadata(): MetadataCollection
+    fun getAllArtifactMetadata(): List<Snapshot>
 
     /**
      * Returns list of the latest snapshots
@@ -68,12 +68,12 @@ interface MetadataRepository : Clearable {
      * If deprioritizeBlueprints is true and there are non-blueprint snapshots,
      * the latest of them will be used.
      */
-    fun getAllArtifactLatestMetadata(deprioritizeBlueprints: Boolean): MetadataCollection
+    fun getAllArtifactLatestMetadata(deprioritizeBlueprints: Boolean): List<Snapshot>
 
     /**
      * Returns artifact with all snapshots of metadata by given artifactId.
      */
-    fun getArtifactMetadata(artifactId: Long): MetadataCollection
+    fun getArtifactMetadata(artifactId: Long): List<Snapshot>
 
     /**
      * Returns snapshot of metadata by given artifactId and with the most recent date.

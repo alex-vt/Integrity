@@ -194,7 +194,7 @@ class MainScreenViewModel @Inject constructor(
         val snapshots = SortingUtil.sortSnapshots(when (filteredArtifactId) {
             null -> metadataRepository.getAllArtifactLatestMetadata(true)
             else -> metadataRepository.getArtifactMetadata(filteredArtifactId)
-        }.snapshots, getSortingMethod())
+        }, getSortingMethod())
         return snapshots.map { Pair(it, getSnapshotCount(it.artifactId)) }.toList()
     }
 
@@ -209,7 +209,7 @@ class MainScreenViewModel @Inject constructor(
     }
 
     private fun getSnapshotCount(artifactId: Long) = metadataRepository
-            .getArtifactMetadata(artifactId).snapshots.count()
+            .getArtifactMetadata(artifactId).count()
 
 
 
@@ -288,7 +288,7 @@ class MainScreenViewModel @Inject constructor(
     }
     
     private fun getCompleteSnapshotDatesOrNull(artifactId: Long) = metadataRepository
-            .getArtifactMetadata(artifactId).snapshots
+            .getArtifactMetadata(artifactId)
             .filter { it.status == SnapshotStatus.COMPLETE }
             .map { it.date }
             .reversed() // in ascending order

@@ -42,6 +42,8 @@ import com.alexvt.integrity.ui.tags.TagsActivity
 import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
+import io.reactivex.Scheduler
+import io.reactivex.android.schedulers.AndroidSchedulers
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -77,6 +79,11 @@ class IntegrityCoreDependenciesModule {
     @Singleton
     @Named("projectLink")
     fun provideProjectLink() = "https://github.com/alex-vt/Integrity/tree/develop" // todo update
+
+
+    @Provides
+    fun provideUiScheduler(): Scheduler = AndroidSchedulers.mainThread()
+
 
     @Provides
     @Singleton

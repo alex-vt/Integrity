@@ -12,7 +12,10 @@ import com.alexvt.integrity.lib.log.LogEntry
 import com.alexvt.integrity.lib.log.LogEntryType
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.reactivex.Flowable
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -80,10 +83,12 @@ class RoomLogRepository(context: Context) : LogRepository {
         suspend fun addEntry(logEntry: DbLogEntry)
 
         @Query("SELECT * FROM dblogentry ORDER BY orderId DESC LIMIT :limit")
-        suspend fun getRecentEntries(limit: Int): List<DbLogEntry>
+        fun getRecentEntries(limit: Int): Flowable<List<DbLogEntry>>
 
-        @Query("SELECT * FROM dblogentry WHERE read = 0 AND type IN (\'${LogEntryType.ERROR}\', \'${LogEntryType.CRASH}\') ORDER BY orderId DESC ")
-        suspend fun getUnreadErrors(): List<DbLogEntry>
+        @Query("SELECT * FROM dblogentry WHERE read = 0 " +
+                "AND type IN (\'${LogEntryType.ERROR}\', \'${LogEntryType.CRASH}\') " +
+                "ORDER BY orderId DESC LIMIT :limit")
+        fun getUnreadErrors(limit: Int): Flowable<List<DbLogEntry>>
 
         @Query("UPDATE dblogentry SET read = 1 WHERE read = 0")
         suspend fun markAllRead()
@@ -100,75 +105,44 @@ class RoomLogRepository(context: Context) : LogRepository {
     private val db = Room.databaseBuilder(context, LogEntryDatabase::class.java, 
             "LogEntryDb").build()
 
-    
-    private var changesListenerMap: Map<String, (() -> Unit)> = emptyMap()
-
-    /**
-     * Registers database contents changes listener with a tag.
-     */
-    override fun addChangesListener(tag: String, changesListener: () -> Unit) {
-        changesListenerMap = changesListenerMap.plus(Pair(tag, changesListener))
-        invokeChangesListeners()
-    }
-
-    /**
-     * Removes database contents changes listener by a tag
-     */
-    override fun removeChangesListener(tag: String) {
-        changesListenerMap = changesListenerMap.minus(tag)
-    }
-
-    private fun invokeChangesListeners() {
-        changesListenerMap.forEach {
-            it.value.invoke()
-        }
-    }
-
     /**
      * Adds the entry to the log.
      */
     override fun addEntry(logEntry: LogEntry) {
-        runBlocking(Dispatchers.Default) {
+        GlobalScope.launch(Dispatchers.Default) {
             EntityConverters.toDbEntity(logEntry).let { db.logEntryDao().addEntry(it) }
         }
-        invokeChangesListeners()
     }
 
     /**
      * Gets log entries ordered by addition time descending.
      */
-    override fun getRecentEntries(limit: Int, resultListener: (List<LogEntry>) -> Unit) {
-        resultListener.invoke(runBlocking(Dispatchers.Default) {
-            db.logEntryDao().getRecentEntries(limit).map { EntityConverters.fromDbEntity(it) }
-        })
-    }
+    override fun getRecentEntries(limit: Int): Flowable<List<LogEntry>> = db.logEntryDao()
+            .getRecentEntries(limit)
+            .map { it.map { EntityConverters.fromDbEntity(it) } }
 
     /**
      * Gets unread error and crash type log entries ordered by addition time descending.
      */
-    override fun getUnreadErrors(resultListener: (List<LogEntry>) -> Unit) {
-        resultListener.invoke(runBlocking(Dispatchers.Default) {
-            db.logEntryDao().getUnreadErrors().map { EntityConverters.fromDbEntity(it) }
-        })
-    }
+    override fun getUnreadErrors(limit: Int): Flowable<List<LogEntry>> = db.logEntryDao()
+            .getUnreadErrors(limit)
+            .map { it.map { EntityConverters.fromDbEntity(it) } }
 
     /**
      * Sets all log entries read.
      */
     override fun markAllRead() {
-        runBlocking(Dispatchers.Default) {
+        GlobalScope.launch(Dispatchers.Default) {
             db.logEntryDao().markAllRead()
         }
-        invokeChangesListeners()
     }
 
     /**
      * Deletes all log entries from database
      */
     override fun clear() {
-        runBlocking(Dispatchers.Default) {
+        GlobalScope.launch(Dispatchers.Default) {
             db.logEntryDao().clear()
         }
-        invokeChangesListeners()
     }
 }

@@ -26,6 +26,7 @@ import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.ui.ThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
+import io.reactivex.Scheduler
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -68,6 +69,7 @@ data class NavigationEvent(
 )
 
 class MainScreenViewModel @Inject constructor(
+        private val uiScheduler: Scheduler,
         // for navigation
         @Named("packageName") val packageName: String,
         @Named("versionName") val versionName: String,
@@ -105,6 +107,11 @@ class MainScreenViewModel @Inject constructor(
 
     private val searchUtil = SearchManager(metadataRepository, searchIndexRepository)
 
+    private val logErrorLimitToNotify = 1000
+    private val errorNotifySubscription = logRepository.getUnreadErrors(logErrorLimitToNotify)
+            .observeOn(uiScheduler)
+            .subscribe { unreadErrors -> logErrorCountData.value = unreadErrors.count() }
+
     init {
         // input state  starts as default
         inputStateData.value = MainScreenInputState(searchViewText = "", filteredArtifactId = null,
@@ -140,11 +147,6 @@ class MainScreenViewModel @Inject constructor(
                 it to scheduledJobManager.getNextRunTimestamp(it) - System.currentTimeMillis()
             }
         }
-        logRepository.addChangesListener(this.toString()) {
-            logRepository.getUnreadErrors {
-                logErrorCountData.value = it.count()
-            }
-        }
 
         // version name, snapshot type component names  are static
         typeNameData.value = dataTypeRepository.getAllDataTypes().map { it.title } // todo add listener to repo
@@ -155,7 +157,7 @@ class MainScreenViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        logRepository.removeChangesListener(this.toString())
+        errorNotifySubscription.dispose()
         settingsRepository.removeChangesListener(this.toString())
         scheduledJobManager.removeScheduledJobsListener(this.toString())
         IntegrityLib.runningJobManager.removeJobListListener(this.toString())

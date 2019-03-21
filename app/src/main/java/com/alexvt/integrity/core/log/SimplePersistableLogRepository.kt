@@ -7,17 +7,17 @@
 package com.alexvt.integrity.core.log
 
 import android.content.Context
+import com.alexvt.integrity.core.util.ReactiveRequestPool
 import com.alexvt.integrity.lib.log.LogEntry
 import com.alexvt.integrity.lib.log.LogEntryType
 import com.alexvt.integrity.lib.util.JsonSerializerUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 /**
  * Manager of repository of app log entries.
  */
-class SimplePersistableLogRepository(private val context: Context) : LogRepository {
+class SimplePersistableLogRepository(private val context: Context,
+       private val reactiveRequestPool: ReactiveRequestPool<List<LogEntry>> = ReactiveRequestPool()
+) : LogRepository {
 
     private data class Log(val entries: ArrayList<LogEntry> = arrayListOf()) // Log entry container
 
@@ -38,29 +38,16 @@ class SimplePersistableLogRepository(private val context: Context) : LogReposito
         }
     }
 
-    private var changesListenerMap: Map<String, (() -> Unit)> = emptyMap()
-
-    /**
-     * Registers database contents changes listener with a tag.
-     */
-    override fun addChangesListener(tag: String, changesListener: () -> Unit) {
-        changesListenerMap = changesListenerMap.plus(Pair(tag, changesListener))
-        invokeChangesListeners()
+    override fun getRecentEntries(limit: Int) = reactiveRequestPool.add {
+        it.sortedByDescending { it.orderId }
+                .take(limit)
     }
 
-    /**
-     * Removes database contents changes listener by a tag
-     */
-    override fun removeChangesListener(tag: String) {
-        changesListenerMap = changesListenerMap.minus(tag)
-    }
-
-    private fun invokeChangesListeners() {
-        GlobalScope.launch (Dispatchers.Main) {
-            changesListenerMap.forEach {
-                it.value.invoke()
-            }
-        }
+    override fun getUnreadErrors(limit: Int) = reactiveRequestPool.add {
+        it.filter { !it.read }
+                .filter { it.type == LogEntryType.ERROR || it.type == LogEntryType.CRASH }
+                .sortedByDescending { it.orderId }
+                .take(limit)
     }
 
     /**
@@ -69,25 +56,6 @@ class SimplePersistableLogRepository(private val context: Context) : LogReposito
     override fun addEntry(logEntry: LogEntry) {
         log.entries.add(logEntry)
         saveChanges(context)
-    }
-
-    /**
-     * Gets log entries ordered by addition time descending.
-     */
-    override fun getRecentEntries(limit: Int, resultListener: (List<LogEntry>) -> Unit) {
-        return resultListener.invoke(log.entries
-                .sortedByDescending { it.orderId }
-                .take(limit))
-    }
-
-    /**
-     * Gets unread error and crash type log entries ordered by addition time descending.
-     */
-    override fun getUnreadErrors(resultListener: (List<LogEntry>) -> Unit) {
-        return resultListener.invoke(log.entries
-                .filter { !it.read }
-                .filter { it.type == LogEntryType.ERROR || it.type == LogEntryType.CRASH }
-                .sortedByDescending { it.orderId })
     }
 
     /**
@@ -114,7 +82,7 @@ class SimplePersistableLogRepository(private val context: Context) : LogReposito
      * Should be called after every metadata modification.
      */
     @Synchronized private fun saveChanges(context: Context) {
-        invokeChangesListeners()
+        reactiveRequestPool.emitForInput(log.entries)
         val logJson = JsonSerializerUtil.toJson(log)
         persistJsonToStorage(context, logJson)
     }

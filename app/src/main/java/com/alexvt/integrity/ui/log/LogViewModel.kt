@@ -13,6 +13,7 @@ import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.log.LogEntry
 import com.alexvt.integrity.ui.ThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
+import io.reactivex.Scheduler
 import javax.inject.Inject
 
 data class NavigationEvent(
@@ -20,6 +21,7 @@ data class NavigationEvent(
 )
 
 class LogViewModel @Inject constructor(
+        private val uiScheduler: Scheduler,
         override val settingsRepository: SettingsRepository,
         private val logRepository: LogRepository,
         private val logOperationManager: LogOperationManager
@@ -31,17 +33,17 @@ class LogViewModel @Inject constructor(
     // single events
     val navigationEventData = SingleLiveEvent<NavigationEvent>()
 
+
+    private val logSubscription = logRepository.getRecentEntries(logEntriesLimit)
+            .observeOn(uiScheduler)
+            .subscribe { logData.value = it }
+
     init {
-        logRepository.addChangesListener(this.toString()) {
-            logRepository.getRecentEntries(logEntriesLimit) {
-                logData.value = it
-            }
-        }
         logOperationManager.markErrorsRead()
     }
 
     override fun onCleared() {
-        logRepository.removeChangesListener(this.toString())
+        logSubscription.dispose()
         super.onCleared()
     }
 

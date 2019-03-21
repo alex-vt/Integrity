@@ -15,6 +15,7 @@ import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.core.notifications.DisabledScheduledJobsNotifier
 import com.alexvt.integrity.core.notifications.ErrorNotifier
 import com.alexvt.integrity.core.settings.SettingsRepository
+import io.reactivex.disposables.Disposable
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,6 +30,7 @@ class IntegrityCore @Inject constructor(
         private val settingsRepository: SettingsRepository,
         private val scheduledJobManager: ScheduledJobManager
 ) {
+    private lateinit var logUnreadErrorSubscription: Disposable
 
     /**
      * Should be called before using any other functions.
@@ -41,11 +43,16 @@ class IntegrityCore @Inject constructor(
             scheduledJobManager.updateSchedule(context)
         }
 
-        logRepository.addChangesListener(this.toString()) {
-            notifyAboutUnreadErrors(context)
+        val logErrorLimitToNotify = 1000
+        logUnreadErrorSubscription = logRepository.getUnreadErrors(logErrorLimitToNotify).subscribe {
+            unreadErrors -> notifyAboutUnreadErrors(unreadErrors, context)
         }
 
         Log(context, "IntegrityCore initialized").log()
+    }
+
+    fun clear() {
+        logUnreadErrorSubscription.dispose()
     }
 
     private fun resetInProgressSnapshotStatuses() {
@@ -58,17 +65,15 @@ class IntegrityCore @Inject constructor(
                 }
     }
 
-    private fun notifyAboutUnreadErrors(context: Context) {
-        logRepository.getUnreadErrors { unreadErrors ->
-            if (unreadErrors.isNotEmpty()) {
-                if (settingsRepository.get().notificationShowErrors) {
-                    ErrorNotifier.notifyAboutErrors(context, unreadErrors)
-                } else {
-                    ErrorNotifier.removeNotification(context)
-                }
+    private fun notifyAboutUnreadErrors(unreadErrors: List<LogEntry>, context: Context) {
+        if (unreadErrors.isNotEmpty()) {
+            if (settingsRepository.get().notificationShowErrors) {
+                ErrorNotifier.notifyAboutErrors(context, unreadErrors)
             } else {
                 ErrorNotifier.removeNotification(context)
             }
+        } else {
+            ErrorNotifier.removeNotification(context)
         }
     }
 

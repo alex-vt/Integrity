@@ -68,6 +68,11 @@ class TagsViewModel @Inject constructor(
         updateTagList()
     }
 
+    override fun onCleared() {
+        settingsRepository.removeChangesListener(this.toString())
+        super.onCleared()
+    }
+
     private fun getTagsFromEditedSnapshot()
             = snapshotWithInitialTags?.tags?.toList() ?: emptyList()
 

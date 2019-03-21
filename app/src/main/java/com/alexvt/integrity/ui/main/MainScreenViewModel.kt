@@ -154,6 +154,14 @@ class MainScreenViewModel @Inject constructor(
         searchResultsData.value = fetchSearchResults()
     }
 
+    override fun onCleared() {
+        logRepository.removeChangesListener(this.toString())
+        settingsRepository.removeChangesListener(this.toString())
+        scheduledJobManager.removeScheduledJobsListener(this.toString())
+        IntegrityLib.runningJobManager.removeJobListListener(this.toString())
+        super.onCleared()
+    }
+
     private fun updateInputState(inputState: MainScreenInputState) {
         inputStateData.value = inputState
         updateContentData() // snapshots, search results  depend on  inputStateData

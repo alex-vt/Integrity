@@ -72,6 +72,11 @@ class DestinationsViewModel @Inject constructor(
         updateDestinationList()
     }
 
+    override fun onCleared() {
+        settingsRepository.removeChangesListener(this.toString())
+        super.onCleared()
+    }
+
     private fun getDestinationsFromEditedSnapshot()
             = snapshotWithInitialDestination?.archiveFolderLocations?.toList() ?: emptyList()
 

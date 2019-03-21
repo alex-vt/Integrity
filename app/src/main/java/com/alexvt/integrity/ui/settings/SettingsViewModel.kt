@@ -63,6 +63,11 @@ class SettingsViewModel @Inject constructor(
         inputStateData.value = InputState(tabId = initialTabId)
     }
 
+    override fun onCleared() {
+        settingsRepository.removeChangesListener(this.toString())
+        super.onCleared()
+    }
+
     // user actions
 
     fun requestViewTabById(tabId: Int) {

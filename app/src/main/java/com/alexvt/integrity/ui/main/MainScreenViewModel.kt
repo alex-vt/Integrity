@@ -16,7 +16,6 @@ import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.core.settings.IntegrityAppSettings
 import com.alexvt.integrity.core.settings.SortingMethod
 import com.alexvt.integrity.core.operations.SnapshotOperationManager
-import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.core.types.DataTypeRepository
 import com.alexvt.integrity.lib.IntegrityLib
@@ -27,6 +26,7 @@ import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.ui.ThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import io.reactivex.Scheduler
+import io.reactivex.disposables.Disposable
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -74,7 +74,7 @@ class MainScreenViewModel @Inject constructor(
         @Named("packageName") val packageName: String,
         @Named("versionName") val versionName: String,
         val metadataRepository: MetadataRepository,
-        val searchIndexRepository: SearchIndexRepository,
+        private val searchManager: SearchManager,
         override val settingsRepository: SettingsRepository,
         val dataFolderManager: DataFolderManager,
         val logRepository: LogRepository,
@@ -104,8 +104,6 @@ class MainScreenViewModel @Inject constructor(
 
     // single events
     val navigationEventData = SingleLiveEvent<NavigationEvent>()
-
-    private val searchUtil = SearchManager(metadataRepository, searchIndexRepository)
 
     private val logErrorLimitToNotify = 1000
     private val errorNotifySubscription = logRepository.getUnreadErrors(logErrorLimitToNotify)
@@ -153,13 +151,14 @@ class MainScreenViewModel @Inject constructor(
 
         // snapshots, search results initial values
         snapshotsData.value = fetchSnapshots()
-        searchResultsData.value = fetchSearchResults()
+        searchResultsData.value = emptyList()
     }
 
     override fun onCleared() {
         errorNotifySubscription.dispose()
         settingsRepository.removeChangesListener(this.toString())
         scheduledJobManager.removeScheduledJobsListener(this.toString())
+        stopSearch()
         IntegrityLib.runningJobManager.removeJobListListener(this.toString())
         super.onCleared()
     }
@@ -173,7 +172,7 @@ class MainScreenViewModel @Inject constructor(
     private val updateContentCoolingOffMillis = 500L
     private val contentDataWithCoolingOff = ThrottledFunction(updateContentCoolingOffMillis) {
         snapshotsData.value = fetchSnapshots()
-        searchResultsData.value = fetchSearchResults()
+        fetchSearchResults { searchResultsData.value = it }
     }
 
     private fun updateContentData() {
@@ -183,12 +182,22 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    private fun fetchSearchResults(): List<SearchResult> {
+    private var searchSubscription: Disposable? = null
+
+    private fun stopSearch() = with (searchSubscription) {
+        if (this != null && !isDisposed) dispose()
+    }
+
+    private fun fetchSearchResults(resultListener: (List<SearchResult>) -> Unit) {
         val searchText = inputStateData.value!!.searchViewText
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val sortingMethod = settingsData.value!!.sortingMethod
-        return SortingUtil.sortSearchResults(
-                searchUtil.searchText(searchText, filteredArtifactId), sortingMethod)
+        stopSearch()
+        searchSubscription = searchManager.searchText(searchText, filteredArtifactId)
+                .subscribeOn(uiScheduler)
+                .subscribe { searchResults ->
+                    resultListener.invoke(SortingUtil.sortSearchResults(searchResults, sortingMethod))
+                }
     }
 
     private fun fetchSnapshots(): List<Pair<Snapshot, Int>> {

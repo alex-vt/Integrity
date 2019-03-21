@@ -8,6 +8,7 @@ package com.alexvt.integrity.core.search
 
 import com.alexvt.integrity.core.util.Clearable
 import com.alexvt.integrity.lib.search.DataChunk
+import io.reactivex.Single
 
 /**
  * Manager of repository of text data chunks for search in.
@@ -34,12 +35,12 @@ interface SearchIndexRepository : Clearable {
     /**
      * Gets all data chunks text of which which contain the given text
      */
-    fun searchText(text: String): List<DataChunk>
+    fun searchText(text: String): Single<List<DataChunk>>
 
     /**
      * Gets all data chunks with the given artifact ID and text of which contains the given text
      */
-    fun searchText(text: String, artifactId: Long): List<DataChunk>
+    fun searchText(text: String, artifactId: Long): Single<List<DataChunk>>
 
     /**
      * Deletes all tags from database

@@ -15,7 +15,7 @@ import com.alexvt.integrity.core.jobs.ScheduledJobManager
 import com.alexvt.integrity.core.jobs.ScheduledJobsEnableReceiver
 import com.alexvt.integrity.core.log.LogEventReceiver
 import com.alexvt.integrity.core.log.LogRepository
-import com.alexvt.integrity.core.log.SimplePersistableLogRepository
+import com.alexvt.integrity.core.log.RoomLogRepository
 import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.core.metadata.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.operations.AndroidSnapshotOperationManager
@@ -101,7 +101,7 @@ class IntegrityCoreDependenciesModule {
     @Provides
     @Singleton
     fun provideLogRepository(context: Context): LogRepository
-            = SimplePersistableLogRepository(context)
+            = RoomLogRepository(context)
 
     @Provides
     @Singleton

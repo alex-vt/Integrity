@@ -10,13 +10,16 @@ import android.content.Context
 import com.alexvt.integrity.lib.metadata.EmptyCredentials
 import com.alexvt.integrity.lib.util.JsonSerializerUtil
 import com.alexvt.integrity.lib.metadata.Credentials
+import io.reactivex.Single
 
 /**
  * Stores credentials simply in Java objects
  * and persists them to Android SharedPreferences as JSON string.
  * todo secure credentials
  */
-class SimplePersistableCredentialsRepository(private val context: Context) : CredentialsRepository {
+class SimplePersistableCredentialsRepository(
+        private val context: Context
+) : CredentialsRepository {
 
     /**
      * A collection of folder locations and credentials
@@ -48,13 +51,13 @@ class SimplePersistableCredentialsRepository(private val context: Context) : Cre
         persistCredentials(context)
     }
 
-    override fun getCredentials(title: String): Credentials
+    override fun getCredentials(title: String?): Credentials
             = credentialsSet.items
             .firstOrNull { it.title == title }
             ?: EmptyCredentials()
 
-    override fun getCredentials(title: String, resultListener: (Credentials) -> Unit)
-            = resultListener.invoke(getCredentials(title))
+    override fun getCredentialsAsync(title: String?): Single<Credentials>
+            = Single.just(getCredentials(title))
 
     override fun removeCredentials(title: String) {
         credentialsSet.items.removeIf { it.title == title }

@@ -13,6 +13,7 @@ import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocation
 import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocationCredentials
 import com.alexvt.integrity.ui.ThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
+import io.reactivex.Scheduler
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -34,8 +35,9 @@ data class InputState(
 )
 
 class SambaDestinationViewModel @Inject constructor(
+        uiScheduler: Scheduler,
         override val settingsRepository: SettingsRepository,
-        val credentialsRepository: CredentialsRepository,
+        private val credentialsRepository: CredentialsRepository,
         @Named("editedSambaDestinationTitle") val editedDestinationTitle: String?,
         @Named("defaultSambaDestinationTitle") val defaultTitle: String
         ) : ThemedViewModel() {
@@ -45,6 +47,7 @@ class SambaDestinationViewModel @Inject constructor(
 
     // single events
     val navigationEventData = SingleLiveEvent<NavigationEvent>()
+    val userNameLoadedEventData = SingleLiveEvent<String>()
 
     init {
         // input state  pre-filled depending on if in edit mode
@@ -54,13 +57,24 @@ class SambaDestinationViewModel @Inject constructor(
             inputStateData.value = InputState(loading = true, title = folderLocation.title,
                     path = folderLocation.fullPath.removePrefix(pathPrefix),
                     user = "", password = "") // user has to input password again
-            credentialsRepository.getCredentials(editedDestinationTitle!!) {
-                val credentials = it as SambaFolderLocationCredentials
-                updateInputState(inputStateData.value!!.copy(loading = false, user = credentials.user))
-            }
         } else {
             inputStateData.value = InputState(loading = false, title = defaultTitle, path = "", user = "", password = "")
         }
+    }
+
+    private val credentialsSubscription = credentialsRepository
+            .getCredentialsAsync(editedDestinationTitle)
+            .subscribeOn(uiScheduler)
+            .subscribe { credentials ->
+                if (credentials is SambaFolderLocationCredentials) {
+                    updateInputState(inputStateData.value!!.copy(loading = false, user = credentials.user))
+                    userNameLoadedEventData.value = credentials.user
+                }
+            }
+
+    override fun onCleared() {
+        credentialsSubscription.dispose()
+        super.onCleared()
     }
 
     private fun updateInputState(inputState: InputState) {

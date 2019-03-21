@@ -15,8 +15,9 @@ import com.alexvt.integrity.lib.util.JsonSerializerUtil
 /**
  * Manager of repository of app log entries.
  */
-class SimplePersistableLogRepository(private val context: Context,
-       private val reactiveRequestPool: ReactiveRequestPool<List<LogEntry>> = ReactiveRequestPool()
+class SimplePersistableLogRepository(
+        private val context: Context,
+        private val reactiveRequestPool: ReactiveRequestPool<List<LogEntry>> = ReactiveRequestPool()
 ) : LogRepository {
 
     private data class Log(val entries: ArrayList<LogEntry> = arrayListOf()) // Log entry container

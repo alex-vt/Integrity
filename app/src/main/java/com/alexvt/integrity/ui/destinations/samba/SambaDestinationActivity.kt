@@ -8,6 +8,7 @@ package com.alexvt.integrity.ui.destinations.samba
 
 import android.os.Bundle
 import android.widget.Toast
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.alexvt.integrity.R
@@ -59,7 +60,10 @@ class SambaDestinationActivity : ThemedActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { vm.onNewPath(it.toString()) }
 
-        etUser.append(vm.inputStateData.value!!.user)
+        vm.userNameLoadedEventData.observe(this, Observer {
+            etUser.setText("")
+            etUser.append(vm.inputStateData.value!!.user)
+        })
         etUser.textChanges()
                 .debounce(20, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())

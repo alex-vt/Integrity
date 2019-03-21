@@ -8,6 +8,7 @@ package com.alexvt.integrity.core.credentials
 
 import com.alexvt.integrity.core.util.Clearable
 import com.alexvt.integrity.lib.metadata.Credentials
+import io.reactivex.Single
 
 /**
  * Manager of repository of credentials
@@ -22,12 +23,12 @@ interface CredentialsRepository : Clearable {
     /**
      * Gets credentials by the provided title. If none, returns empty ones.
      */
-    fun getCredentials(title: String): Credentials
+    fun getCredentials(title: String?): Credentials
 
     /**
      * Gets credentials by the provided title, async.
      */
-    fun getCredentials(title: String, resultListener: (Credentials) -> Unit)
+    fun getCredentialsAsync(title: String?): Single<Credentials>
 
     fun removeCredentials(title: String)
 

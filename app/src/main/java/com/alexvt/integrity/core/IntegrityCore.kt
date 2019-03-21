@@ -59,15 +59,16 @@ class IntegrityCore @Inject constructor(
     }
 
     private fun notifyAboutUnreadErrors(context: Context) {
-        val unreadErrors = logRepository.getUnreadErrors()
-        if (unreadErrors.isNotEmpty()) {
-            if (settingsRepository.get().notificationShowErrors) {
-                ErrorNotifier.notifyAboutErrors(context, unreadErrors)
+        logRepository.getUnreadErrors { unreadErrors ->
+            if (unreadErrors.isNotEmpty()) {
+                if (settingsRepository.get().notificationShowErrors) {
+                    ErrorNotifier.notifyAboutErrors(context, unreadErrors)
+                } else {
+                    ErrorNotifier.removeNotification(context)
+                }
             } else {
                 ErrorNotifier.removeNotification(context)
             }
-        } else {
-            ErrorNotifier.removeNotification(context)
         }
     }
 

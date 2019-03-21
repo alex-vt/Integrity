@@ -74,20 +74,20 @@ class SimplePersistableLogRepository(private val context: Context) : LogReposito
     /**
      * Gets log entries ordered by addition time descending.
      */
-    override fun getRecentEntries(limit: Int): List<LogEntry> {
-        return log.entries
+    override fun getRecentEntries(limit: Int, resultListener: (List<LogEntry>) -> Unit) {
+        return resultListener.invoke(log.entries
                 .sortedByDescending { it.orderId }
-                .take(limit)
+                .take(limit))
     }
 
     /**
      * Gets unread error and crash type log entries ordered by addition time descending.
      */
-    override fun getUnreadErrors(): List<LogEntry> {
-        return log.entries
+    override fun getUnreadErrors(resultListener: (List<LogEntry>) -> Unit) {
+        return resultListener.invoke(log.entries
                 .filter { !it.read }
                 .filter { it.type == LogEntryType.ERROR || it.type == LogEntryType.CRASH }
-                .sortedByDescending { it.orderId }
+                .sortedByDescending { it.orderId })
     }
 
     /**

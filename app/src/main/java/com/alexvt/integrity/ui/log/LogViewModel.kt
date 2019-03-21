@@ -32,9 +32,10 @@ class LogViewModel @Inject constructor(
     val navigationEventData = SingleLiveEvent<NavigationEvent>()
 
     init {
-        logData.value = logRepository.getRecentEntries(logEntriesLimit)
         logRepository.addChangesListener(this.toString()) {
-            logData.value = logRepository.getRecentEntries(logEntriesLimit)
+            logRepository.getRecentEntries(logEntriesLimit) {
+                logData.value = it
+            }
         }
         logOperationManager.markErrorsRead()
     }

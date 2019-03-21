@@ -140,9 +140,10 @@ class MainScreenViewModel @Inject constructor(
                 it to scheduledJobManager.getNextRunTimestamp(it) - System.currentTimeMillis()
             }
         }
-        logErrorCountData.value = logRepository.getUnreadErrors().count()
         logRepository.addChangesListener(this.toString()) {
-            logErrorCountData.value = logRepository.getUnreadErrors().count()
+            logRepository.getUnreadErrors {
+                logErrorCountData.value = it.count()
+            }
         }
 
         // version name, snapshot type component names  are static

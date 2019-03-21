@@ -33,12 +33,12 @@ interface LogRepository : Clearable {
     /**
      * Gets log entries ordered by time descending.
      */
-    fun getRecentEntries(limit: Int): List<LogEntry>
+    fun getRecentEntries(limit: Int, resultListener: (List<LogEntry>) -> Unit)
 
     /**
      * Gets unread error and crash type log entries ordered by time descending.
      */
-    fun getUnreadErrors(): List<LogEntry>
+    fun getUnreadErrors(resultListener: (List<LogEntry>) -> Unit)
 
     /**
      * Sets all log entries read.

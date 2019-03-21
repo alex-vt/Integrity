@@ -53,6 +53,9 @@ class SimplePersistableCredentialsRepository(private val context: Context) : Cre
             .firstOrNull { it.title == title }
             ?: EmptyCredentials()
 
+    override fun getCredentials(title: String, resultListener: (Credentials) -> Unit)
+            = resultListener.invoke(getCredentials(title))
+
     override fun removeCredentials(title: String) {
         credentialsSet.items.removeIf { it.title == title }
         persistCredentials(context)

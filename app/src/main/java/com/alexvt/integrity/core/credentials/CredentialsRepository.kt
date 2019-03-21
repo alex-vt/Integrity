@@ -24,6 +24,11 @@ interface CredentialsRepository : Clearable {
      */
     fun getCredentials(title: String): Credentials
 
+    /**
+     * Gets credentials by the provided title, async.
+     */
+    fun getCredentials(title: String, resultListener: (Credentials) -> Unit)
+
     fun removeCredentials(title: String)
 
     /**

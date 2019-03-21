@@ -26,6 +26,7 @@ enum class InputError {
 }
 
 data class InputState(
+        val loading: Boolean, // todo use in view
         val title: String,
         val path: String,
         val user: String,
@@ -47,15 +48,18 @@ class SambaDestinationViewModel @Inject constructor(
 
     init {
         // input state  pre-filled depending on if in edit mode
-        inputStateData.value = if (isEditMode()) {
+        if (isEditMode()) {
             val folderLocation = settingsRepository.getAllFolderLocations()
                     .first { it.title == editedDestinationTitle } as SambaFolderLocation
-            val credentials = credentialsRepository.getCredentials(editedDestinationTitle!!)
-                    as SambaFolderLocationCredentials
-            InputState(folderLocation.title, folderLocation.fullPath.removePrefix(pathPrefix),
-                    credentials.user, password = "") // user has to input it again
+            inputStateData.value = InputState(loading = true, title = folderLocation.title,
+                    path = folderLocation.fullPath.removePrefix(pathPrefix),
+                    user = "", password = "") // user has to input password again
+            credentialsRepository.getCredentials(editedDestinationTitle!!) {
+                val credentials = it as SambaFolderLocationCredentials
+                updateInputState(inputStateData.value!!.copy(loading = false, user = credentials.user))
+            }
         } else {
-            InputState(defaultTitle, path = "", user = "", password = "")
+            inputStateData.value = InputState(loading = false, title = defaultTitle, path = "", user = "", password = "")
         }
     }
 

@@ -23,12 +23,16 @@ interface LogRepository : Clearable {
     /**
      * Gets log entries ordered by time descending.
      */
-    fun getRecentEntries(limit: Int): Flowable<List<LogEntry>>
+    fun getRecentEntriesBlocking(limit: Int): List<LogEntry>
+
+    fun getRecentEntriesFlowable(limit: Int): Flowable<List<LogEntry>>
 
     /**
      * Gets unread error and crash type log entries ordered by time descending.
      */
-    fun getUnreadErrors(limit: Int): Flowable<List<LogEntry>>
+    fun getUnreadErrorsBlocking(limit: Int): List<LogEntry>
+
+    fun getUnreadErrorsFlowable(limit: Int): Flowable<List<LogEntry>>
 
     /**
      * Sets all log entries read.

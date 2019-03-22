@@ -23,12 +23,12 @@ interface CredentialsRepository : Clearable {
     /**
      * Gets credentials by the provided title. If none, returns empty ones.
      */
-    fun getCredentials(title: String?): Credentials
+    fun getCredentialsBlocking(title: String?): Credentials
 
     /**
      * Gets credentials by the provided title, async.
      */
-    fun getCredentialsAsync(title: String?): Single<Credentials>
+    fun getCredentialsSingle(title: String?): Single<Credentials>
 
     fun removeCredentials(title: String)
 

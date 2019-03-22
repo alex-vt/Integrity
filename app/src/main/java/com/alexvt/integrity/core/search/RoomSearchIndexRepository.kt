@@ -112,11 +112,11 @@ class RoomSearchIndexRepository(context: Context) : SearchIndexRepository {
         }
     }
 
-    override fun searchText(text: String): Single<List<DataChunk>> = db.dataChunkDao()
+    override fun searchTextSingle(text: String): Single<List<DataChunk>> = db.dataChunkDao()
             .searchText("%$text%")
             .map { it.map { EntityConverters.fromDbEntity(it) } }
 
-    override fun searchText(text: String, artifactId: Long): Single<List<DataChunk>> = db.dataChunkDao()
+    override fun searchTextSingle(text: String, artifactId: Long): Single<List<DataChunk>> = db.dataChunkDao()
             .searchText("%$text%", artifactId)
             .map { it.map { EntityConverters.fromDbEntity(it) } }
 

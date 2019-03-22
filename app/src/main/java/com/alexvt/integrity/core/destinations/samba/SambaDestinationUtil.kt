@@ -29,7 +29,7 @@ class SambaDestinationUtil : DestinationUtil<SambaFolderLocation> {
                               artifactId: Long, artifactAlias: String, date: String,
                               archiveFolderLocation: SambaFolderLocation) {
         val sambaFolderLocationCredentials = credentialsRepository
-                .getCredentials(archiveFolderLocation.title) as SambaFolderLocationCredentials
+                .getCredentialsBlocking(archiveFolderLocation.title) as SambaFolderLocationCredentials
         val sambaAuth = NtlmPasswordAuthentication(
                 null, sambaFolderLocationCredentials.user,
                 sambaFolderLocationCredentials.password)

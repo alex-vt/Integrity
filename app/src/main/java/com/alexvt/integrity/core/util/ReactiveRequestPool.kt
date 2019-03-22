@@ -7,56 +7,59 @@
 package com.alexvt.integrity.core.util
 
 import io.reactivex.Flowable
-import io.reactivex.processors.PublishProcessor
+import io.reactivex.processors.BehaviorProcessor
 
 /**
  * Manages reactive requests,
- * each of which has a Flowable that emits certain data computed by inputToOutput function
- * when emitForInput with inputData is called.
+ * each of which has a Flowable that emits certain data computed by dataSource function
+ * when emitCurrentData with is called.
  *
  *
  * Example of usage:
  *
  * 1. Create a request pool for your input type:
- * val reactiveRequestPool = ReactiveRequestPool<List<String>>()
+ * val reactiveRequestPool = ReactiveRequestPool()
  *
- * 2. Declare flowables with input to output functions:
- * val textCountFlowable: Flowable<Int> = reactiveRequestPool.add { it.size }
+ * 2. Declare flowables with dataSource functions:
+ * val listSizeFlowable: Flowable<Int> = reactiveRequestPool.add { myMutableList.size }
  *
- * 3. When you want to update your input data, call like this:
- * reactiveRequestPool.emitForInput(listOf("one", "two"))
+ * 3. When you want to emit current data from the dataSource, call like this:
+ * reactiveRequestPool.emitCurrentDataAll()
  *
- * 4. Subscribers of textCountFlowable will get the corresponding output data updates.
+ * 4. Subscribers of listSize will get the corresponding data updates.
+ * Note: when subscribing to a flowable, it will emit the dataSource result as the first value.
  */
 
-class ReactiveRequestPool<I> {
+class ReactiveRequestPool {
 
-    inner class ReactiveRequest<O>(
-            val publishProcessor: PublishProcessor<O> = PublishProcessor.create(),
-            private val inputToOutput: (I) -> O
+    inner class ReactiveRequest<D>(
+            val publishProcessor: BehaviorProcessor<D> = BehaviorProcessor.create(),
+            private val dataSource: () -> D
     ) {
-        fun emitForInput(inputData: I) {
-            android.util.Log.v("ReactiveRequestPool", "Emitting result of: $inputToOutput")
-            publishProcessor.onNext(inputToOutput.invoke(inputData))
+        fun emitCurrentData() {
+            android.util.Log.v("ReactiveRequestPool", "Emitting result of: $dataSource")
+            publishProcessor.onNext(dataSource.invoke())
         }
     }
 
     private var reactiveRequests: List<ReactiveRequest<out Any?>> = emptyList()
 
-    fun <O> add(inputToOutput: (I) -> O): Flowable<O> {
-        cleanupOldRequests()
-        val reactiveRequest: ReactiveRequest<O> = ReactiveRequest(PublishProcessor.create(), inputToOutput)
+    fun <O> add(outputSource: () -> O): Flowable<O> {
+        cleanupUnsubscribed()
+        val reactiveRequest: ReactiveRequest<O> = ReactiveRequest(BehaviorProcessor.create(), outputSource)
         reactiveRequests = reactiveRequests.plus(reactiveRequest)
+        reactiveRequest.emitCurrentData() // seeding the new flowable with the first value.
+        android.util.Log.v("ReactiveRequestPool", "Added request, total: ${reactiveRequests.size}")
         return reactiveRequest.publishProcessor
     }
 
-    fun emitForInput(inputData: I) {
-        cleanupOldRequests()
-        android.util.Log.v("ReactiveRequestPool", "Subscribers: ${reactiveRequests.size}")
-        reactiveRequests.forEach { it.emitForInput(inputData) }
+    fun emitCurrentDataAll() {
+        cleanupUnsubscribed()
+        reactiveRequests.forEach { it.emitCurrentData() }
+        android.util.Log.v("ReactiveRequestPool", "Emitted for all requests, total: ${reactiveRequests.size}")
     }
 
-    private fun cleanupOldRequests() {
+    private fun cleanupUnsubscribed() {
         reactiveRequests = reactiveRequests.filter { it.publishProcessor.hasSubscribers() }
     }
 }

@@ -34,7 +34,7 @@ class LogViewModel @Inject constructor(
     val navigationEventData = SingleLiveEvent<NavigationEvent>()
 
 
-    private val logSubscription = logRepository.getRecentEntries(logEntriesLimit)
+    private val logSubscription = logRepository.getRecentEntriesFlowable(logEntriesLimit)
             .observeOn(uiScheduler)
             .subscribe { logData.value = it }
 

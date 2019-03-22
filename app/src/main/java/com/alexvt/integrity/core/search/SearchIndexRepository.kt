@@ -35,12 +35,12 @@ interface SearchIndexRepository : Clearable {
     /**
      * Gets all data chunks text of which which contain the given text
      */
-    fun searchText(text: String): Single<List<DataChunk>>
+    fun searchTextSingle(text: String): Single<List<DataChunk>>
 
     /**
      * Gets all data chunks with the given artifact ID and text of which contains the given text
      */
-    fun searchText(text: String, artifactId: Long): Single<List<DataChunk>>
+    fun searchTextSingle(text: String, artifactId: Long): Single<List<DataChunk>>
 
     /**
      * Deletes all tags from database

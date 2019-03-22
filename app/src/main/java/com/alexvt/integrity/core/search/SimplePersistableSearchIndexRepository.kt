@@ -50,12 +50,12 @@ class SimplePersistableSearchIndexRepository(private val context: Context) : Sea
         persistAll(context)
     }
 
-    override fun searchText(text: String): Single<List<DataChunk>> = Single.just(
+    override fun searchTextSingle(text: String): Single<List<DataChunk>> = Single.just(
             allDataChunks.chunks
                     .filter { it.text.contains(text) }
     )
 
-    override fun searchText(text: String, artifactId: Long): Single<List<DataChunk>> = Single.just(
+    override fun searchTextSingle(text: String, artifactId: Long): Single<List<DataChunk>> = Single.just(
             allDataChunks.chunks
                     .filter { it.artifactId == artifactId && it.text.contains(text) }
     )

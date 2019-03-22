@@ -51,13 +51,13 @@ class SimplePersistableCredentialsRepository(
         persistCredentials(context)
     }
 
-    override fun getCredentials(title: String?): Credentials
+    override fun getCredentialsBlocking(title: String?): Credentials
             = credentialsSet.items
             .firstOrNull { it.title == title }
             ?: EmptyCredentials()
 
-    override fun getCredentialsAsync(title: String?): Single<Credentials>
-            = Single.just(getCredentials(title))
+    override fun getCredentialsSingle(title: String?): Single<Credentials>
+            = Single.just(getCredentialsBlocking(title))
 
     override fun removeCredentials(title: String) {
         credentialsSet.items.removeIf { it.title == title }

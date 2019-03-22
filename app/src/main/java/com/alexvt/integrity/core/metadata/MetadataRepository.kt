@@ -7,8 +7,9 @@
 package com.alexvt.integrity.core.metadata
 
 import com.alexvt.integrity.core.util.Clearable
-import com.alexvt.integrity.lib.metadata.MetadataCollection
 import com.alexvt.integrity.lib.metadata.Snapshot
+import io.reactivex.Flowable
+import io.reactivex.Single
 
 /**
  * Manager of repository of artifact and snapshot metadata stored in database.
@@ -16,17 +17,6 @@ import com.alexvt.integrity.lib.metadata.Snapshot
  * Note: Corresponding data in storage is not managed here.
  */
 interface MetadataRepository : Clearable {
-
-    /**
-     * Registers database contents changes listener with a tag.
-     * todo narrow down to tracking changes of subset of data
-     */
-    fun addChangesListener(changesListener: () -> Unit)
-
-    /**
-     * Removes database contents changes listener by a tag
-     */
-    fun removeChangesListener()
 
     /**
      * Writes snapshot metadata to database.
@@ -59,7 +49,9 @@ interface MetadataRepository : Clearable {
     /**
      * Returns list of all snapshots of metadata stored in database, for all artifacts.
      */
-    fun getAllArtifactMetadata(): List<Snapshot>
+    fun getAllArtifactMetadataBlocking(): List<Snapshot>
+
+    fun getAllArtifactMetadataFlowable(): Flowable<List<Snapshot>>
 
     /**
      * Returns list of the latest snapshots
@@ -68,22 +60,30 @@ interface MetadataRepository : Clearable {
      * If deprioritizeBlueprints is true and there are non-blueprint snapshots,
      * the latest of them will be used.
      */
-    fun getAllArtifactLatestMetadata(deprioritizeBlueprints: Boolean): List<Snapshot>
+    fun getAllArtifactLatestMetadataBlocking(deprioritizeBlueprints: Boolean): List<Snapshot>
+
+    fun getAllArtifactLatestMetadataFlowable(deprioritizeBlueprints: Boolean): Flowable<List<Snapshot>>
 
     /**
      * Returns artifact with all snapshots of metadata by given artifactId.
      */
-    fun getArtifactMetadata(artifactId: Long): List<Snapshot>
+    fun getArtifactMetadataBlocking(artifactId: Long): List<Snapshot>
+
+    fun getArtifactMetadataFlowable(artifactId: Long): Flowable<List<Snapshot>>
 
     /**
      * Returns snapshot of metadata by given artifactId and with the most recent date.
      */
-    fun getLatestSnapshotMetadata(artifactId: Long): Snapshot
+    fun getLatestSnapshotMetadataBlocking(artifactId: Long): Snapshot
+
+    fun getLatestSnapshotMetadataFlowable(artifactId: Long): Flowable<Snapshot>
 
     /**
      * Returns snapshot of metadata by given artifactId and date.
      */
-    fun getSnapshotMetadata(artifactId: Long, date: String): Snapshot
+    fun getSnapshotMetadataBlocking(artifactId: Long, date: String): Snapshot
+
+    fun getSnapshotMetadataFlowable(artifactId: Long, date: String): Flowable<Snapshot>
 
     /**
      * Removes snapshot metadata marked as blueprints for a given artifact.

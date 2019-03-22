@@ -63,7 +63,7 @@ class SambaDestinationViewModel @Inject constructor(
     }
 
     private val credentialsSubscription = credentialsRepository
-            .getCredentialsAsync(editedDestinationTitle)
+            .getCredentialsSingle(editedDestinationTitle)
             .subscribeOn(uiScheduler)
             .subscribe { credentials ->
                 if (credentials is SambaFolderLocationCredentials) {

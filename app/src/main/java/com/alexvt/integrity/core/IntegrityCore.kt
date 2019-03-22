@@ -6,6 +6,7 @@
 
 package com.alexvt.integrity.core
 
+import android.annotation.SuppressLint
 import android.content.Context
 import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.core.jobs.ScheduledJobManager
@@ -15,7 +16,6 @@ import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.core.notifications.DisabledScheduledJobsNotifier
 import com.alexvt.integrity.core.notifications.ErrorNotifier
 import com.alexvt.integrity.core.settings.SettingsRepository
-import io.reactivex.disposables.Disposable
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,33 +30,24 @@ class IntegrityCore @Inject constructor(
         private val settingsRepository: SettingsRepository,
         private val scheduledJobManager: ScheduledJobManager
 ) {
-    private lateinit var logUnreadErrorSubscription: Disposable
-
     /**
      * Should be called before using any other functions.
      */
     fun init() {
-        resetInProgressSnapshotStatuses() // if there are any in progress snapshots, they are rogue
-
         settingsRepository.addChangesListener(this.toString()) {
             notifyAboutDisabledScheduledJobs(context)
             scheduledJobManager.updateSchedule(context)
         }
 
-        val logErrorLimitToNotify = 1000
-        logUnreadErrorSubscription = logRepository.getUnreadErrors(logErrorLimitToNotify).subscribe {
-            unreadErrors -> notifyAboutUnreadErrors(unreadErrors, context)
-        }
+        watchAndNotifyAboutUnreadErrors()
+
+        resetInProgressSnapshotStatuses()
 
         Log(context, "IntegrityCore initialized").log()
     }
 
-    fun clear() {
-        logUnreadErrorSubscription.dispose()
-    }
-
     private fun resetInProgressSnapshotStatuses() {
-        metadataRepository.getAllArtifactMetadata()
+        metadataRepository.getAllArtifactMetadataBlocking()
                 .filter { it.status == SnapshotStatus.IN_PROGRESS }
                 .forEach {
                     metadataRepository.removeSnapshotMetadata(it.artifactId, it.date)
@@ -65,10 +56,19 @@ class IntegrityCore @Inject constructor(
                 }
     }
 
-    private fun notifyAboutUnreadErrors(unreadErrors: List<LogEntry>, context: Context) {
-        if (unreadErrors.isNotEmpty()) {
+    @SuppressLint("CheckResult")
+    private fun watchAndNotifyAboutUnreadErrors() {
+        val logErrorLimitToNotify = 1000
+        logRepository.getUnreadErrorsFlowable(logErrorLimitToNotify)
+                .subscribe { unreadErrorLogEntries ->
+                    notifyAboutUnreadErrors(unreadErrorLogEntries, context)
+                }
+    }
+
+    private fun notifyAboutUnreadErrors(unreadErrorLogEntries: List<LogEntry>, context: Context) {
+        if (unreadErrorLogEntries.isNotEmpty()) {
             if (settingsRepository.get().notificationShowErrors) {
-                ErrorNotifier.notifyAboutErrors(context, unreadErrors)
+                ErrorNotifier.notifyAboutErrors(context, unreadErrorLogEntries)
             } else {
                 ErrorNotifier.removeNotification(context)
             }

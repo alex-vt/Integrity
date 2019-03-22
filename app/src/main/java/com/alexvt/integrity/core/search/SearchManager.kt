@@ -41,9 +41,9 @@ class SearchManager @Inject constructor(private val metadataRepository: Metadata
     private fun searchTextIfBigEnough(searchedText: String, artifactId: Long?) =
             if (isBigEnough(searchedText)) {
                 if (artifactId != null) {
-                    searchIndexRepository.searchText(searchedText, artifactId)
+                    searchIndexRepository.searchTextSingle(searchedText, artifactId)
                 } else {
-                    searchIndexRepository.searchText(searchedText)
+                    searchIndexRepository.searchTextSingle(searchedText)
                 }
             } else {
                 Single.just(emptyList())
@@ -53,7 +53,7 @@ class SearchManager @Inject constructor(private val metadataRepository: Metadata
             = Pattern.quote(searchedText).toRegex().findAll(text).map { it.range }
 
     private fun getSearchResultTitle(chunk: DataChunk) = metadataRepository
-            .getSnapshotMetadata(chunk.artifactId, chunk.date).title
+            .getSnapshotMetadataBlocking(chunk.artifactId, chunk.date).title
 
     private fun truncateTextRange(text: String, range: IntRange): Pair<String, IntRange> {
         val maxMargin = 100

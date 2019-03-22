@@ -16,7 +16,6 @@ import io.reactivex.Flowable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Manager of repository of app log entries, using Room.
@@ -83,12 +82,12 @@ class RoomLogRepository(context: Context) : LogRepository {
         suspend fun addEntry(logEntry: DbLogEntry)
 
         @Query("SELECT * FROM dblogentry ORDER BY orderId DESC LIMIT :limit")
-        fun getRecentEntries(limit: Int): Flowable<List<DbLogEntry>>
+        fun getRecentEntriesFlowable(limit: Int): Flowable<List<DbLogEntry>>
 
         @Query("SELECT * FROM dblogentry WHERE read = 0 " +
                 "AND type IN (\'${LogEntryType.ERROR}\', \'${LogEntryType.CRASH}\') " +
                 "ORDER BY orderId DESC LIMIT :limit")
-        fun getUnreadErrors(limit: Int): Flowable<List<DbLogEntry>>
+        fun getUnreadErrorsFlowable(limit: Int): Flowable<List<DbLogEntry>>
 
         @Query("UPDATE dblogentry SET read = 1 WHERE read = 0")
         suspend fun markAllRead()
@@ -117,16 +116,24 @@ class RoomLogRepository(context: Context) : LogRepository {
     /**
      * Gets log entries ordered by addition time descending.
      */
-    override fun getRecentEntries(limit: Int): Flowable<List<LogEntry>> = db.logEntryDao()
-            .getRecentEntries(limit)
+    override fun getRecentEntriesFlowable(limit: Int): Flowable<List<LogEntry>> = db.logEntryDao()
+            .getRecentEntriesFlowable(limit)
             .map { it.map { EntityConverters.fromDbEntity(it) } }
+
+    override fun getRecentEntriesBlocking(limit: Int): List<LogEntry>
+            = getRecentEntriesFlowable(limit)
+            .blockingFirst()
 
     /**
      * Gets unread error and crash type log entries ordered by addition time descending.
      */
-    override fun getUnreadErrors(limit: Int): Flowable<List<LogEntry>> = db.logEntryDao()
-            .getUnreadErrors(limit)
+    override fun getUnreadErrorsFlowable(limit: Int): Flowable<List<LogEntry>> = db.logEntryDao()
+            .getUnreadErrorsFlowable(limit)
             .map { it.map { EntityConverters.fromDbEntity(it) } }
+
+    override fun getUnreadErrorsBlocking(limit: Int): List<LogEntry>
+            = getUnreadErrorsFlowable(limit)
+            .blockingFirst()
 
     /**
      * Sets all log entries read.

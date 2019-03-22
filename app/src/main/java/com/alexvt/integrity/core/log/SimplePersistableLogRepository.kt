@@ -17,7 +17,7 @@ import com.alexvt.integrity.lib.util.JsonSerializerUtil
  */
 class SimplePersistableLogRepository(
         private val context: Context,
-        private val reactiveRequestPool: ReactiveRequestPool<List<LogEntry>> = ReactiveRequestPool()
+        private val reactiveRequests: ReactiveRequestPool = ReactiveRequestPool()
 ) : LogRepository {
 
     private data class Log(val entries: ArrayList<LogEntry> = arrayListOf()) // Log entry container
@@ -39,16 +39,22 @@ class SimplePersistableLogRepository(
         }
     }
 
-    override fun getRecentEntries(limit: Int) = reactiveRequestPool.add {
-        it.sortedByDescending { it.orderId }
-                .take(limit)
+    override fun getRecentEntriesBlocking(limit: Int)
+            = log.entries.sortedByDescending { it.orderId }
+            .take(limit)
+
+    override fun getRecentEntriesFlowable(limit: Int) = reactiveRequests.add {
+        getRecentEntriesBlocking(limit)
     }
 
-    override fun getUnreadErrors(limit: Int) = reactiveRequestPool.add {
-        it.filter { !it.read }
-                .filter { it.type == LogEntryType.ERROR || it.type == LogEntryType.CRASH }
-                .sortedByDescending { it.orderId }
-                .take(limit)
+    override fun getUnreadErrorsBlocking(limit: Int): List<LogEntry>
+            = log.entries.filter { !it.read }
+            .filter { it.type == LogEntryType.ERROR || it.type == LogEntryType.CRASH }
+            .sortedByDescending { it.orderId }
+            .take(limit)
+
+    override fun getUnreadErrorsFlowable(limit: Int) = reactiveRequests.add {
+        getUnreadErrorsBlocking(limit)
     }
 
     /**
@@ -83,7 +89,7 @@ class SimplePersistableLogRepository(
      * Should be called after every metadata modification.
      */
     @Synchronized private fun saveChanges(context: Context) {
-        reactiveRequestPool.emitForInput(log.entries)
+        reactiveRequests.emitCurrentDataAll()
         val logJson = JsonSerializerUtil.toJson(log)
         persistJsonToStorage(context, logJson)
     }

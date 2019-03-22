@@ -8,20 +8,22 @@ package com.alexvt.integrity.core.metadata
 
 import android.content.Context
 import com.alexvt.integrity.core.operations.HashUtil
+import com.alexvt.integrity.core.util.ReactiveRequestPool
 import com.alexvt.integrity.lib.metadata.MetadataCollection
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotCompareUtil
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.lib.util.JsonSerializerUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import io.reactivex.Flowable
 
 /**
  * Stores metadata simply in Java objects and persists them to Android SharedPreferences
  * as JSON string.
  */
-class SimplePersistableMetadataRepository(private val context: Context): MetadataRepository {
+class SimplePersistableMetadataRepository(
+        private val context: Context,
+        private val reactiveRequests: ReactiveRequestPool = ReactiveRequestPool()
+): MetadataRepository {
 
     private var allMetadata: MetadataCollection
 
@@ -42,30 +44,6 @@ class SimplePersistableMetadataRepository(private val context: Context): Metadat
         }
     }
 
-    private var changesListenerMap: Map<String, (() -> Unit)> = emptyMap()
-
-    /**
-     * Registers database contents changes listener with a tag.
-     */
-    override fun addChangesListener(changesListener: () -> Unit) {
-        changesListenerMap = changesListenerMap.plus(Pair(context.toString(), changesListener))
-        invokeChangesListeners()
-    }
-
-    /**
-     * Removes database contents changes listener by a tag
-     */
-    override fun removeChangesListener() {
-        changesListenerMap = changesListenerMap.minus(context.toString())
-    }
-
-    private fun invokeChangesListeners() {
-        GlobalScope.launch (Dispatchers.Main) {
-            changesListenerMap.forEach {
-                it.value.invoke()
-            }
-        }
-    }
 
     override fun addSnapshotMetadata(snapshot: Snapshot) {
         allMetadata.snapshots.add(snapshot)
@@ -85,9 +63,14 @@ class SimplePersistableMetadataRepository(private val context: Context): Metadat
         saveChanges(context)
     }
 
-    override fun getAllArtifactMetadata() = allMetadata.snapshots
+    override fun getAllArtifactMetadataBlocking(): List<Snapshot>
+            = allMetadata.snapshots
 
-    override fun getAllArtifactLatestMetadata(deprioritizeBlueprints: Boolean): List<Snapshot> {
+    override fun getAllArtifactMetadataFlowable(): Flowable<List<Snapshot>> = reactiveRequests.add {
+        getAllArtifactMetadataBlocking()
+    }
+
+    override fun getAllArtifactLatestMetadataBlocking(deprioritizeBlueprints: Boolean): List<Snapshot> {
         val snapshotComparator = if (deprioritizeBlueprints) {
             SnapshotCompareUtil.blueprintLowPriorityComparator.thenByDescending { it.date }
         } else {
@@ -101,21 +84,41 @@ class SimplePersistableMetadataRepository(private val context: Context): Metadat
                 .sortedByDescending { it.date }
     }
 
-    override fun getArtifactMetadata(artifactId: Long)
+    override fun getAllArtifactLatestMetadataFlowable(deprioritizeBlueprints: Boolean
+    ): Flowable<List<Snapshot>> = reactiveRequests.add {
+        getAllArtifactLatestMetadataBlocking(deprioritizeBlueprints)
+    }
+
+    override fun getArtifactMetadataBlocking(artifactId: Long)
             = allMetadata.snapshots
             .filter { it.artifactId == artifactId }
             .sortedByDescending { it.date }
 
-    override fun getLatestSnapshotMetadata(artifactId: Long): Snapshot {
+    override fun getArtifactMetadataFlowable(artifactId: Long
+    ): Flowable<List<Snapshot>> = reactiveRequests.add {
+        getArtifactMetadataBlocking(artifactId)
+    }
+
+    override fun getLatestSnapshotMetadataBlocking(artifactId: Long): Snapshot {
         return allMetadata.snapshots
                 .filter { it.artifactId == artifactId }
                 .sortedByDescending { it.date }
                 .first()
     }
 
-    override fun getSnapshotMetadata(artifactId: Long, date: String): Snapshot {
+    override fun getLatestSnapshotMetadataFlowable(artifactId: Long
+    ): Flowable<Snapshot> = reactiveRequests.add {
+        getLatestSnapshotMetadataBlocking(artifactId)
+    }
+
+    override fun getSnapshotMetadataBlocking(artifactId: Long, date: String): Snapshot {
         return allMetadata.snapshots
                 .first { it.artifactId == artifactId && it.date == date }
+    }
+
+    override fun getSnapshotMetadataFlowable(artifactId: Long, date: String
+    ): Flowable<Snapshot> = reactiveRequests.add {
+        getSnapshotMetadataBlocking(artifactId, date)
     }
 
     override fun clear() {
@@ -137,7 +140,7 @@ class SimplePersistableMetadataRepository(private val context: Context): Metadat
      * Should be called after every metadata modification.
      */
     @Synchronized private fun saveChanges(context: Context) {
-        invokeChangesListeners()
+        reactiveRequests.emitCurrentDataAll()
         val fullMetadataJson = JsonSerializerUtil.toJson(allMetadata)
         persistJsonToStorage(context, fullMetadataJson)
     }

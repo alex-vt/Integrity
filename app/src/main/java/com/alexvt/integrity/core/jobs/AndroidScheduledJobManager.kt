@@ -84,7 +84,7 @@ class AndroidScheduledJobManager @Inject constructor(
      * Sorted by time remaining until job starts.
      */
     private fun getScheduledJobs() = if (settingsRepository.get().jobsEnableScheduled) {
-        metadataRepository.getAllArtifactLatestMetadata(false)
+        metadataRepository.getAllArtifactLatestMetadataBlocking(false)
                 .filter { it.downloadSchedule.periodSeconds > 0L } // todo also resume jobs interrupted not by user
                 .sortedBy { getNextRunTimestamp(it) }
     } else {
@@ -130,7 +130,7 @@ class AndroidScheduledJobManager @Inject constructor(
 
             // Starting creating snapshot async. Use RunningJobManager to get status
 
-            val latestSnapshot = metadataRepository.getSnapshotMetadata(artifactId, date)
+            val latestSnapshot = metadataRepository.getSnapshotMetadataBlocking(artifactId, date)
             snapshotOperationManager.saveSnapshot( // todo pass in constructor
                     latestSnapshot.copy(status = SnapshotStatus.IN_PROGRESS))
 

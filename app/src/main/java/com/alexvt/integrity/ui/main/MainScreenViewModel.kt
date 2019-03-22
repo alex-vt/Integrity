@@ -107,7 +107,7 @@ class MainScreenViewModel @Inject constructor(
     val navigationEventData = SingleLiveEvent<NavigationEvent>()
 
     private val logErrorLimitToNotify = 1000
-    private val errorNotifySubscription = logRepository.getUnreadErrors(logErrorLimitToNotify)
+    private val errorNotifySubscription = logRepository.getUnreadErrorsFlowable(logErrorLimitToNotify)
             .observeOn(uiScheduler)
             .subscribe { unreadErrors -> logErrorCountData.value = unreadErrors.count() }
 
@@ -135,13 +135,13 @@ class MainScreenViewModel @Inject constructor(
         runningJobIdsData.value = emptyList()
         IntegrityLib.runningJobManager.addJobListListener(this.toString()) {
             runningJobIdsData.value = it.map {
-                metadataRepository.getSnapshotMetadata(it.first, it.second)
+                metadataRepository.getSnapshotMetadataBlocking(it.first, it.second)
             }
         }
         scheduledJobIdsData.value = emptyList()
         scheduledJobManager.addScheduledJobsListener(this.toString()) {
             scheduledJobIdsData.value = it.map {
-                metadataRepository.getSnapshotMetadata(it.first, it.second)
+                metadataRepository.getSnapshotMetadataBlocking(it.first, it.second)
             }.map {
                 it to scheduledJobManager.getNextRunTimestamp(it) - System.currentTimeMillis()
             }
@@ -205,8 +205,8 @@ class MainScreenViewModel @Inject constructor(
     private fun fetchSnapshots(): List<Pair<Snapshot, Int>> {
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val snapshots = SortingUtil.sortSnapshots(when (filteredArtifactId) {
-            null -> metadataRepository.getAllArtifactLatestMetadata(true)
-            else -> metadataRepository.getArtifactMetadata(filteredArtifactId)
+            null -> metadataRepository.getAllArtifactLatestMetadataBlocking(true)
+            else -> metadataRepository.getArtifactMetadataBlocking(filteredArtifactId)
         }, getSortingMethod())
         return snapshots.map { Pair(it, getSnapshotCount(it.artifactId)) }.toList()
     }
@@ -222,7 +222,7 @@ class MainScreenViewModel @Inject constructor(
     }
 
     private fun getSnapshotCount(artifactId: Long) = metadataRepository
-            .getArtifactMetadata(artifactId).count()
+            .getArtifactMetadataBlocking(artifactId).count()
 
 
 
@@ -258,7 +258,7 @@ class MainScreenViewModel @Inject constructor(
     fun computeArtifactFilterTitle(): String {
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val title = if (filteredArtifactId != null) {
-            metadataRepository.getLatestSnapshotMetadata(filteredArtifactId).title
+            metadataRepository.getLatestSnapshotMetadataBlocking(filteredArtifactId).title
         } else {
             ""
         }
@@ -280,7 +280,7 @@ class MainScreenViewModel @Inject constructor(
     }
 
     private fun viewRunningJobOrOpenSnapshot(artifactId: Long, date: String) {
-        val snapshot = metadataRepository.getSnapshotMetadata(artifactId, date)
+        val snapshot = metadataRepository.getSnapshotMetadataBlocking(artifactId, date)
         if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
             viewRunningJobDialog(artifactId, date)
             return
@@ -301,7 +301,7 @@ class MainScreenViewModel @Inject constructor(
     }
     
     private fun getCompleteSnapshotDatesOrNull(artifactId: Long) = metadataRepository
-            .getArtifactMetadata(artifactId)
+            .getArtifactMetadataBlocking(artifactId)
             .filter { it.status == SnapshotStatus.COMPLETE }
             .map { it.date }
             .reversed() // in ascending order
@@ -309,7 +309,7 @@ class MainScreenViewModel @Inject constructor(
 
 
     private fun viewRunningJobDialog(artifactId: Long, date: String) {
-        val snapshot = metadataRepository.getSnapshotMetadata(artifactId, date)
+        val snapshot = metadataRepository.getSnapshotMetadataBlocking(artifactId, date)
         if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
             updateInputState(inputStateData.value!!.copy(jobProgressArtifactId = artifactId,
                     jobProgressDate = date, jobProgressTitle = snapshot.title))
@@ -408,7 +408,7 @@ class MainScreenViewModel @Inject constructor(
     }
 
     private fun openAddSnapshotOfArtifact(artifactId: Long) {
-        val snapshot = metadataRepository.getLatestSnapshotMetadata(artifactId)
+        val snapshot = metadataRepository.getLatestSnapshotMetadataBlocking(artifactId)
         val dataType = dataTypeRepository.getDataType(snapshot.dataTypeClassName)
         navigationEventData.value = NavigationEvent(
                 targetPackage = dataType.packageName,
@@ -505,7 +505,7 @@ class MainScreenViewModel @Inject constructor(
         val isSaving = snapshotOperationManager.saveSnapshot(snapshot)
         if (isSaving) {
             val snapshotBlueprint = metadataRepository
-                    .getLatestSnapshotMetadata(snapshot.artifactId)
+                    .getLatestSnapshotMetadataBlocking(snapshot.artifactId)
             viewRunningJobDialog(snapshotBlueprint.artifactId, snapshotBlueprint.date)
         }
     }

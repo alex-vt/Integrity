@@ -56,7 +56,7 @@ class AndroidSnapshotOperationManager @Inject constructor(
         if (snapshot.status == SnapshotStatus.IN_PROGRESS
                 || snapshot.status == SnapshotStatus.INCOMPLETE) {
             val snapshotBlueprint = metadataRepository
-                    .getLatestSnapshotMetadata(snapshot.artifactId)
+                    .getLatestSnapshotMetadataBlocking(snapshot.artifactId)
             if (deviceStateAllowsDownload(snapshot)) {
                 downloadFromBlueprint(snapshotBlueprint)
                 return true
@@ -69,7 +69,7 @@ class AndroidSnapshotOperationManager @Inject constructor(
      * Cancels long running job if it's running. Metadata status changes to Incomplete.
      */
     override fun cancelSnapshotCreation(artifactId: Long, date: String) {
-        val snapshotInProgress = metadataRepository.getSnapshotMetadata(artifactId,
+        val snapshotInProgress = metadataRepository.getSnapshotMetadataBlocking(artifactId,
                 date)
         SnapshotDownloadCancelRequest().send(context, getDataFolderPath(),
                 snapshotInProgress)
@@ -191,7 +191,7 @@ class AndroidSnapshotOperationManager @Inject constructor(
 
         override fun onReceive(context: Context, intent: Intent) {
             AndroidInjection.inject(this, context)
-            val snapshot = metadataRepository.getSnapshotMetadata(
+            val snapshot = metadataRepository.getSnapshotMetadataBlocking(
                     IntentUtil.getArtifactId(intent), IntentUtil.getDate(intent))
             if (IntentUtil.isDownloaded(intent)) {
                 GlobalScope.launch(Dispatchers.IO) {

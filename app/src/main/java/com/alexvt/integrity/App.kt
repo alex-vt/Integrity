@@ -17,10 +17,12 @@ import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.util.ThemeUtil
 import com.alexvt.integrity.lib.log.Log
 import com.alexvt.integrity.lib.util.ThemeColors
+import dagger.Lazy
 import dagger.android.*
 import dagger.android.support.HasSupportFragmentInjector
 import java.lang.RuntimeException
 import javax.inject.Inject
+import kotlin.concurrent.thread
 
 
 class App : Application(), HasActivityInjector, HasSupportFragmentInjector, HasBroadcastReceiverInjector {
@@ -42,7 +44,7 @@ class App : Application(), HasActivityInjector, HasSupportFragmentInjector, HasB
 
 
     @Inject
-    lateinit var integrityCore: IntegrityCore
+    lateinit var integrityCore: Lazy<IntegrityCore>
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
@@ -62,7 +64,7 @@ class App : Application(), HasActivityInjector, HasSupportFragmentInjector, HasB
                 .inject(this)
 
         try {
-            integrityCore.init()
+            thread { integrityCore.get().init() }
             ThemeUtil.initThemeSupport(this)
             ThemeUtil.applyTheme(with(settingsRepository.get()) {
                 ThemeColors(colorBackground, colorPrimary, colorAccent)

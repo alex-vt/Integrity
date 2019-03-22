@@ -21,8 +21,8 @@ import com.alexvt.integrity.core.metadata.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.operations.AndroidSnapshotOperationManager
 import com.alexvt.integrity.core.operations.LogOperationManager
 import com.alexvt.integrity.core.operations.SnapshotOperationManager
+import com.alexvt.integrity.core.search.RoomSearchIndexRepository
 import com.alexvt.integrity.core.search.SearchIndexRepository
-import com.alexvt.integrity.core.search.SimplePersistableSearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.core.settings.SimplePersistableSettingsRepository
 import com.alexvt.integrity.core.types.AndroidDataTypeRepository
@@ -98,7 +98,7 @@ class IntegrityCoreDependenciesModule {
     @Provides
     @Singleton
     fun provideSearchIndexRepository(context: Context): SearchIndexRepository
-            = SimplePersistableSearchIndexRepository(context)
+            = RoomSearchIndexRepository(context)
 
     @Provides
     @Singleton

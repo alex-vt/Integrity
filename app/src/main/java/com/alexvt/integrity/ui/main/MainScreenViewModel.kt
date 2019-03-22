@@ -27,6 +27,7 @@ import com.alexvt.integrity.ui.ThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import io.reactivex.Scheduler
 import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -194,7 +195,8 @@ class MainScreenViewModel @Inject constructor(
         val sortingMethod = settingsData.value!!.sortingMethod
         stopSearch()
         searchSubscription = searchManager.searchText(searchText, filteredArtifactId)
-                .subscribeOn(uiScheduler)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(uiScheduler)
                 .subscribe { searchResults ->
                     resultListener.invoke(SortingUtil.sortSearchResults(searchResults, sortingMethod))
                 }

@@ -27,8 +27,8 @@ data class IntegrityAppSettings(
         val sortingMethod: String = SortingMethod.NEW_FIRST,
         val fasterSearchInputs: Boolean = false,
         val dataFolderPath: String = "Integrity",
-        val dataTags: ArrayList<Tag> = arrayListOf(),
-        val dataFolderLocations: ArrayList<FolderLocation> = arrayListOf(),
+        val dataTags: List<Tag> = emptyList(),
+        val dataFolderLocations: List<FolderLocation> = emptyList(),
         val notificationShowErrors: Boolean = true,
         val notificationShowDisabledScheduled: Boolean = true
 ) : Serializable

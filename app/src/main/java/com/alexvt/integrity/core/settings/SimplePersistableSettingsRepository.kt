@@ -8,9 +8,11 @@ package com.alexvt.integrity.core.settings
 
 import android.content.Context
 import com.alexvt.integrity.lib.destinations.local.LocalFolderLocation
-import com.alexvt.integrity.lib.util.JsonSerializerUtil
+import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocation
 import com.alexvt.integrity.lib.metadata.FolderLocation
 import com.alexvt.integrity.lib.metadata.Tag
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -27,10 +29,19 @@ class SimplePersistableSettingsRepository(private val context: Context) : Settin
     private val preferencesName = "persisted_$TAG"
     private val preferenceKey = "${TAG}_json"
 
+    private val timestamp = System.currentTimeMillis()
+    private val moshiJsonAdapter = Moshi.Builder()
+            .add(PolymorphicJsonAdapterFactory.of(FolderLocation::class.java, "FolderLocation")
+                    .withSubtype(LocalFolderLocation::class.java, "LocalFolderLocation")
+                    .withSubtype(SambaFolderLocation::class.java, "SambaFolderLocation")
+            ).build().adapter(IntegrityAppSettings::class.java)
+
     init {
         val logJson = readJsonFromStorage(context)
         if (logJson != null) {
-            integrityAppSettings = JsonSerializerUtil.fromJson(logJson, IntegrityAppSettings::class.java)
+            integrityAppSettings = moshiJsonAdapter.fromJson(logJson)!!
+            android.util.Log.v(TAG, "Moshi adapter + deserialization took "
+                    + (System.currentTimeMillis() - timestamp) + " millis")
         } else {
             integrityAppSettings = getDefaultSettings()
             saveChanges(context)
@@ -89,13 +100,13 @@ class SimplePersistableSettingsRepository(private val context: Context) : Settin
 
     override fun addTag(tag: Tag) {
         val settings = get()
-        settings.dataTags.add(tag)
-        set(settings)
+        set(settings.copy(dataTags = settings.dataTags.plus(tag)))
     }
 
     override fun removeTag(name: String) {
         val settings = get()
-        settings.dataTags.removeIf { it.text == name }
+        set(settings.copy(dataTags = settings.dataTags
+                .minus(settings.dataTags.first { it.text == name })))
         set(settings)
     }
 
@@ -103,16 +114,13 @@ class SimplePersistableSettingsRepository(private val context: Context) : Settin
 
     override fun clearTags() {
         val settings = get()
-        settings.dataTags.clear()
-        set(settings)
+        set(settings.copy(dataTags = emptyList()))
     }
 
 
     override fun addFolderLocation(folderLocation: FolderLocation): String {
         val settings = get()
-        settings.dataFolderLocations.add(folderLocation)
-        set(settings)
-
+        set(settings.copy(dataFolderLocations = settings.dataFolderLocations.plus(folderLocation)))
         return folderLocation.title
     }
 
@@ -122,13 +130,14 @@ class SimplePersistableSettingsRepository(private val context: Context) : Settin
 
     override fun removeFolderLocation(title: String) {
         val settings = get()
-        settings.dataFolderLocations.removeIf { it.title == title }
+        set(settings.copy(dataFolderLocations = settings.dataFolderLocations
+                .minus(settings.dataFolderLocations.first { it.title == title })))
         set(settings)
     }
 
     override fun clearFolderLocations() {
         val settings = get()
-        settings.dataFolderLocations.clear()
+        set(settings.copy(dataFolderLocations = emptyList()))
         set(settings)
     }
 
@@ -140,7 +149,7 @@ class SimplePersistableSettingsRepository(private val context: Context) : Settin
      */
     @Synchronized private fun saveChanges(context: Context) {
         invokeChangesListeners()
-        val settingsJson = JsonSerializerUtil.toJson(integrityAppSettings)
+        val settingsJson = moshiJsonAdapter.toJson(integrityAppSettings)
         persistJsonToStorage(context, settingsJson) // todo listener
     }
 
@@ -151,7 +160,7 @@ class SimplePersistableSettingsRepository(private val context: Context) : Settin
             = getSharedPreferences(context).getString(preferenceKey, null)
 
     private fun persistJsonToStorage(context: Context, value: String)
-            = getSharedPreferences(context).edit().putString(preferenceKey, value).commit()
+            = getSharedPreferences(context).edit().putString(preferenceKey, value).apply()
 
     private fun getSharedPreferences(context: Context) =
             context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)

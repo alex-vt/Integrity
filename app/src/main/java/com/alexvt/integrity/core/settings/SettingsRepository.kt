@@ -12,6 +12,8 @@ import com.alexvt.integrity.lib.metadata.Tag
 
 /**
  * Manager of repository of app settings (singleton).
+ *
+ * Settings have small size, high availability and can be accessed synchronously.
  */
 interface SettingsRepository : Clearable {
 

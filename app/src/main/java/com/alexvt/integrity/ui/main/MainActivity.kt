@@ -254,22 +254,22 @@ class MainActivity : ThemedActivity() {
             updateScheduledJobsInDrawer()
             updateScheduledJobsSwitch()
         })
-        vm.runningJobIdsData.observe(this, androidx.lifecycle.Observer {
+        vm.runningJobSnapshotsData.observe(this, androidx.lifecycle.Observer {
             updateRunningJobsInDrawer()
         })
-        vm.scheduledJobIdsData.observe(this, androidx.lifecycle.Observer {
+        vm.scheduledJobSnapshotsData.observe(this, androidx.lifecycle.Observer {
             updateScheduledJobsInDrawer()
         })
     }
 
     private fun updateRunningJobsInDrawer() {
-        updateJobsInDrawer(vm.runningJobIdsData.value!!.map {
+        updateJobsInDrawer(vm.runningJobSnapshotsData.value!!.map {
             getRunningJobDrawerItem(it)
         }, 1L, "Running now", "No running jobs")
     }
 
     private fun updateScheduledJobsInDrawer() {
-        updateJobsInDrawer(vm.scheduledJobIdsData.value!!.map {
+        updateJobsInDrawer(vm.scheduledJobSnapshotsData.value!!.map {
             getScheduledJobDrawerItem(it.first, it.second)
         }, 2L, "Up next", "No scheduled jobs")
     }
@@ -393,7 +393,7 @@ class MainActivity : ThemedActivity() {
 
             rvSnapshotList.visibility = if (searching) View.GONE else View.VISIBLE
             rvSearchResults.visibility = if (searching) View.VISIBLE else View.GONE
-            tvFilteredArtifactTitle.text = vm.computeArtifactFilterTitle()
+            vm.computeArtifactFilterTitle { tvFilteredArtifactTitle.text }
             llSorting.visibility = if (filterArtifact || searching) View.VISIBLE else View.GONE
             llFilteredArtifact.visibility = if (filterArtifact) View.VISIBLE else View.GONE
 

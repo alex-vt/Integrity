@@ -27,6 +27,10 @@ import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import io.reactivex.Scheduler
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -93,8 +97,8 @@ class MainScreenViewModel @Inject constructor(
     // primary
     val inputStateData = MutableLiveData<MainScreenInputState>()
     val settingsData = MutableLiveData<IntegrityAppSettings>()
-    val runningJobIdsData = MutableLiveData<List<Snapshot>>()
-    val scheduledJobIdsData = MutableLiveData<List<Pair<Snapshot, Long>>>()
+    val runningJobSnapshotsData = MutableLiveData<List<Snapshot>>()
+    val scheduledJobSnapshotsData = MutableLiveData<List<Pair<Snapshot, Long>>>()
     val logErrorCountData = MutableLiveData<Int>()
     val typeNameData = MutableLiveData<List<String>>()
 
@@ -135,18 +139,30 @@ class MainScreenViewModel @Inject constructor(
                         recreate = true)
             }
         }
-        runningJobIdsData.value = emptyList()
+        runningJobSnapshotsData.value = emptyList()
         IntegrityLib.runningJobManager.addJobListListener(this.toString()) {
-            runningJobIdsData.value = it.map {
-                metadataRepository.getSnapshotMetadataBlocking(it.first, it.second)
+            GlobalScope.launch(Dispatchers.Main) {
+                withContext(Dispatchers.Default) {
+                    it.map {
+                        metadataRepository.getSnapshotMetadataBlocking(it.first, it.second)
+                    }
+                }.let {
+                    runningJobSnapshotsData.value = it
+                }
             }
         }
-        scheduledJobIdsData.value = emptyList()
+        scheduledJobSnapshotsData.value = emptyList()
         scheduledJobManager.addScheduledJobsListener(this.toString()) {
-            scheduledJobIdsData.value = it.map {
-                metadataRepository.getSnapshotMetadataBlocking(it.first, it.second)
-            }.map {
-                it to scheduledJobManager.getNextRunTimestamp(it) - System.currentTimeMillis()
+            GlobalScope.launch(Dispatchers.Main) {
+                withContext(Dispatchers.Default) {
+                    it.map {
+                        metadataRepository.getSnapshotMetadataBlocking(it.first, it.second)
+                    }.map {
+                        it to scheduledJobManager.getNextRunTimestamp(it) - System.currentTimeMillis()
+                    }
+                }.let {
+                    scheduledJobSnapshotsData.value = it
+                }
             }
         }
 
@@ -154,7 +170,7 @@ class MainScreenViewModel @Inject constructor(
         typeNameData.value = dataTypeRepository.getAllDataTypes().map { it.title } // todo add listener to repo
 
         // snapshots, search results initial values
-        snapshotsData.value = fetchSnapshots()
+        snapshotsData.value = emptyList()
         searchResultsData.value = emptyList()
     }
 
@@ -173,8 +189,8 @@ class MainScreenViewModel @Inject constructor(
 
     private val updateContentCoolingOffMillis = 500L
     private val contentDataWithCoolingOff = ThrottledFunction(updateContentCoolingOffMillis) {
-        snapshotsData.value = fetchSnapshots()
-        fetchSearchResults { searchResultsData.value = it }
+        subscribeToSnapshots()
+        subscribeToSearchResults()
     }
 
     private fun updateContentData() {
@@ -184,26 +200,34 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    private fun fetchSearchResults(resultListener: (List<SearchResult>) -> Unit) {
+    private fun subscribeToSnapshots() {
+        val filteredArtifactId = inputStateData.value!!.filteredArtifactId
+        when (filteredArtifactId) {
+            null -> metadataRepository.getAllArtifactLatestMetadataFlowable(true)
+            else -> metadataRepository.getArtifactMetadataFlowable(filteredArtifactId)
+        }.subscribeOn(Schedulers.newThread())
+                .map { SortingUtil.sortSnapshots(it, getSortingMethod()) }
+                .map { sortedSnapshots ->
+                    sortedSnapshots.map { Pair(it, getSnapshotCountBlocking(it.artifactId)) }
+                }.observeOn(uiScheduler)
+                .subscribe { snapshotsCountedByArtifact ->
+                    snapshotsData.value = snapshotsCountedByArtifact
+                }
+                .untilClearedOrUpdated("snapshots")
+    }
+
+    private fun subscribeToSearchResults() {
         val searchText = inputStateData.value!!.searchViewText
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val sortingMethod = settingsData.value!!.sortingMethod
         searchManager.searchText(searchText, filteredArtifactId)
                 .subscribeOn(Schedulers.newThread())
+                .map { SortingUtil.sortSearchResults(it, sortingMethod) }
                 .observeOn(uiScheduler)
                 .subscribe { searchResults ->
-                    resultListener.invoke(SortingUtil.sortSearchResults(searchResults, sortingMethod))
+                    searchResultsData.value = searchResults
                 }
                 .untilClearedOrUpdated("search")
-    }
-
-    private fun fetchSnapshots(): List<Pair<Snapshot, Int>> {
-        val filteredArtifactId = inputStateData.value!!.filteredArtifactId
-        val snapshots = SortingUtil.sortSnapshots(when (filteredArtifactId) {
-            null -> metadataRepository.getAllArtifactLatestMetadataBlocking(true)
-            else -> metadataRepository.getArtifactMetadataBlocking(filteredArtifactId)
-        }, getSortingMethod())
-        return snapshots.map { Pair(it, getSnapshotCount(it.artifactId)) }.toList()
     }
 
     private fun getSortingMethod(): String {
@@ -216,12 +240,8 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    private fun getSnapshotCount(artifactId: Long) = metadataRepository
-            .getArtifactMetadataBlocking(artifactId).count()
-
-
-
-
+    private fun getSnapshotCountBlocking(artifactId: Long)
+            = metadataRepository.getArtifactMetadataBlocking(artifactId).count()
 
     fun computeScreenTitle(): String {
         val isSearching = inputStateData.value!!.searchViewText.isNotBlank()
@@ -250,16 +270,18 @@ class MainScreenViewModel @Inject constructor(
         return "$scopeTitle$sortingTitleSuffix"
     }
 
-    fun computeArtifactFilterTitle(): String {
+    fun computeArtifactFilterTitle(listener: (String) -> Unit) = GlobalScope.launch(Dispatchers.Main) {
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val title = if (filteredArtifactId != null) {
-            metadataRepository.getLatestSnapshotMetadataBlocking(filteredArtifactId).title
+            withContext(Dispatchers.Default) {
+                metadataRepository.getLatestSnapshotMetadataBlocking(filteredArtifactId).title
+            }
         } else {
             ""
         }
         val isSearching = inputStateData.value!!.searchViewText.isNotBlank()
         val prefix = if (isSearching) "in: " else ""
-        return "$prefix$title"
+        listener.invoke("$prefix$title")
     }
 
     fun getSortingTypeNames() = SortingUtil.getSortingTypeNames()
@@ -274,37 +296,44 @@ class MainScreenViewModel @Inject constructor(
         viewRunningJobOrOpenSnapshot(artifactId, date)
     }
 
-    private fun viewRunningJobOrOpenSnapshot(artifactId: Long, date: String) {
-        val snapshot = metadataRepository.getSnapshotMetadataBlocking(artifactId, date)
+    private fun viewRunningJobOrOpenSnapshot(artifactId: Long, date: String) = GlobalScope.launch(Dispatchers.Main) {
+        val snapshot = withContext(Dispatchers.Default) {
+            metadataRepository.getSnapshotMetadataBlocking(artifactId, date)
+        }
         if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
             viewRunningJobDialog(artifactId, date)
-            return
+        } else {
+            // todo ensure snapshot data presence in folder first
+            val dataType = dataTypeRepository.getDataType(snapshot.dataTypeClassName)
+            val dates = withContext(Dispatchers.Default) {
+                getCompleteSnapshotDatesOrNullBlocking(artifactId)
+            }
+            navigationEventData.value = NavigationEvent(
+                    targetPackage = dataType.packageName,
+                    targetClass = dataType.viewerClass,
+                    bundledSnapshot = snapshot,
+                    bundledDates = dates,
+                    bundledFontName = settingsData.value!!.textFont,
+                    bundledColorBackground = settingsData.value!!.colorBackground,
+                    bundledColorPrimary = settingsData.value!!.colorPrimary,
+                    bundledColorAccent = settingsData.value!!.colorAccent,
+                    bundledDataFolderName = settingsData.value!!.dataFolderPath
+            )
         }
-        // todo ensure snapshot data presence in folder first
-        val dataType = dataTypeRepository.getDataType(snapshot.dataTypeClassName)
-        navigationEventData.value = NavigationEvent(
-                targetPackage = dataType.packageName,
-                targetClass = dataType.viewerClass,
-                bundledSnapshot = snapshot,
-                bundledDates = getCompleteSnapshotDatesOrNull(artifactId),
-                bundledFontName = settingsData.value!!.textFont,
-                bundledColorBackground = settingsData.value!!.colorBackground,
-                bundledColorPrimary = settingsData.value!!.colorPrimary,
-                bundledColorAccent = settingsData.value!!.colorAccent,
-                bundledDataFolderName = settingsData.value!!.dataFolderPath
-        )
     }
     
-    private fun getCompleteSnapshotDatesOrNull(artifactId: Long) = metadataRepository
-            .getArtifactMetadataBlocking(artifactId)
+    private fun getCompleteSnapshotDatesOrNullBlocking(artifactId: Long)
+            = metadataRepository.getArtifactMetadataBlocking(artifactId)
             .filter { it.status == SnapshotStatus.COMPLETE }
             .map { it.date }
             .reversed() // in ascending order
             .ifEmpty { null }
 
 
-    private fun viewRunningJobDialog(artifactId: Long, date: String) {
-        val snapshot = metadataRepository.getSnapshotMetadataBlocking(artifactId, date)
+    private fun viewRunningJobDialog(artifactId: Long, date: String) = GlobalScope.launch(Dispatchers.Main) {
+        val snapshot = withContext(Dispatchers.Default) {
+            metadataRepository.getSnapshotMetadataBlocking(artifactId, date)
+        }
         if (snapshot.status == SnapshotStatus.IN_PROGRESS) {
             updateInputState(inputStateData.value!!.copy(jobProgressArtifactId = artifactId,
                     jobProgressDate = date, jobProgressTitle = snapshot.title))
@@ -402,8 +431,10 @@ class MainScreenViewModel @Inject constructor(
         openAddSnapshotOfArtifact(artifactId) // opens new snapshot of existing artifact, as blueprint
     }
 
-    private fun openAddSnapshotOfArtifact(artifactId: Long) {
-        val snapshot = metadataRepository.getLatestSnapshotMetadataBlocking(artifactId)
+    private fun openAddSnapshotOfArtifact(artifactId: Long) = GlobalScope.launch(Dispatchers.Main) {
+        val snapshot = withContext(Dispatchers.Default) {
+            metadataRepository.getLatestSnapshotMetadataBlocking(artifactId)
+        }
         val dataType = dataTypeRepository.getDataType(snapshot.dataTypeClassName)
         navigationEventData.value = NavigationEvent(
                 targetPackage = dataType.packageName,
@@ -496,11 +527,14 @@ class MainScreenViewModel @Inject constructor(
 
     // lifecycle actions
 
-    fun snapshotReturned(snapshot: Snapshot) {
-        val isSaving = snapshotOperationManager.saveSnapshot(snapshot)
+    fun snapshotReturned(snapshot: Snapshot) = GlobalScope.launch(Dispatchers.Main) {
+        val isSaving = withContext(Dispatchers.Default) {
+            snapshotOperationManager.saveSnapshot(snapshot)
+        }
         if (isSaving) {
-            val snapshotBlueprint = metadataRepository
-                    .getLatestSnapshotMetadataBlocking(snapshot.artifactId)
+            val snapshotBlueprint = withContext(Dispatchers.Default) {
+                metadataRepository.getLatestSnapshotMetadataBlocking(snapshot.artifactId)
+            }
             viewRunningJobDialog(snapshotBlueprint.artifactId, snapshotBlueprint.date)
         }
     }

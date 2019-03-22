@@ -7,9 +7,6 @@
 package com.alexvt.integrity.lib.jobs
 
 import com.alexvt.integrity.lib.metadata.Snapshot
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 /**
  * Allows accounting jobs by given corresponding snapshot,
@@ -87,10 +84,8 @@ internal class InMemoryRunningJobManager : RunningJobManager {
         val runningJobSnapshotIds = jobStatusMap
                 .filter { it.value } // not canceled
                 .map { getArtifactIdAndDate(it.key) }
-        GlobalScope.launch (Dispatchers.Main) {
-            runningJobsListenerMap.forEach {
-                it.value.invoke(runningJobSnapshotIds)
-            }
+        runningJobsListenerMap.forEach {
+            it.value.invoke(runningJobSnapshotIds)
         }
     }
 

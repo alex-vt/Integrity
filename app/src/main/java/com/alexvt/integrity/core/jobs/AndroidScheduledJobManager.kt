@@ -14,9 +14,6 @@ import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.log.Log
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -71,10 +68,8 @@ class AndroidScheduledJobManager @Inject constructor(
      */
     private fun invokeListenersWithCurrentData() {
         val scheduledJobIds = getScheduledJobs().map { Pair(it.artifactId, it.date) }
-        GlobalScope.launch (Dispatchers.Main) {
-            scheduledJobsListenerMap.forEach {
-                it.value.invoke(scheduledJobIds)
-            }
+        scheduledJobsListenerMap.forEach {
+            it.value.invoke(scheduledJobIds)
         }
     }
 

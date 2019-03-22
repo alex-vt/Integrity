@@ -13,7 +13,7 @@ import com.alexvt.integrity.core.search.SearchIndexRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.filesystem.FilesystemManager
-import com.alexvt.integrity.ui.ThemedViewModel
+import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
 import javax.inject.Named
@@ -38,7 +38,7 @@ class RecoveryViewModel @Inject constructor(
         val dataFolderManager: DataFolderManager,
         val filesystemManager: FilesystemManager,
         @Named("recoveryIssue") val recoveryIssue: String?
-        ) : ThemedViewModel() {
+        ) : RxAutoDisposeThemedViewModel() {
 
     // single events
     val navigationEventData = SingleLiveEvent<NavigationEvent>()

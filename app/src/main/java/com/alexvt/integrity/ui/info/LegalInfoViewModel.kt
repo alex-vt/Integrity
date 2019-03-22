@@ -7,7 +7,7 @@
 package com.alexvt.integrity.ui.info
 
 import com.alexvt.integrity.core.settings.SettingsRepository
-import com.alexvt.integrity.ui.ThemedViewModel
+import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
 import javax.inject.Named
@@ -24,7 +24,7 @@ class LegalInfoViewModel @Inject constructor(
         @Named("privacyPolicyTitle") val privacyPolicyTitle: String,
         @Named("privacyPolicyText") val privacyPolicyText: String,
         override val settingsRepository: SettingsRepository
-        ) : ThemedViewModel() {
+        ) : RxAutoDisposeThemedViewModel() {
 
     // single events
     val navigationEventData = SingleLiveEvent<LegalInfoNavigationEvent>()

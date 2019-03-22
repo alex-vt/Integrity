@@ -11,7 +11,7 @@ import com.alexvt.integrity.core.credentials.CredentialsRepository
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocation
 import com.alexvt.integrity.lib.destinations.samba.SambaFolderLocationCredentials
-import com.alexvt.integrity.ui.ThemedViewModel
+import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import io.reactivex.Scheduler
 import javax.inject.Inject
@@ -40,7 +40,7 @@ class SambaDestinationViewModel @Inject constructor(
         private val credentialsRepository: CredentialsRepository,
         @Named("editedSambaDestinationTitle") val editedDestinationTitle: String?,
         @Named("defaultSambaDestinationTitle") val defaultTitle: String
-        ) : ThemedViewModel() {
+        ) : RxAutoDisposeThemedViewModel() {
     private val pathPrefix = "smb://"
 
     val inputStateData = MutableLiveData<InputState>()
@@ -60,21 +60,17 @@ class SambaDestinationViewModel @Inject constructor(
         } else {
             inputStateData.value = InputState(loading = false, title = defaultTitle, path = "", user = "", password = "")
         }
-    }
 
-    private val credentialsSubscription = credentialsRepository
-            .getCredentialsSingle(editedDestinationTitle)
-            .subscribeOn(uiScheduler)
-            .subscribe { credentials ->
-                if (credentials is SambaFolderLocationCredentials) {
-                    updateInputState(inputStateData.value!!.copy(loading = false, user = credentials.user))
-                    userNameLoadedEventData.value = credentials.user
+        // loading user name
+        credentialsRepository.getCredentialsSingle(editedDestinationTitle)
+                .subscribeOn(uiScheduler)
+                .subscribe { credentials ->
+                    if (credentials is SambaFolderLocationCredentials) {
+                        updateInputState(inputStateData.value!!.copy(loading = false, user = credentials.user))
+                        userNameLoadedEventData.value = credentials.user
+                    }
                 }
-            }
-
-    override fun onCleared() {
-        credentialsSubscription.dispose()
-        super.onCleared()
+                .untilCleared()
     }
 
     private fun updateInputState(inputState: InputState) {

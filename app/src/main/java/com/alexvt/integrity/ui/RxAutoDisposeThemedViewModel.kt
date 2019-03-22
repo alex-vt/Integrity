@@ -10,8 +10,35 @@ import androidx.lifecycle.ViewModel
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.util.ThemeColors
 import com.alexvt.integrity.lib.util.ThemeUtil
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 
-abstract class ThemedViewModel : ViewModel() {
+abstract class RxAutoDisposeThemedViewModel : ViewModel() {
+
+    private val disposeOnClear = CompositeDisposable()
+
+    private var taggedDisposables: Map<String, Disposable> = emptyMap()
+
+    override fun onCleared() {
+        super.onCleared()
+        disposeOnClear.clear()
+        taggedDisposables = emptyMap()
+    }
+
+    fun Disposable.untilCleared() = untilClearedOrUpdated(null)
+
+    fun Disposable.untilClearedOrUpdated(tag: String?) {
+        if (tag != null) {
+            if (taggedDisposables.containsKey(tag)) {
+                taggedDisposables[tag]!!.dispose()
+                taggedDisposables = taggedDisposables.minus(tag)
+            }
+            taggedDisposables = taggedDisposables.plus(tag to this)
+        }
+        disposeOnClear.add(this)
+    }
+
+
     abstract val settingsRepository: SettingsRepository
 
     fun getFont() = settingsRepository.get().textFont

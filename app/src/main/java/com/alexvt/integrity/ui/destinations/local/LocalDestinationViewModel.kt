@@ -9,7 +9,7 @@ package com.alexvt.integrity.ui.destinations.local
 import androidx.lifecycle.MutableLiveData
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.destinations.local.LocalFolderLocation
-import com.alexvt.integrity.ui.ThemedViewModel
+import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
 import javax.inject.Named
@@ -32,7 +32,7 @@ class LocalDestinationViewModel @Inject constructor(
         override val settingsRepository: SettingsRepository,
         @Named("editedLocalDestinationTitle") val editedDestinationTitle: String?,
         @Named("defaultLocalDestinationTitle") val defaultTitle: String
-        ) : ThemedViewModel() {
+        ) : RxAutoDisposeThemedViewModel() {
 
     val inputStateData = MutableLiveData<InputState>()
 

@@ -7,7 +7,7 @@
 package com.alexvt.integrity.ui.info
 
 import com.alexvt.integrity.core.settings.SettingsRepository
-import com.alexvt.integrity.ui.ThemedViewModel
+import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
 import javax.inject.Named
@@ -27,7 +27,7 @@ class HelpInfoViewModel @Inject constructor(
         @Named("settingsScreenClass") val settingsScreenClass: String,
         @Named("recoveryScreenClass") val recoveryScreenClass: String,
         @Named("legalInfoScreenClass") val legalInfoScreenClass: String
-        ) : ThemedViewModel() {
+        ) : RxAutoDisposeThemedViewModel() {
 
     // single events
     val navigationEventData = SingleLiveEvent<NavigationEvent>()

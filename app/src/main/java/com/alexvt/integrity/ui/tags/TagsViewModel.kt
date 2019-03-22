@@ -11,7 +11,7 @@ import com.alexvt.integrity.core.settings.IntegrityAppSettings
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.Tag
-import com.alexvt.integrity.ui.ThemedViewModel
+import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
 import javax.inject.Named
@@ -41,7 +41,7 @@ class TagsViewModel @Inject constructor(
         override val settingsRepository: SettingsRepository,
         @Named("selectModeTags") val selectMode: Boolean,
         @Named("snapshotWithInitialTags") val snapshotWithInitialTags: Snapshot?
-        ) : ThemedViewModel() {
+        ) : RxAutoDisposeThemedViewModel() {
 
     val inputStateData = MutableLiveData<InputState>()
     private val settingsData = MutableLiveData<IntegrityAppSettings>()

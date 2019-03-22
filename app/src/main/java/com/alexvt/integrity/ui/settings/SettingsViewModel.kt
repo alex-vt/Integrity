@@ -14,7 +14,7 @@ import com.alexvt.integrity.core.types.DataTypeRepository
 import com.alexvt.integrity.lib.filesystem.FilesystemManager
 import com.alexvt.integrity.lib.util.FontUtil
 import com.alexvt.integrity.lib.util.ThemeUtil
-import com.alexvt.integrity.ui.ThemedViewModel
+import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
 import javax.inject.Named
@@ -42,7 +42,7 @@ class SettingsViewModel @Inject constructor(
         @Named("destinationsScreenClass") val destinationsScreenClass: String,
         @Named("recoveryScreenClass") val recoveryScreenClass: String,
         @Named("legalInfoScreenClass") val legalInfoScreenClass: String
-        ) : ThemedViewModel() {
+        ) : RxAutoDisposeThemedViewModel() {
 
     val settingsData = MutableLiveData<IntegrityAppSettings>()
     val navigationEventData = SingleLiveEvent<NavigationEvent>()

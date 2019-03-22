@@ -15,7 +15,7 @@ import com.alexvt.integrity.core.settings.IntegrityAppSettings
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.metadata.FolderLocation
 import com.alexvt.integrity.lib.metadata.Snapshot
-import com.alexvt.integrity.ui.ThemedViewModel
+import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import javax.inject.Inject
 import javax.inject.Named
@@ -45,7 +45,7 @@ class DestinationsViewModel @Inject constructor(
         val credentialsRepository: CredentialsRepository,
         @Named("selectMode") val selectMode: Boolean,
         @Named("snapshotWithInitialDestination") val snapshotWithInitialDestination: Snapshot?
-        ) : ThemedViewModel() {
+        ) : RxAutoDisposeThemedViewModel() {
 
     private val inputStateData = MutableLiveData<DestinationsInputState>()
     private val settingsData = MutableLiveData<IntegrityAppSettings>()

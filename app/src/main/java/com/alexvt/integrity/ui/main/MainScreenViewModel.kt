@@ -23,10 +23,9 @@ import com.alexvt.integrity.lib.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.util.ThrottledFunction
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
-import com.alexvt.integrity.ui.ThemedViewModel
+import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import io.reactivex.Scheduler
-import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 import javax.inject.Named
@@ -89,7 +88,7 @@ class MainScreenViewModel @Inject constructor(
         @Named("recoveryScreenClass") val recoveryScreenClass: String,
         @Named("helpInfoScreenClass") val helpInfoScreenClass: String,
         @Named("legalInfoScreenClass") val legalInfoScreenClass: String
-    ): ThemedViewModel() {
+    ): RxAutoDisposeThemedViewModel() {
 
     // primary
     val inputStateData = MutableLiveData<MainScreenInputState>()
@@ -107,9 +106,6 @@ class MainScreenViewModel @Inject constructor(
     val navigationEventData = SingleLiveEvent<NavigationEvent>()
 
     private val logErrorLimitToNotify = 1000
-    private val errorNotifySubscription = logRepository.getUnreadErrorsFlowable(logErrorLimitToNotify)
-            .observeOn(uiScheduler)
-            .subscribe { unreadErrors -> logErrorCountData.value = unreadErrors.count() }
 
     init {
         // input state  starts as default
@@ -117,6 +113,13 @@ class MainScreenViewModel @Inject constructor(
                 runningDownloadViewArtifactId = null, viewingSortingTypeOptions = false,
                 jobProgressArtifactId = null, jobProgressDate = null,
                 jobProgressTitle = "", jobProgressMessage = "")
+
+        // reactive count of error log entries
+        logRepository.getUnreadErrorsFlowable(logErrorLimitToNotify)
+                .map { it.count() }
+                .observeOn(uiScheduler)
+                .subscribe { logErrorCountData.value = it }
+                .untilCleared()
 
         // settings, jobs, log error count  are listened to in their repositories
         settingsData.value = settingsRepository.get()
@@ -156,10 +159,8 @@ class MainScreenViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        errorNotifySubscription.dispose()
         settingsRepository.removeChangesListener(this.toString())
         scheduledJobManager.removeScheduledJobsListener(this.toString())
-        stopSearch()
         IntegrityLib.runningJobManager.removeJobListListener(this.toString())
         super.onCleared()
     }
@@ -183,23 +184,17 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    private var searchSubscription: Disposable? = null
-
-    private fun stopSearch() = with (searchSubscription) {
-        if (this != null && !isDisposed) dispose()
-    }
-
     private fun fetchSearchResults(resultListener: (List<SearchResult>) -> Unit) {
         val searchText = inputStateData.value!!.searchViewText
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val sortingMethod = settingsData.value!!.sortingMethod
-        stopSearch()
-        searchSubscription = searchManager.searchText(searchText, filteredArtifactId)
+        searchManager.searchText(searchText, filteredArtifactId)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(uiScheduler)
                 .subscribe { searchResults ->
                     resultListener.invoke(SortingUtil.sortSearchResults(searchResults, sortingMethod))
                 }
+                .untilClearedOrUpdated("search")
     }
 
     private fun fetchSnapshots(): List<Pair<Snapshot, Int>> {

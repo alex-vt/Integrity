@@ -84,10 +84,18 @@ class RoomLogRepository(context: Context) : LogRepository {
         @Query("SELECT * FROM dblogentry ORDER BY orderId DESC LIMIT :limit")
         fun getRecentEntriesFlowable(limit: Int): Flowable<List<DbLogEntry>>
 
+        @Query("SELECT * FROM dblogentry ORDER BY orderId DESC LIMIT :limit")
+        fun getRecentEntriesBlocking(limit: Int): List<DbLogEntry>
+
         @Query("SELECT * FROM dblogentry WHERE read = 0 " +
                 "AND type IN (\'${LogEntryType.ERROR}\', \'${LogEntryType.CRASH}\') " +
                 "ORDER BY orderId DESC LIMIT :limit")
         fun getUnreadErrorsFlowable(limit: Int): Flowable<List<DbLogEntry>>
+
+        @Query("SELECT * FROM dblogentry WHERE read = 0 " +
+                "AND type IN (\'${LogEntryType.ERROR}\', \'${LogEntryType.CRASH}\') " +
+                "ORDER BY orderId DESC LIMIT :limit")
+        fun getUnreadErrorsBlocking(limit: Int): List<DbLogEntry>
 
         @Query("UPDATE dblogentry SET read = 1 WHERE read = 0")
         suspend fun markAllRead()
@@ -120,9 +128,9 @@ class RoomLogRepository(context: Context) : LogRepository {
             .getRecentEntriesFlowable(limit)
             .map { it.map { EntityConverters.fromDbEntity(it) } }
 
-    override fun getRecentEntriesBlocking(limit: Int): List<LogEntry>
-            = getRecentEntriesFlowable(limit)
-            .blockingFirst()
+    override fun getRecentEntriesBlocking(limit: Int): List<LogEntry> = db.logEntryDao()
+            .getRecentEntriesBlocking(limit)
+            .map { EntityConverters.fromDbEntity(it) }
 
     /**
      * Gets unread error and crash type log entries ordered by addition time descending.
@@ -131,9 +139,9 @@ class RoomLogRepository(context: Context) : LogRepository {
             .getUnreadErrorsFlowable(limit)
             .map { it.map { EntityConverters.fromDbEntity(it) } }
 
-    override fun getUnreadErrorsBlocking(limit: Int): List<LogEntry>
-            = getUnreadErrorsFlowable(limit)
-            .blockingFirst()
+    override fun getUnreadErrorsBlocking(limit: Int): List<LogEntry> = db.logEntryDao()
+            .getUnreadErrorsBlocking(limit)
+            .map { EntityConverters.fromDbEntity(it) }
 
     /**
      * Sets all log entries read.

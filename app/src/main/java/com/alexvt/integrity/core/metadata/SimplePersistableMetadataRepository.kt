@@ -70,23 +70,17 @@ class SimplePersistableMetadataRepository(
         getAllArtifactMetadataBlocking()
     }
 
-    override fun getAllArtifactLatestMetadataBlocking(deprioritizeBlueprints: Boolean): List<Snapshot> {
-        val snapshotComparator = if (deprioritizeBlueprints) {
-            SnapshotCompareUtil.blueprintLowPriorityComparator.thenByDescending { it.date }
-        } else {
-            compareByDescending { it.date }
-        }
+    override fun getAllArtifactLatestMetadataBlocking(): List<Snapshot> {
         return allMetadata.snapshots
                 .groupBy { it.artifactId }
                 .map { it.value
-                        .sortedWith(snapshotComparator)
+                        .sortedWith(compareByDescending { it.date })
                         .first() }
                 .sortedByDescending { it.date }
     }
 
-    override fun getAllArtifactLatestMetadataFlowable(deprioritizeBlueprints: Boolean
-    ): Flowable<List<Snapshot>> = reactiveRequests.add {
-        getAllArtifactLatestMetadataBlocking(deprioritizeBlueprints)
+    override fun getAllArtifactLatestMetadataFlowable(): Flowable<List<Snapshot>> = reactiveRequests.add {
+        getAllArtifactLatestMetadataBlocking()
     }
 
     override fun getArtifactMetadataBlocking(artifactId: Long)

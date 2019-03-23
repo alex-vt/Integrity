@@ -56,13 +56,10 @@ interface MetadataRepository : Clearable {
     /**
      * Returns list of the latest snapshots
      * of metadata for all artifacts.
-     *
-     * If deprioritizeBlueprints is true and there are non-blueprint snapshots,
-     * the latest of them will be used.
      */
-    fun getAllArtifactLatestMetadataBlocking(deprioritizeBlueprints: Boolean): List<Snapshot>
+    fun getAllArtifactLatestMetadataBlocking(): List<Snapshot>
 
-    fun getAllArtifactLatestMetadataFlowable(deprioritizeBlueprints: Boolean): Flowable<List<Snapshot>>
+    fun getAllArtifactLatestMetadataFlowable(): Flowable<List<Snapshot>>
 
     /**
      * Returns artifact with all snapshots of metadata by given artifactId.

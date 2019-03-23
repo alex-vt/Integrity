@@ -17,6 +17,7 @@ import com.alexvt.integrity.core.log.LogEventReceiver
 import com.alexvt.integrity.core.log.LogRepository
 import com.alexvt.integrity.core.log.RoomLogRepository
 import com.alexvt.integrity.core.metadata.MetadataRepository
+import com.alexvt.integrity.core.metadata.RoomMetadataRepository
 import com.alexvt.integrity.core.metadata.SimplePersistableMetadataRepository
 import com.alexvt.integrity.core.operations.AndroidSnapshotOperationManager
 import com.alexvt.integrity.core.operations.LogOperationManager
@@ -88,7 +89,7 @@ class IntegrityCoreDependenciesModule {
     @Provides
     @Singleton
     fun provideMetadataRepository(context: Context): MetadataRepository
-            = SimplePersistableMetadataRepository(context)
+            = RoomMetadataRepository(context)
 
     @Provides
     @Singleton

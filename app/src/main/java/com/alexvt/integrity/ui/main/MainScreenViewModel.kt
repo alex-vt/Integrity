@@ -203,7 +203,7 @@ class MainScreenViewModel @Inject constructor(
     private fun subscribeToSnapshots() {
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         when (filteredArtifactId) {
-            null -> metadataRepository.getAllArtifactLatestMetadataFlowable(true)
+            null -> metadataRepository.getAllArtifactLatestMetadataFlowable()
             else -> metadataRepository.getArtifactMetadataFlowable(filteredArtifactId)
         }.subscribeOn(Schedulers.newThread())
                 .map { SortingUtil.sortSnapshots(it, getSortingMethod()) }
@@ -379,11 +379,13 @@ class MainScreenViewModel @Inject constructor(
                 .get().copy(sortingMethod = newSortingMethod))
     }
 
-    fun removeArtifact(artifactId: Long)
-            = snapshotOperationManager.removeArtifact(artifactId, false)
+    fun removeArtifact(artifactId: Long) = GlobalScope.launch(Dispatchers.Default) {
+        snapshotOperationManager.removeArtifact(artifactId, false)
+    }
 
-    fun removeSnapshot(artifactId: Long, date: String)
-            = snapshotOperationManager.removeSnapshot(artifactId, date, false)
+    fun removeSnapshot(artifactId: Long, date: String)= GlobalScope.launch(Dispatchers.Default) {
+        snapshotOperationManager.removeSnapshot(artifactId, date, false)
+    }
 
     fun addSnapshot(artifactId: Long) {
         openAddSnapshotOfArtifact(artifactId)
@@ -496,10 +498,12 @@ class MainScreenViewModel @Inject constructor(
 
     // dialog
 
-    fun cancelSnapshotCreation() {
-        snapshotOperationManager.cancelSnapshotCreation(
-                inputStateData.value!!.jobProgressArtifactId!!,
-                inputStateData.value!!.jobProgressDate!!)
+    fun cancelSnapshotCreation() = GlobalScope.launch(Dispatchers.Main) {
+        withContext(Dispatchers.Default) {
+            snapshotOperationManager.cancelSnapshotCreation(
+                    inputStateData.value!!.jobProgressArtifactId!!,
+                    inputStateData.value!!.jobProgressDate!!)
+        }
         hideRunningJobDialog()
     }
 

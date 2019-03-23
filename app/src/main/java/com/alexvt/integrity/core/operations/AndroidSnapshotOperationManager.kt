@@ -29,6 +29,7 @@ import dagger.android.AndroidInjection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import javax.inject.Inject
 
@@ -191,15 +192,19 @@ class AndroidSnapshotOperationManager @Inject constructor(
 
         override fun onReceive(context: Context, intent: Intent) {
             AndroidInjection.inject(this, context)
-            val snapshot = metadataRepository.getSnapshotMetadataBlocking(
-                    IntentUtil.getArtifactId(intent), IntentUtil.getDate(intent))
-            if (IntentUtil.isDownloaded(intent)) {
-                GlobalScope.launch(Dispatchers.IO) {
-                    snapshotOperationManager.archiveSnapshot(snapshot)
+            GlobalScope.launch(Dispatchers.Main) {
+                val snapshot = withContext(Dispatchers.Default) {
+                    metadataRepository.getSnapshotMetadataBlocking(
+                            IntentUtil.getArtifactId(intent), IntentUtil.getDate(intent))
                 }
-                // Final. Archiving will continue in the main app process.
-            } else {
-                snapshotOperationManager.postSnapshotDownloadProgress(snapshot, IntentUtil.getMessage(intent))
+                if (IntentUtil.isDownloaded(intent)) {
+                    withContext(Dispatchers.Default) {
+                        snapshotOperationManager.archiveSnapshot(snapshot)
+                    }
+                    // Final. Archiving will continue in the main app process.
+                } else {
+                    snapshotOperationManager.postSnapshotDownloadProgress(snapshot, IntentUtil.getMessage(intent))
+                }
             }
         }
     }

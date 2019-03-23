@@ -14,6 +14,10 @@ import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.lib.log.Log
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -66,8 +70,10 @@ class AndroidScheduledJobManager @Inject constructor(
     /**
      * Feeds listeners with artifactIDs and dates of scheduled jobs at the moment
      */
-    private fun invokeListenersWithCurrentData() {
-        val scheduledJobIds = getScheduledJobs().map { Pair(it.artifactId, it.date) }
+    private fun invokeListenersWithCurrentData() = GlobalScope.launch {
+        val scheduledJobIds = withContext(Dispatchers.Default) {
+            getScheduledJobsBlocking()
+        }.map { Pair(it.artifactId, it.date) }
         scheduledJobsListenerMap.forEach {
             it.value.invoke(scheduledJobIds)
         }
@@ -78,8 +84,8 @@ class AndroidScheduledJobManager @Inject constructor(
      *
      * Sorted by time remaining until job starts.
      */
-    private fun getScheduledJobs() = if (settingsRepository.get().jobsEnableScheduled) {
-        metadataRepository.getAllArtifactLatestMetadataBlocking(false)
+    private fun getScheduledJobsBlocking() = if (settingsRepository.get().jobsEnableScheduled) {
+        metadataRepository.getAllArtifactLatestMetadataBlocking()
                 .filter { it.downloadSchedule.periodSeconds > 0L } // todo also resume jobs interrupted not by user
                 .sortedBy { getNextRunTimestamp(it) }
     } else {
@@ -93,11 +99,13 @@ class AndroidScheduledJobManager @Inject constructor(
      * Schedules jobs eligible for scheduling at the moment of calling
      * todo edit only changed jobs
      */
-    override fun updateSchedule(context: Context) {
+    override fun updateSchedule(context: Context) = GlobalScope.launch {
         val workManagerJobTag = "downloading"
         WorkManager.getInstance().pruneWork()
         WorkManager.getInstance().cancelAllWorkByTag(workManagerJobTag)
-        val workList = getScheduledJobs().map {
+        val workList = withContext(Dispatchers.Default) {
+            getScheduledJobsBlocking()
+        }.map {
             android.util.Log.v(ScheduledJobManager::class.java.simpleName, "Scheduling download job " +
                     "in ${getNextJobDelay(it)} ms for ${it.title} (artifactID ${it.artifactId})")
             OneTimeWorkRequest.Builder(SnapshotDownloadWorker::class.java)
@@ -115,7 +123,7 @@ class AndroidScheduledJobManager @Inject constructor(
         invokeListenersWithCurrentData()
         Log(context, "Updated future jobs schedule: enabled = " +
                 "${settingsRepository.get().jobsEnableScheduled}, ${workList.size} jobs scheduled").log()
-    }
+    }.let { /* no return type */ }
 
     inner class SnapshotDownloadWorker(val context: Context, params: WorkerParameters): Worker(context, params) {
         override fun doWork(): Result {

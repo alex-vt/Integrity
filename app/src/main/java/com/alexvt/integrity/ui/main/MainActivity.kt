@@ -291,6 +291,10 @@ class MainActivity : ThemedActivity() {
             (rvSnapshotList.adapter as SnapshotRecyclerAdapter)
                     .setItems(it, vm.inputStateData.value!!.filteredArtifactId == null)
         })
+
+        vm.inputStateData.observe(this, androidx.lifecycle.Observer {
+            rvSnapshotList.visibility = if (vm.isSearching()) View.GONE else View.VISIBLE
+        })
     }
 
     private fun bindSearchResults() {
@@ -302,13 +306,13 @@ class MainActivity : ThemedActivity() {
         })
         vm.inputStateData.observe(this, androidx.lifecycle.Observer {
             updateNoResultsPlaceholder()
+            rvSearchResults.visibility = if (vm.isSearching()) View.VISIBLE else View.GONE
         })
     }
 
     private fun updateNoResultsPlaceholder() {
         val searchResultsExist = vm.searchResultsData.value!!.isNotEmpty()
-        val isSearching = vm.inputStateData.value!!.searchViewText.isNotBlank()
-        tvNoResults.visibility = if (isSearching && !searchResultsExist) View.VISIBLE else View.GONE
+        tvNoResults.visibility = if (vm.isSearching() && !searchResultsExist) View.VISIBLE else View.GONE
     }
 
     private fun bindFloatingButton() {
@@ -317,7 +321,7 @@ class MainActivity : ThemedActivity() {
                 CommunityMaterial.Icon.cmd_close)
 
         vm.inputStateData.observe(this, androidx.lifecycle.Observer {
-            sdAdd.visibility = if (it.searchViewText.isBlank()) View.VISIBLE else View.GONE
+            sdAdd.visibility = if (vm.isSearching()) View.GONE else View.VISIBLE
             // lazy updating for FloatingSubButtons
             val floatingButtonTag = if (it.filteredArtifactId == null) "Types" else "Type"
             if (floatingButtonTag != sdAdd.tag) {
@@ -388,13 +392,10 @@ class MainActivity : ThemedActivity() {
                     .colorRes(R.color.colorWhite)
         })
         vm.inputStateData.observe(this, androidx.lifecycle.Observer {
-            val searching = it.searchViewText.isNotBlank()
             val filterArtifact = it.filteredArtifactId != null
 
-            rvSnapshotList.visibility = if (searching) View.GONE else View.VISIBLE
-            rvSearchResults.visibility = if (searching) View.VISIBLE else View.GONE
             vm.computeArtifactFilterTitle { tvFilteredArtifactTitle.text }
-            llSorting.visibility = if (filterArtifact || searching) View.VISIBLE else View.GONE
+            llSorting.visibility = if (filterArtifact || vm.isSearching()) View.VISIBLE else View.GONE
             llFilteredArtifact.visibility = if (filterArtifact) View.VISIBLE else View.GONE
 
             svMain.setQuery(it.searchViewText, false)

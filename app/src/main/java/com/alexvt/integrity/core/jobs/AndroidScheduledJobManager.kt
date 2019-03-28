@@ -126,6 +126,7 @@ class AndroidScheduledJobManager @Inject constructor(
     }.let { /* no return type */ }
 
     inner class SnapshotDownloadWorker(val context: Context, params: WorkerParameters): Worker(context, params) {
+        // todo fix DI
         override fun doWork(): Result {
             val artifactId = inputData.getLong("artifactId", -1)
             val date = inputData.getString("date")!!

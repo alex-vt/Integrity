@@ -240,6 +240,8 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
+    fun isSearching() = inputStateData.value!!.searchViewText.isNotBlank()
+
     private fun getSnapshotCountBlocking(artifactId: Long)
             = metadataRepository.getArtifactMetadataBlocking(artifactId).count()
 

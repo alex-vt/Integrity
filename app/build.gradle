@@ -117,6 +117,9 @@ dependencies {
     implementation 'com.squareup.moshi:moshi:1.8.0'
     implementation "com.squareup.moshi:moshi-adapters:1.8.0"
 
+    implementation 'com.xwray:groupie:2.3.0'
+    implementation 'com.xwray:groupie-kotlin-android-extensions:2.3.0'
+
     implementation 'org.jsoup:jsoup:1.10.3'
 
     implementation 'com.afollestad.material-dialogs:core:2.0.0-beta4'

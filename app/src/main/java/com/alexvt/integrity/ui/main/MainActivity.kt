@@ -15,7 +15,6 @@ import android.os.Bundle
 import com.afollestad.materialdialogs.MaterialDialog
 import com.alexvt.integrity.R
 import com.alexvt.integrity.lib.metadata.Snapshot
-import com.alexvt.integrity.lib.util.IntentUtil
 import io.reactivex.android.schedulers.AndroidSchedulers
 
 import kotlinx.android.synthetic.main.activity_main.*
@@ -39,16 +38,16 @@ import co.zsmb.materialdrawerkt.draweritems.badge
 import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.alexvt.integrity.core.search.SortingUtil
-import com.alexvt.integrity.lib.util.FontUtil
-import com.alexvt.integrity.lib.util.SearchViewUtil
-import com.alexvt.integrity.lib.util.ThemeUtil
-import com.alexvt.integrity.lib.util.ThemedActivity
+import com.alexvt.integrity.lib.util.*
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import com.jakewharton.rxbinding3.appcompat.queryTextChanges
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.IIcon
 import com.mikepenz.materialdrawer.model.*
+import com.xwray.groupie.GroupAdapter
+import com.xwray.groupie.Section
+import com.xwray.groupie.kotlinandroidextensions.ViewHolder
 import dagger.android.AndroidInjection
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -275,21 +274,30 @@ class MainActivity : ThemedActivity() {
     }
 
     private fun bindSnapshotList() {
-        rvSnapshotList.adapter = SnapshotRecyclerAdapter(ArrayList(), this,
-                vm.settingsRepository, vm.dataFolderManager,
-                onClickListener = { artifactId, date ->
-                    vm.viewSnapshot(artifactId, date)
-                },
-                onLongClickListener = { artifactId, date, many ->
-                    if (many) askRemoveArtifact(artifactId) else askRemoveSnapshot(artifactId, date)
-                },
-                onClickMoreListener = { artifactId, _, many ->
-                    if (many) vm.viewMoreOfArtifact(artifactId) else vm.addSnapshot(artifactId)
-                })
-
+        val snapshotAdapter = GroupAdapter<ViewHolder>()
+        val snapshotsSection = Section()
+        snapshotAdapter.add(snapshotsSection)
+        rvSnapshotList.adapter = snapshotAdapter
         vm.snapshotsData.observe(this, androidx.lifecycle.Observer {
-            (rvSnapshotList.adapter as SnapshotRecyclerAdapter)
-                    .setItems(it, vm.inputStateData.value!!.filteredArtifactId == null)
+            it.map { SnapshotListItem(
+                    snapshot = it.first,
+                    relatedSnapshotCount = it.second,
+                    context = this,
+                    showMoreButton = vm.inputStateData.value!!.filteredArtifactId == null,
+                    settingsRepository = vm.settingsRepository,
+                    dataFolderManager = vm.dataFolderManager,
+                    onClickListener = { artifactId, date ->
+                        vm.viewSnapshot(artifactId, date)
+                    },
+                    onLongClickListener = { artifactId, date, many ->
+                        if (many) askRemoveArtifact(artifactId) else askRemoveSnapshot(artifactId, date)
+                    },
+                    onClickMoreListener = { artifactId, _, many ->
+                        if (many) vm.viewMoreOfArtifact(artifactId) else vm.addSnapshot(artifactId)
+                    }
+            ) }.let {
+                snapshotsSection.update(it)
+            }
         })
 
         vm.inputStateData.observe(this, androidx.lifecycle.Observer {
@@ -298,12 +306,22 @@ class MainActivity : ThemedActivity() {
     }
 
     private fun bindSearchResults() {
-        rvSearchResults.adapter = SearchResultRecyclerAdapter(ArrayList(), this)
-
+        val searchResultAdapter = GroupAdapter<ViewHolder>()
+        val searchResultSection = Section()
+        searchResultAdapter.add(searchResultSection)
+        rvSearchResults.adapter = searchResultAdapter
         vm.searchResultsData.observe(this, androidx.lifecycle.Observer {
-            (rvSearchResults.adapter as SearchResultRecyclerAdapter).setItems(it)
-            updateNoResultsPlaceholder()
+            it.map {SearchResultListItem(
+                    searchResult = it,
+                    context = this,
+                    onLinkClickListener = { ViewExternalUtil.viewLinkExternal(this, it) }
+            ) }.let {
+                searchResultSection.update(it)
+            }.also {
+                updateNoResultsPlaceholder()
+            }
         })
+
         vm.inputStateData.observe(this, androidx.lifecycle.Observer {
             updateNoResultsPlaceholder()
             rvSearchResults.visibility = if (vm.isSearching()) View.VISIBLE else View.GONE

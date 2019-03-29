@@ -6,7 +6,6 @@
 
 package com.alexvt.integrity.ui.main
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.core.jobs.ScheduledJobManager
@@ -23,6 +22,7 @@ import com.alexvt.integrity.lib.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.util.ThrottledFunction
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
+import com.alexvt.integrity.lib.search.SearchRequest
 import com.alexvt.integrity.lib.search.SearchResult
 import com.alexvt.integrity.lib.search.SnapshotSearchResult
 import com.alexvt.integrity.lib.search.TextSearchResult
@@ -47,6 +47,7 @@ data class MainScreenInputState(
         // bottom sheet controls
         val searchViewText: String,
         val filteredArtifactId: Long?,
+        val searchShowOnePerArtifact: Boolean,
 
         // dialogs view model
         val runningDownloadViewArtifactId: Long?,
@@ -119,6 +120,7 @@ class MainScreenViewModel @Inject constructor(
     init {
         // input state  starts as default
         inputStateData.value = MainScreenInputState(searchViewText = "", filteredArtifactId = null,
+                searchShowOnePerArtifact = true,
                 runningDownloadViewArtifactId = null, viewingSortingTypeOptions = false,
                 jobProgressArtifactId = null, jobProgressDate = null,
                 jobProgressTitle = "", jobProgressMessage = "")
@@ -197,10 +199,10 @@ class MainScreenViewModel @Inject constructor(
     private val contentDataWithCoolingOff = ThrottledFunction(updateContentCoolingOffMillis) {
         subscribeToSnapshots()
         subscribeToSearchResults(snapshotSearchResultsData, "searchSnapshots") {
-            text, artifactId -> searchManager.searchSnapshotTitles(text, artifactId)
+            searchManager.searchSnapshotTitles(it)
         }
         subscribeToSearchResults(textSearchResultsData, "searchText") {
-            text, artifactId -> searchManager.searchText(text, artifactId)
+            searchManager.searchText(it)
         }
     }
 
@@ -227,21 +229,22 @@ class MainScreenViewModel @Inject constructor(
                 .untilClearedOrUpdated("snapshots")
     }
 
-    private fun <S: SearchResult> subscribeToSearchResults(targetLiveData: MutableLiveData<List<S>>,
-                                                           tag: String,
-                                                           searchFunction: (String, Long?) -> Single<List<S>>) {
-        val searchText = inputStateData.value!!.searchViewText
-        val filteredArtifactId = inputStateData.value!!.filteredArtifactId
-        val sortingMethod = settingsData.value!!.sortingMethod
-        searchFunction.invoke(searchText, filteredArtifactId)
-                .subscribeOn(Schedulers.newThread())
-                .map { SortingUtil.sort(it, sortingMethod) }
-                .observeOn(uiScheduler)
-                .subscribe { searchResults ->
-                    targetLiveData.value = searchResults
-                }
-                .untilClearedOrUpdated(tag)
-    }
+    private fun <S: SearchResult> subscribeToSearchResults(
+            targetLiveData: MutableLiveData<List<S>>,
+            tag: String,
+            searchFunction: (SearchRequest) -> Single<List<S>>
+    ) = SearchRequest(
+            text = inputStateData.value!!.searchViewText,
+            artifactId = inputStateData.value!!.filteredArtifactId,
+            sortingMethod = settingsData.value!!.sortingMethod,
+            onePerArtifact = inputStateData.value!!.searchShowOnePerArtifact
+    ).let { searchFunction.invoke(it) }
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(uiScheduler)
+            .subscribe { searchResults ->
+                targetLiveData.value = searchResults
+            }
+            .untilClearedOrUpdated(tag)
 
     private fun getSortingMethod(): String {
         val isSearching = inputStateData.value!!.searchViewText.isNotBlank()
@@ -375,6 +378,10 @@ class MainScreenViewModel @Inject constructor(
 
     fun setSearchText(searchText: String) {
         updateInputState(inputStateData.value!!.copy(searchViewText = searchText.trim()))
+    }
+
+    fun setSearchShowOnePerArtifact(value: Boolean) {
+        updateInputState(inputStateData.value!!.copy(searchShowOnePerArtifact = value))
     }
 
     fun clickArtifactFilteringClose() {

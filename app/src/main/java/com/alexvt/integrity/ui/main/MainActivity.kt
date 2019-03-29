@@ -41,6 +41,7 @@ import com.alexvt.integrity.lib.util.*
 import com.mikepenz.community_material_typeface_library.CommunityMaterial
 import com.mikepenz.iconics.utils.IconicsMenuInflaterUtil
 import com.jakewharton.rxbinding3.appcompat.queryTextChanges
+import com.jakewharton.rxbinding3.widget.checkedChanges
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.IIcon
 import com.mikepenz.materialdrawer.model.*
@@ -76,6 +77,7 @@ class MainActivity : ThemedActivity() {
         bindSearchResults()
         bindFloatingButton()
         bindBottomSheetControls()
+        bindBottomSheetExplore()
         bindJobProgressDialog()
         bindNavigation()
     }
@@ -405,6 +407,12 @@ class MainActivity : ThemedActivity() {
                 .subscribe {
                     vm.setSearchText(it.toString())
                 }
+        cbOnePerArtifact.checkedChanges()
+                .debounce(20, TimeUnit.MILLISECONDS) // preventing loop between vm and view
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    vm.setSearchShowOnePerArtifact(it)
+                }
         vm.settingsData.observe(this, androidx.lifecycle.Observer {
             val sortingMethod = it.sortingMethod
             val sortingTypeIcon: IIcon = when {
@@ -427,9 +435,11 @@ class MainActivity : ThemedActivity() {
             val filterArtifact = it.filteredArtifactId != null
 
             vm.computeArtifactFilterTitle { tvFilteredArtifactTitle.text }
-            llSorting.visibility = if (filterArtifact || vm.isSearching()) View.VISIBLE else View.GONE
+            llFilters.visibility = if (filterArtifact || vm.isSearching()) View.VISIBLE else View.GONE
             llFilteredArtifact.visibility = if (filterArtifact) View.VISIBLE else View.GONE
+            cbOnePerArtifact.visibility = if (vm.isSearching()) View.VISIBLE else View.GONE
 
+            cbOnePerArtifact.isChecked = it.searchShowOnePerArtifact
             svMain.setQuery(it.searchViewText, false)
         })
 
@@ -451,6 +461,12 @@ class MainActivity : ThemedActivity() {
         iivSortingDirection.setOnClickListener {
             vm.clickSortingDirectionButton()
         }
+    }
+
+    private fun bindBottomSheetExplore() {
+        vm.inputStateData.observe(this, androidx.lifecycle.Observer {
+            llExplore.visibility = if (!vm.isSearching()) View.VISIBLE else View.GONE
+        })
     }
 
     private fun tryToggleExpandSection(isScheduledJobs: Boolean) {

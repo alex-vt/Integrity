@@ -24,6 +24,7 @@ data class NamedLink(val title: String = "", val link: String = "")
  * and the most relevant links (around the searched text, and general ones in the data chunk).
  */
 data class TextSearchResult(val snapshotTitle: String,
+                            val artifactId: Long,
                             val date: String,
                             val truncatedText: String,
                             val highlightRange: IntRange,
@@ -38,3 +39,10 @@ data class SnapshotSearchResult(val snapshot: Snapshot,
 ): SearchResult()
 
 abstract class SearchResult
+
+data class SearchRequest(
+        val text: String,
+        val artifactId: Long?,
+        val sortingMethod: String,
+        val onePerArtifact: Boolean
+)

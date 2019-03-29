@@ -81,11 +81,12 @@
     <LinearLayout
         android:id="@+id/llBottomSheet"
         android:layout_width="match_parent"
-        android:layout_height="350dp"
+        android:layout_height="300dp"
         android:background="?attr/backgroundColor"
         android:orientation="vertical"
         app:behavior_hideable="false"
         app:behavior_peekHeight="118dp"
+        tools:behavior_peekHeight="300dp"
         android:elevation="10dp"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
         android:clickable="true"
@@ -124,104 +125,131 @@
 
             <LinearLayout
                 android:id="@+id/llFilters"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/svMain"
                 >
 
-                <FrameLayout
-                    android:id="@+id/llSorting"
-                    android:layout_width="90dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginRight="12dp"
-                    android:background="@drawable/rounded_white"
-                    android:backgroundTint="@color/colorTranslucentGray"
-                    >
-
-                    <com.mikepenz.iconics.view.IconicsImageView
-                        android:id="@+id/iivSortingType"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="12dp"
-                        app:iiv_color="@color/colorWhite"
-                        app:iiv_icon="cmd-folder-clock-outline"
-                        android:background="@drawable/rounded_white"
-                        android:backgroundTint="?attr/colorPrimary"
-                        android:layout_gravity="start"
-                        />
-
-                    <com.mikepenz.iconics.view.IconicsImageView
-                        android:id="@+id/iivSortingDirection"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="12dp"
-                        app:iiv_color="@color/colorWhite"
-                        app:iiv_icon="cmd-sort-descending"
-                        android:background="@drawable/rounded_white"
-                        android:backgroundTint="?attr/colorPrimary"
-                        android:layout_gravity="end"
-                        />
-
-                </FrameLayout>
-
-                <RelativeLayout
-                    android:id="@+id/llFilteredArtifact"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="16dp"
-                    android:paddingLeft="20dp"
-                    android:paddingRight="12dp"
-                    android:background="@drawable/rounded_white"
-                    android:backgroundTint="?attr/colorPrimary"
+                    android:orientation="horizontal"
                     >
 
-                    <TextView
-                        android:id="@+id/tvFilteredArtifactTitle"
+                    <FrameLayout
+                        android:id="@+id/llSorting"
+                        android:layout_width="90dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginRight="12dp"
+                        android:background="@drawable/rounded_white"
+                        android:backgroundTint="@color/colorTranslucentGray"
+                        >
+
+                        <com.mikepenz.iconics.view.IconicsImageView
+                            android:id="@+id/iivSortingType"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:padding="12dp"
+                            app:iiv_color="@color/colorWhite"
+                            app:iiv_icon="cmd-folder-clock-outline"
+                            android:background="@drawable/rounded_white"
+                            android:backgroundTint="?attr/colorPrimary"
+                            android:layout_gravity="start"
+                            />
+
+                        <com.mikepenz.iconics.view.IconicsImageView
+                            android:id="@+id/iivSortingDirection"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:padding="12dp"
+                            app:iiv_color="@color/colorWhite"
+                            app:iiv_icon="cmd-sort-descending"
+                            android:background="@drawable/rounded_white"
+                            android:backgroundTint="?attr/colorPrimary"
+                            android:layout_gravity="end"
+                            />
+
+                    </FrameLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/llFilteredArtifact"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Viewing in: Filtered Artifact Title"
-                        android:layout_centerVertical="true"
-                        android:textColor="@color/colorWhite"
-                        android:maxLines="1"
-                        android:textSize="15sp"
-                        android:ellipsize="end"
-                        android:layout_toLeftOf="@+id/iivUnFilterArtifact"
-                        />
+                        android:layout_marginRight="16dp"
+                        android:paddingLeft="20dp"
+                        android:paddingRight="12dp"
+                        android:background="@drawable/rounded_white"
+                        android:backgroundTint="?attr/colorPrimary"
+                        >
 
-                    <com.mikepenz.iconics.view.IconicsImageView
-                        android:id="@+id/iivUnFilterArtifact"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="12dp"
-                        app:iiv_color="@color/colorWhite"
-                        app:iiv_icon="cmd-close"
-                        android:background="@drawable/rounded_padded_clickable"
-                        android:layout_alignParentEnd="true"
-                        />
+                        <TextView
+                            android:id="@+id/tvFilteredArtifactTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Viewing in: Filtered Artifact Title"
+                            android:layout_centerVertical="true"
+                            android:textColor="@color/colorWhite"
+                            android:maxLines="1"
+                            android:textSize="15sp"
+                            android:ellipsize="end"
+                            android:layout_toLeftOf="@+id/iivUnFilterArtifact"
+                            />
 
-                </RelativeLayout>
+                        <com.mikepenz.iconics.view.IconicsImageView
+                            android:id="@+id/iivUnFilterArtifact"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:padding="12dp"
+                            app:iiv_color="@color/colorWhite"
+                            app:iiv_icon="cmd-close"
+                            android:background="@drawable/rounded_padded_clickable"
+                            android:layout_alignParentEnd="true"
+                            />
+
+                    </RelativeLayout>
+
+                </LinearLayout>
+
+                <CheckBox
+                    android:id="@+id/cbOnePerArtifact"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Show for first snapshot in artifact"
+                    android:layout_marginLeft="19dp"
+                    android:layout_marginRight="19dp"
+                    android:layout_marginTop="5dp"
+                    android:checked="true"
+                    />
 
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/tvExplore"
+            <LinearLayout
+                android:id="@+id/llExplore"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
-                android:text="Explore"
+                android:orientation="vertical"
                 android:layout_below="@+id/llFilters"
-                />
+                >
 
-            <TextView
-                android:id="@+id/tvEmpty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
-                android:text="(empty)"
-                android:layout_below="@+id/tvExplore"
-                />
+                <TextView
+                    android:id="@+id/tvExplore"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:text="Explore"
+                    />
+
+                <TextView
+                    android:id="@+id/tvEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:text="(empty)"
+                    />
+
+            </LinearLayout>
 
         </RelativeLayout>
 

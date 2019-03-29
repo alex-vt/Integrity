@@ -6,6 +6,8 @@
 
 package com.alexvt.integrity.lib.search
 
+import com.alexvt.integrity.lib.metadata.Snapshot
+
 data class DataChunk(val artifactId: Long = 0,
                      val date: String = "",
                      val text: String = "",
@@ -21,9 +23,18 @@ data class NamedLink(val title: String = "", val link: String = "")
  * User viewable data chunk part containing its text truncated around the searched text in it,
  * and the most relevant links (around the searched text, and general ones in the data chunk).
  */
-data class SearchResult(val snapshotTitle: String,
-                        val date: String,
-                        val truncatedText: String,
-                        val highlightRange: IntRange,
-                        val relevantLinkOrNull: NamedLink?
-)
+data class TextSearchResult(val snapshotTitle: String,
+                            val date: String,
+                            val truncatedText: String,
+                            val highlightRange: IntRange,
+                            val relevantLinkOrNull: NamedLink?
+): SearchResult()
+
+/**
+ * Search result for snapshot title of which contains the search text.
+ */
+data class SnapshotSearchResult(val snapshot: Snapshot,
+                                val titleHighlightRange: IntRange
+): SearchResult()
+
+abstract class SearchResult

@@ -82,6 +82,14 @@ interface MetadataRepository : Clearable {
 
     fun getSnapshotMetadataFlowable(artifactId: Long, date: String): Flowable<Snapshot>
 
+
+    /**
+     * Returns snapshots by given title substring.
+     */
+    fun searchTitleSingle(searchText: String): Single<List<Snapshot>>
+
+    fun searchTitleSingle(searchText: String, artifactId: Long): Single<List<Snapshot>>
+
     /**
      * Removes snapshot metadata marked as blueprints for a given artifact.
      */

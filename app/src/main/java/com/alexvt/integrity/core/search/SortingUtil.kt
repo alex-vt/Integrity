@@ -8,7 +8,9 @@ package com.alexvt.integrity.core.search
 
 import com.alexvt.integrity.core.settings.SortingMethod
 import com.alexvt.integrity.lib.metadata.Snapshot
-import com.alexvt.integrity.lib.search.SearchResult
+import com.alexvt.integrity.lib.search.SnapshotSearchResult
+import com.alexvt.integrity.lib.search.TextSearchResult
+import java.lang.Exception
 
 object SortingUtil { // for UI
 
@@ -50,47 +52,39 @@ object SortingUtil { // for UI
             sortingDirection = getOppositeDirection(getSortingDirection(sortingMethod))
     )
 
+    // todo sortability compile time verification
+    private fun getDate(sortable: Any) = when (sortable) {
+        is Snapshot -> sortable.date
+        is TextSearchResult -> sortable.date
+        is SnapshotSearchResult -> sortable.snapshot.date
+        else -> throw Exception("Item $sortable not sortable by date")
+    }
 
+    private fun getTitle(sortable: Any) = when (sortable) {
+        is Snapshot -> sortable.title
+        is TextSearchResult -> sortable.snapshotTitle
+        is SnapshotSearchResult -> sortable.snapshot.title
+        else -> throw Exception("Item $sortable not sortable by title")
+    }
 
-    fun sortSnapshots(snapshots: List<Snapshot>,
-                      sortingMethod: String) = with (snapshots) {
+    fun <T: Any> sort(sortableItems: List<T>,
+                      sortingMethod: String): List<T> = with (sortableItems) {
         if (isByDate(sortingMethod)) {
             if (isAscending(sortingMethod)) {
-                sortedBy { it.date }
+                sortedBy { getDate(it) }
             } else {
-                sortedByDescending { it.date }
+                sortedByDescending { getDate(it) }
             }
         } else if (isByTitle(sortingMethod)) {
             if (isAscending(sortingMethod)) {
-                sortedBy { it.title }
+                sortedBy { getTitle(it)}
             } else {
-                sortedByDescending { it.title }
+                sortedByDescending { getTitle(it) }
             }
         } else {
             shuffled()
         }
     }
-
-    fun sortSearchResults(searchResults: List<SearchResult>,
-                          sortingMethod: String) = with (searchResults) {
-        if (isByDate(sortingMethod)) {
-            if (isAscending(sortingMethod)) {
-                sortedBy { it.date }
-            } else {
-                sortedByDescending { it.date }
-            }
-        } else if (isByTitle(sortingMethod)) {
-            if (isAscending(sortingMethod)) {
-                sortedBy { it.snapshotTitle }
-            } else {
-                sortedByDescending { it.snapshotTitle }
-            }
-        } else {
-            shuffled()
-        }
-    }
-
-
 
     private fun getSortingType(sortingMethod: String) = when (sortingMethod) {
         SortingMethod.NEW_FIRST, SortingMethod.OLD_FIRST -> SortingType.DATE

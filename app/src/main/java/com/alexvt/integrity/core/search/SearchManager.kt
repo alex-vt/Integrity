@@ -7,38 +7,56 @@
 package com.alexvt.integrity.core.search
 
 import com.alexvt.integrity.core.metadata.MetadataRepository
-import com.alexvt.integrity.lib.search.DataChunk
-import com.alexvt.integrity.lib.search.NamedLink
-import com.alexvt.integrity.lib.search.SearchResult
+import com.alexvt.integrity.lib.metadata.Snapshot
+import com.alexvt.integrity.lib.search.*
 import io.reactivex.Single
+import io.reactivex.functions.BiFunction
+import io.reactivex.rxkotlin.zipWith
 import java.util.regex.Pattern
 import javax.inject.Inject
 
 class SearchManager @Inject constructor(private val metadataRepository: MetadataRepository,
                                         private val searchIndexRepository: SearchIndexRepository) {
 
+    /**
+     * Searches snapshot titles and indexed text data, then merges search results.
+     */
+    fun search(searchedText: String, artifactId: Long?)
+            = searchSnapshotTitles(searchedText, artifactId)
+            .zipWith(searchText(searchedText, artifactId), BiFunction {
+                snapshotResults: List<SearchResult>, textResults: List<SearchResult> ->
+                snapshotResults.plus(textResults)
+            })
+
+    fun searchSnapshotTitles(searchedText: String, artifactId: Long?)
+            = searchSnapshots(searchedText, artifactId)
+            .map { snapshotToSearchResults(searchedText, it) }
+
+    private fun snapshotToSearchResults(searchedText: String, snapshots: List<Snapshot>) = snapshots
+            .map { snapshot -> getLocationsOfSearchedText(snapshot.title, searchedText)
+                    .map { range -> SnapshotSearchResult(snapshot, range) }
+            }.flatMap { it.toList() }
+
+    private fun searchSnapshots(searchedText: String, artifactId: Long?) =
+            if (isBigEnough(searchedText)) {
+                if (artifactId != null) {
+                    metadataRepository.searchTitleSingle(searchedText, artifactId)
+                } else {
+                    metadataRepository.searchTitleSingle(searchedText)
+                }
+            } else {
+                Single.just(emptyList())
+            }
+
     fun searchText(searchedText: String, artifactId: Long?)
-            = searchTextIfBigEnough(searchedText, artifactId)
+            = searchIndexedChunks(searchedText, artifactId)
             .map { chunksToSearchResults(searchedText, it) }
-
-    private fun chunksToSearchResults(searchedText: String, chunks: List<DataChunk>)
-            = chunks.map { chunk -> getLocationsOfSearchedText(chunk.text, searchedText)
-            .map { range -> run {
-                val truncatedTextWithHighlightRange = truncateTextRange(chunk.text, range)
-                SearchResult(getSearchResultTitle(chunk), chunk.date,
-                        truncatedTextWithHighlightRange.first,
-                        truncatedTextWithHighlightRange.second,
-                        getRelevantLinkOrNull(chunk.links, searchedText))
-            }
-            }
-    }.flatMap { it.toList() }
-
 
     private val minSearchTextLength = 3
 
     private fun isBigEnough(searchText: String) = searchText.length >= minSearchTextLength
 
-    private fun searchTextIfBigEnough(searchedText: String, artifactId: Long?) =
+    private fun searchIndexedChunks(searchedText: String, artifactId: Long?) =
             if (isBigEnough(searchedText)) {
                 if (artifactId != null) {
                     searchIndexRepository.searchTextSingle(searchedText, artifactId)
@@ -48,6 +66,18 @@ class SearchManager @Inject constructor(private val metadataRepository: Metadata
             } else {
                 Single.just(emptyList())
             }
+
+    private fun chunksToSearchResults(searchedText: String, chunks: List<DataChunk>) = chunks
+            .map { chunk -> getLocationsOfSearchedText(chunk.text, searchedText)
+                    .map { range -> run {
+                        val truncatedTextWithHighlightRange = truncateTextRange(chunk.text, range)
+                        TextSearchResult(getSearchResultTitle(chunk), chunk.date,
+                                truncatedTextWithHighlightRange.first,
+                                truncatedTextWithHighlightRange.second,
+                                getRelevantLinkOrNull(chunk.links, searchedText))
+                    }
+                    }
+            }.flatMap { it.toList() }
 
     private fun getLocationsOfSearchedText(text: String, searchedText: String)
             = Pattern.quote(searchedText).toRegex().findAll(text).map { it.range }

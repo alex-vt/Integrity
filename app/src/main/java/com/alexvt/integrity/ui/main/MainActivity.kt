@@ -33,7 +33,6 @@ import com.alexvt.integrity.ui.util.SpeedDialUtil
 import com.mikepenz.iconics.context.IconicsLayoutInflater2
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.holder.BadgeStyle
-import java.util.*
 import co.zsmb.materialdrawerkt.draweritems.badge
 import co.zsmb.materialdrawerkt.draweritems.switchable.switchItem
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
@@ -295,9 +294,7 @@ class MainActivity : ThemedActivity() {
                     onClickMoreListener = { artifactId, _, many ->
                         if (many) vm.viewMoreOfArtifact(artifactId) else vm.addSnapshot(artifactId)
                     }
-            ) }.let {
-                snapshotsSection.update(it)
-            }
+            ) }.let { snapshotsSection.update(it) }
         })
 
         vm.inputStateData.observe(this, androidx.lifecycle.Observer {
@@ -307,19 +304,35 @@ class MainActivity : ThemedActivity() {
 
     private fun bindSearchResults() {
         val searchResultAdapter = GroupAdapter<ViewHolder>()
-        val searchResultSection = Section()
-        searchResultAdapter.add(searchResultSection)
         rvSearchResults.adapter = searchResultAdapter
-        vm.searchResultsData.observe(this, androidx.lifecycle.Observer {
-            it.map {SearchResultListItem(
-                    searchResult = it,
+
+        val searchSnapshotSection = Section()
+        searchResultAdapter.add(searchSnapshotSection)
+        vm.snapshotSearchResultsData.observe(this, androidx.lifecycle.Observer {
+            it.map { SnapshotListItem(
+                    snapshot = it.snapshot,
+                    titleHighlightRange = it.titleHighlightRange,
+                    relatedSnapshotCount = 1,
                     context = this,
-                    onLinkClickListener = { ViewExternalUtil.viewLinkExternal(this, it) }
-            ) }.let {
-                searchResultSection.update(it)
-            }.also {
-                updateNoResultsPlaceholder()
-            }
+                    showMoreButton = false,
+                    settingsRepository = vm.settingsRepository,
+                    dataFolderManager = vm.dataFolderManager,
+                    onClickListener = { artifactId, date ->
+                        vm.viewSnapshot(artifactId, date)
+                    }
+            ) }.let { searchSnapshotSection.update(it) }
+            updateNoResultsPlaceholder()
+        })
+
+        val searchTextSection = Section()
+        searchResultAdapter.add(searchTextSection)
+        vm.textSearchResultsData.observe(this, androidx.lifecycle.Observer {
+            it.map { TextSearchResultListItem(
+                        textSearchResult = it,
+                        context = this,
+                        onLinkClickListener = { ViewExternalUtil.viewLinkExternal(this, it) }
+            ) }.let { searchTextSection.update(it) }
+            updateNoResultsPlaceholder()
         })
 
         vm.inputStateData.observe(this, androidx.lifecycle.Observer {
@@ -329,7 +342,8 @@ class MainActivity : ThemedActivity() {
     }
 
     private fun updateNoResultsPlaceholder() {
-        val searchResultsExist = vm.searchResultsData.value!!.isNotEmpty()
+        val searchResultsExist = vm.textSearchResultsData.value!!.isNotEmpty()
+                || vm.snapshotSearchResultsData.value!!.isNotEmpty()
         tvNoResults.visibility = if (vm.isSearching() && !searchResultsExist) View.VISIBLE else View.GONE
     }
 

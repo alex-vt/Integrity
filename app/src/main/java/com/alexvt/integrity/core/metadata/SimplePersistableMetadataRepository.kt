@@ -15,6 +15,7 @@ import com.alexvt.integrity.lib.metadata.SnapshotCompareUtil
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
 import com.alexvt.integrity.lib.util.JsonSerializerUtil
 import io.reactivex.Flowable
+import io.reactivex.Single
 
 /**
  * Stores metadata simply in Java objects and persists them to Android SharedPreferences
@@ -114,6 +115,16 @@ class SimplePersistableMetadataRepository(
     ): Flowable<Snapshot> = reactiveRequests.add {
         getSnapshotMetadataBlocking(artifactId, date)
     }
+
+    override fun searchTitleSingle(searchText: String): Single<List<Snapshot>> = Single.just(
+            allMetadata.snapshots
+                    .filter { it.title.contains(searchText) }
+    )
+
+    override fun searchTitleSingle(searchText: String, artifactId: Long): Single<List<Snapshot>> = Single.just(
+            allMetadata.snapshots
+                    .filter { it.artifactId == artifactId && it.title.contains(searchText) }
+    )
 
     override fun clear() {
         allMetadata.snapshots.clear()

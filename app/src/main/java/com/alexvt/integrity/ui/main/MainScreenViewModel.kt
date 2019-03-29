@@ -6,11 +6,11 @@
 
 package com.alexvt.integrity.ui.main
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.alexvt.integrity.core.metadata.MetadataRepository
 import com.alexvt.integrity.core.jobs.ScheduledJobManager
 import com.alexvt.integrity.core.log.LogRepository
-import com.alexvt.integrity.lib.search.SearchResult
 import com.alexvt.integrity.core.search.SearchManager
 import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.core.settings.IntegrityAppSettings
@@ -23,9 +23,13 @@ import com.alexvt.integrity.lib.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.util.ThrottledFunction
 import com.alexvt.integrity.lib.metadata.Snapshot
 import com.alexvt.integrity.lib.metadata.SnapshotStatus
+import com.alexvt.integrity.lib.search.SearchResult
+import com.alexvt.integrity.lib.search.SnapshotSearchResult
+import com.alexvt.integrity.lib.search.TextSearchResult
 import com.alexvt.integrity.ui.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.ui.util.SingleLiveEvent
 import io.reactivex.Scheduler
+import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -103,7 +107,8 @@ class MainScreenViewModel @Inject constructor(
     val typeNameData = MutableLiveData<List<String>>()
 
     // depends on primary
-    val searchResultsData = MutableLiveData<List<SearchResult>>()
+    val snapshotSearchResultsData = MutableLiveData<List<SnapshotSearchResult>>()
+    val textSearchResultsData = MutableLiveData<List<TextSearchResult>>()
     val snapshotsData = MutableLiveData<List<Pair<Snapshot, Int>>>()
 
     // single events
@@ -171,7 +176,8 @@ class MainScreenViewModel @Inject constructor(
 
         // snapshots, search results initial values
         snapshotsData.value = emptyList()
-        searchResultsData.value = emptyList()
+        snapshotSearchResultsData.value = emptyList()
+        textSearchResultsData.value = emptyList()
     }
 
     override fun onCleared() {
@@ -190,7 +196,12 @@ class MainScreenViewModel @Inject constructor(
     private val updateContentCoolingOffMillis = 500L
     private val contentDataWithCoolingOff = ThrottledFunction(updateContentCoolingOffMillis) {
         subscribeToSnapshots()
-        subscribeToSearchResults()
+        subscribeToSearchResults(snapshotSearchResultsData, "searchSnapshots") {
+            text, artifactId -> searchManager.searchSnapshotTitles(text, artifactId)
+        }
+        subscribeToSearchResults(textSearchResultsData, "searchText") {
+            text, artifactId -> searchManager.searchText(text, artifactId)
+        }
     }
 
     private fun updateContentData() {
@@ -206,7 +217,7 @@ class MainScreenViewModel @Inject constructor(
             null -> metadataRepository.getAllArtifactLatestMetadataFlowable()
             else -> metadataRepository.getArtifactMetadataFlowable(filteredArtifactId)
         }.subscribeOn(Schedulers.newThread())
-                .map { SortingUtil.sortSnapshots(it, getSortingMethod()) }
+                .map { SortingUtil.sort(it, getSortingMethod()) }
                 .map { sortedSnapshots ->
                     sortedSnapshots.map { Pair(it, getSnapshotCountBlocking(it.artifactId)) }
                 }.observeOn(uiScheduler)
@@ -216,18 +227,20 @@ class MainScreenViewModel @Inject constructor(
                 .untilClearedOrUpdated("snapshots")
     }
 
-    private fun subscribeToSearchResults() {
+    private fun <S: SearchResult> subscribeToSearchResults(targetLiveData: MutableLiveData<List<S>>,
+                                                           tag: String,
+                                                           searchFunction: (String, Long?) -> Single<List<S>>) {
         val searchText = inputStateData.value!!.searchViewText
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         val sortingMethod = settingsData.value!!.sortingMethod
-        searchManager.searchText(searchText, filteredArtifactId)
+        searchFunction.invoke(searchText, filteredArtifactId)
                 .subscribeOn(Schedulers.newThread())
-                .map { SortingUtil.sortSearchResults(it, sortingMethod) }
+                .map { SortingUtil.sort(it, sortingMethod) }
                 .observeOn(uiScheduler)
                 .subscribe { searchResults ->
-                    searchResultsData.value = searchResults
+                    targetLiveData.value = searchResults
                 }
-                .untilClearedOrUpdated("search")
+                .untilClearedOrUpdated(tag)
     }
 
     private fun getSortingMethod(): String {

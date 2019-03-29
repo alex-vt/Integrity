@@ -15,6 +15,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import io.reactivex.Flowable
+import io.reactivex.Single
 import kotlin.collections.ArrayList
 import java.lang.reflect.ParameterizedType
 
@@ -161,6 +162,12 @@ class RoomMetadataRepository(context: Context): MetadataRepository {
         @Query("SELECT * FROM dbsnapshot WHERE artifactId = :artifactId AND date = :date")
         fun getSnapshotMetadataBlocking(artifactId: Long, date: String): List<DbSnapshot>
 
+        @Query("SELECT * FROM dbsnapshot WHERE title LIKE :text")
+        fun searchTitleSingle(text: String): Single<List<DbSnapshot>>
+
+        @Query("SELECT * FROM dbsnapshot WHERE artifactId = :artifactId AND title LIKE :text")
+        fun searchTitleSingle(text: String, artifactId: Long): Single<List<DbSnapshot>>
+
         @Query("DELETE FROM dbsnapshot")
         fun clear()
 
@@ -232,6 +239,14 @@ class RoomMetadataRepository(context: Context): MetadataRepository {
             .getSnapshotMetadataFlowable(artifactId, date)
             .map { it.first() }
             .map { EntityConverters.fromDbEntity(it) }
+
+    override fun searchTitleSingle(searchText: String): Single<List<Snapshot>> = db.snapshotDao()
+            .searchTitleSingle("%$searchText%")
+            .map { it.map { EntityConverters.fromDbEntity(it) } }
+
+    override fun searchTitleSingle(searchText: String, artifactId: Long): Single<List<Snapshot>> = db.snapshotDao()
+            .searchTitleSingle("%$searchText%", artifactId)
+            .map { it.map { EntityConverters.fromDbEntity(it) } }
 
     override fun clear() {
         db.snapshotDao().clear()

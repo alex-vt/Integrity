@@ -7,6 +7,10 @@
 package com.alexvt.integrity.ui.main
 
 import android.content.Context
+import android.graphics.Color
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.view.View
 import com.alexvt.integrity.R
 import com.alexvt.integrity.core.settings.SettingsRepository
@@ -22,14 +26,15 @@ import kotlinx.android.synthetic.main.snapshot_list_item.view.*
 
 class SnapshotListItem(
         private val snapshot: Snapshot,
+        private val titleHighlightRange: IntRange? = null,
         private val relatedSnapshotCount: Int,
         private val context: Context,
         private val showMoreButton: Boolean,
         private val settingsRepository: SettingsRepository,
         private val dataFolderManager: DataFolderManager,
         private val onClickListener: (Long, String) -> Unit,
-        private val onLongClickListener: (Long, String, Boolean) -> Unit,
-        private val onClickMoreListener: (Long, String, Boolean) -> Unit
+        private val onLongClickListener: ((Long, String, Boolean) -> Unit)? = null,
+        private val onClickMoreListener: ((Long, String, Boolean) -> Unit)? = null
         ) : Item() {
     override fun getLayout() = R.layout.snapshot_list_item
 
@@ -44,7 +49,7 @@ class SnapshotListItem(
     }
 
     override fun bind(holder: ViewHolder, position: Int) {
-        holder.itemView.tvTitle.text = snapshot.title
+        holder.itemView.tvTitle.text = getHighlightedSpannable(snapshot.title, titleHighlightRange)
         holder.itemView.tvDate.text = when {
             snapshot.status == SnapshotStatus.COMPLETE -> snapshot.date
             snapshot.status == SnapshotStatus.INCOMPLETE -> snapshot.date + " (incomplete)"
@@ -58,13 +63,13 @@ class SnapshotListItem(
         holder.itemView.bMore.text = if (isMultipleSnapshots) "${relatedSnapshotCount - 1} more" else "Add more"
 
         holder.itemView.bMore.setOnClickListener {
-            onClickMoreListener.invoke(snapshot.artifactId, snapshot.date, isMultipleSnapshots)
+            onClickMoreListener?.invoke(snapshot.artifactId, snapshot.date, isMultipleSnapshots)
         }
         holder.itemView.setOnClickListener {
             onClickListener.invoke(snapshot.artifactId, snapshot.date)
         }
         holder.itemView.setOnLongClickListener {
-            onLongClickListener.invoke(snapshot.artifactId, snapshot.date, isMultipleSnapshots)
+            onLongClickListener?.invoke(snapshot.artifactId, snapshot.date, isMultipleSnapshots)
             false
         }
 
@@ -82,5 +87,14 @@ class SnapshotListItem(
                     .load(snapshotPreviewPath)
                     .into(holder.itemView.ivPreview)
         }
+    }
+
+    private fun getHighlightedSpannable(text: String, highlightRange: IntRange? = null): Spannable {
+        val spannableString = SpannableString(text)
+        if (highlightRange != null) {
+            spannableString.setSpan(ForegroundColorSpan(Color.BLUE), highlightRange.first,
+                    highlightRange.last + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        return spannableString
     }
 }

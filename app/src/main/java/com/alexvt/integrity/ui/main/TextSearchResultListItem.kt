@@ -14,37 +14,37 @@ import android.text.style.ForegroundColorSpan
 import android.view.View
 import com.alexvt.integrity.R
 import com.alexvt.integrity.lib.search.NamedLink
-import com.alexvt.integrity.lib.search.SearchResult
+import com.alexvt.integrity.lib.search.TextSearchResult
 import com.xwray.groupie.kotlinandroidextensions.Item
 import com.xwray.groupie.kotlinandroidextensions.ViewHolder
 import kotlinx.android.synthetic.main.search_result_list_item.view.*
 
-class SearchResultListItem(
-        private val searchResult: SearchResult,
+class TextSearchResultListItem(
+        private val textSearchResult: TextSearchResult,
         private val context: Context,
         private val onLinkClickListener: (String) -> Unit
         ) : Item() {
     override fun getLayout() = R.layout.search_result_list_item
 
     override fun isSameAs(other: com.xwray.groupie.Item<*>?): Boolean {
-        if (other !is SearchResultListItem) return false
-        if (searchResult.snapshotTitle != other.searchResult.snapshotTitle) return false
-        if (searchResult.date != other.searchResult.date) return false
-        if (searchResult.truncatedText != other.searchResult.truncatedText) return false
-        if (searchResult.highlightRange != other.searchResult.highlightRange) return false
+        if (other !is TextSearchResultListItem) return false
+        if (textSearchResult.snapshotTitle != other.textSearchResult.snapshotTitle) return false
+        if (textSearchResult.date != other.textSearchResult.date) return false
+        if (textSearchResult.truncatedText != other.textSearchResult.truncatedText) return false
+        if (textSearchResult.highlightRange != other.textSearchResult.highlightRange) return false
         return true
     }
 
     override fun bind(holder: ViewHolder, position: Int) {
-        holder.itemView.tvSnapshotTitle.text = searchResult.snapshotTitle
-        holder.itemView.tvSnapshotDate.text = searchResult.date
+        holder.itemView.tvSnapshotTitle.text = textSearchResult.snapshotTitle
+        holder.itemView.tvSnapshotDate.text = textSearchResult.date
 
-        holder.itemView.tvText.text = getHighlightedSpannable(searchResult.truncatedText,
-                searchResult.highlightRange)
+        holder.itemView.tvText.text = getHighlightedSpannable(textSearchResult.truncatedText,
+                textSearchResult.highlightRange)
 
-        if (searchResult.relevantLinkOrNull != null) { // todo button to view other links
+        if (textSearchResult.relevantLinkOrNull != null) { // todo button to view other links
             holder.itemView.tvRelevantLink.visibility = View.VISIBLE
-            val relevantLink = searchResult.relevantLinkOrNull as NamedLink
+            val relevantLink = textSearchResult.relevantLinkOrNull as NamedLink
             holder.itemView.tvRelevantLink.text = relevantLink.title
             holder.itemView.tvRelevantLink.setOnClickListener {
                 onLinkClickListener.invoke(relevantLink.link)

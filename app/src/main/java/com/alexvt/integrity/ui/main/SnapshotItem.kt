@@ -63,24 +63,20 @@ class SnapshotItem(
         return true
     }
 
-    private fun getIvPreview(holder: ViewHolder) = holder.itemView.findViewById<ImageView>(R.id.ivPreview)
-
-    private fun getTvTitle(holder: ViewHolder) = holder.itemView.findViewById<TextView>(R.id.tvTitle)
-
-    private fun getTvDate(holder: ViewHolder) = holder.itemView.findViewById<TextView>(R.id.tvDate)
-
-    private fun getTvType(holder: ViewHolder) = holder.itemView.findViewById<TextView>(R.id.tvType)
-
-    private fun getBmore(holder: ViewHolder) = holder.itemView.findViewById<Button>(R.id.bMore)
-
-
     override fun bind(holder: ViewHolder, position: Int) {
-        getTvType(holder).text = dataTypeRepository.getDataType(snapshot.dataTypeClassName).title
-        getTvType(holder).background.setColorFilter(ThemeUtil.getIntColor(snapshot.themeColor),
+        val ivPreview = holder.itemView.findViewById<ImageView>(R.id.ivPreview)
+        val tvTitle = holder.itemView.findViewById<TextView>(R.id.tvTitle)
+        val tvDate = holder.itemView.findViewById<TextView>(R.id.tvDate)
+        val tvType = holder.itemView.findViewById<TextView>(R.id.tvType)
+        val bMore = holder.itemView.findViewById<Button>(R.id.bMore)
+
+        tvType.text = dataTypeRepository.getDataType(snapshot.dataTypeClassName).title
+        tvType.background.setColorFilter(ThemeUtil.getIntColor(snapshot.themeColor),
                 PorterDuff.Mode.DARKEN)
 
-        getTvTitle(holder).text = getHighlightedSpannable(snapshot.title, titleHighlightRange)
-        getTvDate(holder).text = when {
+        tvTitle.text = getHighlightedSpannable(snapshot.title, titleHighlightRange)
+
+        tvDate.text = when {
             snapshot.status == SnapshotStatus.COMPLETE -> snapshot.date
             snapshot.status == SnapshotStatus.INCOMPLETE -> snapshot.date + " (incomplete)"
             snapshot.status == SnapshotStatus.IN_PROGRESS -> snapshot.date + " (downloading)"
@@ -89,12 +85,12 @@ class SnapshotItem(
 
         val isMultipleSnapshots = relatedSnapshotCount > 1
 
-        getBmore(holder).visibility = if (showMoreButton) View.VISIBLE else View.GONE
-        getBmore(holder).text = if (isMultipleSnapshots) "${relatedSnapshotCount - 1} more" else "Add more"
-
-        getBmore(holder).setOnClickListener {
+        bMore.visibility = if (showMoreButton) View.VISIBLE else View.GONE
+        bMore.text = if (isMultipleSnapshots) "${relatedSnapshotCount - 1} more" else "Add more"
+        bMore.setOnClickListener {
             onClickMoreListener?.invoke(snapshot.artifactId, snapshot.date, isMultipleSnapshots)
         }
+
         holder.itemView.setOnClickListener {
             onClickListener.invoke(snapshot.artifactId, snapshot.date)
         }
@@ -107,7 +103,7 @@ class SnapshotItem(
         val snapshotPreviewPath = dataFolderManager.getSnapshotPreviewPath(
                 settingsRepository.get().dataFolderPath, snapshot.artifactId, snapshot.date)
         if (!dataFolderManager.fileExists(snapshotPreviewPath)) {
-            getIvPreview(holder).setImageDrawable(IconicsDrawable(context)
+            ivPreview.setImageDrawable(IconicsDrawable(context)
                     .icon(CommunityMaterial.Icon2.cmd_view_grid)
                     .colorRes(R.color.colorBlueprint)
                     .sizeDp(36))
@@ -115,7 +111,7 @@ class SnapshotItem(
             Glide.with(context)
                     .asBitmap()
                     .load(snapshotPreviewPath)
-                    .into(getIvPreview(holder))
+                    .into(ivPreview)
         }
     }
 

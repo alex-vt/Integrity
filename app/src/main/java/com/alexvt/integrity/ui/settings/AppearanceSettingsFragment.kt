@@ -30,6 +30,7 @@ class AppearanceSettingsFragment : SettingsFragment() {
         bindColorPrimary()
         bindColorAccent()
         bindTextFont()
+        bindSnapshotsListViewType()
     }
 
     private fun bindColorBackground() = bindColorSetting(
@@ -60,5 +61,14 @@ class AppearanceSettingsFragment : SettingsFragment() {
             initialSelection = vm.getCurrentFontIndex(),
             settingSelector = { it.textFont },
             selectionAction = { vm.saveFont(it) }
+    )
+
+    private fun bindSnapshotsListViewType() = bindSelectionSetting(
+            key = "appearance_snapshots_view_type",
+            title = "View snapshots as",
+            items = vm.getAllSnapshotListViewTypeNames(),
+            initialSelection = vm.getCurrentSnapshotListViewTypeIndex(),
+            settingSelector = { it.snapshotListViewMode },
+            selectionAction = { vm.saveSnapshotListViewType(it) }
     )
 }

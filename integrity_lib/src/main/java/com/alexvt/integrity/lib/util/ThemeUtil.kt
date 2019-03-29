@@ -22,6 +22,8 @@ data class ThemeColors(
 
 object ThemeUtil { // todo use parsed colors
 
+    fun getIntColor(stringColor: String) = Color.parseColor(stringColor)
+
     fun getColorBackground(colors: ThemeColors) = Color.parseColor(colors.colorBackground)
 
     fun getColorBackgroundSecondary(colors: ThemeColors): Int {

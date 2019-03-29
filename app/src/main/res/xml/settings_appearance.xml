@@ -44,4 +44,15 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory
+        app:title="Snapshot lists"
+        >
+
+        <Preference
+            app:key="appearance_snapshots_view_type"
+            app:title="View snapshots in lists as"
+            app:summary="Cards"/>
+
+    </PreferenceCategory>
+
 </androidx.preference.PreferenceScreen>

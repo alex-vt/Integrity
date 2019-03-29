@@ -280,12 +280,13 @@ class MainActivity : ThemedActivity() {
         snapshotAdapter.add(snapshotsSection)
         rvSnapshotList.adapter = snapshotAdapter
         vm.snapshotsData.observe(this, androidx.lifecycle.Observer {
-            it.map { SnapshotListItem(
+            it.map { SnapshotItem(
                     snapshot = it.first,
                     relatedSnapshotCount = it.second,
                     context = this,
                     showMoreButton = vm.inputStateData.value!!.filteredArtifactId == null,
                     settingsRepository = vm.settingsRepository,
+                    dataTypeRepository = vm.dataTypeRepository,
                     dataFolderManager = vm.dataFolderManager,
                     onClickListener = { artifactId, date ->
                         vm.viewSnapshot(artifactId, date)
@@ -311,13 +312,14 @@ class MainActivity : ThemedActivity() {
         val searchSnapshotSection = Section()
         searchResultAdapter.add(searchSnapshotSection)
         vm.snapshotSearchResultsData.observe(this, androidx.lifecycle.Observer {
-            it.map { SnapshotListItem(
+            it.map { SnapshotItem(
                     snapshot = it.snapshot,
                     titleHighlightRange = it.titleHighlightRange,
                     relatedSnapshotCount = 1,
                     context = this,
                     showMoreButton = false,
                     settingsRepository = vm.settingsRepository,
+                    dataTypeRepository = vm.dataTypeRepository,
                     dataFolderManager = vm.dataFolderManager,
                     onClickListener = { artifactId, date ->
                         vm.viewSnapshot(artifactId, date)

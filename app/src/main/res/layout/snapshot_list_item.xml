@@ -47,8 +47,22 @@
             android:alpha="0.7"
             android:textColor="?android:attr/textColorSecondary"
             android:layout_toRightOf="@+id/ivPreview"
-            android:layout_toLeftOf="@+id/bMore"
+            android:layout_toLeftOf="@+id/tvType"
             android:layout_below="@+id/tvTitle"
+            />
+
+        <TextView
+            android:id="@+id/tvType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Type"
+            android:layout_marginRight="8dp"
+            android:textColor="@color/colorDark"
+            android:background="@drawable/rounded_white"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
+            android:layout_below="@+id/tvTitle"
+            android:layout_toLeftOf="@+id/bMore"
             />
 
         <Button

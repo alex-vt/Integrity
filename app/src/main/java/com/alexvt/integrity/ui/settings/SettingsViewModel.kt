@@ -9,6 +9,7 @@ package com.alexvt.integrity.ui.settings
 import androidx.lifecycle.MutableLiveData
 import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.core.settings.IntegrityAppSettings
+import com.alexvt.integrity.core.settings.ListViewMode
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.core.types.DataTypeRepository
 import com.alexvt.integrity.lib.filesystem.FilesystemManager
@@ -108,6 +109,20 @@ class SettingsViewModel @Inject constructor(
             getAllFontNames().indexOf(settingsRepository.get().textFont),
             0
     ) // default 0
+
+    fun getAllSnapshotListViewTypeNames()
+            = listOf(ListViewMode.LIST, ListViewMode.CARDS, ListViewMode.BIG_CARDS)
+
+    fun getCurrentSnapshotListViewTypeIndex() = Math.max(
+            getAllSnapshotListViewTypeNames().indexOf(settingsRepository.get().snapshotListViewMode),
+            0
+    ) // default 0
+
+    fun saveSnapshotListViewType(index: Int) {
+        val snapshotListViewTypeName = getAllSnapshotListViewTypeNames()[index]
+        settingsRepository.set(settingsRepository.get()
+                .copy(snapshotListViewMode = snapshotListViewTypeName))
+    }
 
     fun toggleScheduledJobsEnabled() {
         settingsRepository.set(settingsRepository.get()

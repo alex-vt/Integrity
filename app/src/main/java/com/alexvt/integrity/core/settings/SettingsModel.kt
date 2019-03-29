@@ -21,17 +21,24 @@ data class IntegrityAppSettings(
         val colorPrimary: String = "#008577",
         val colorAccent: String = "#EE0077",
         val textFont: String = "",
+        val snapshotListViewMode: String = ListViewMode.CARDS,
         val jobsEnableScheduled: Boolean = true,
         val jobsExpandRunning: Boolean = true,
         val jobsExpandScheduled: Boolean = true,
         val sortingMethod: String = SortingMethod.NEW_FIRST,
-        val fasterSearchInputs: Boolean = false,
+        val fasterSearchInputs: Boolean = true,
         val dataFolderPath: String = "Integrity",
         val dataTags: List<Tag> = emptyList(),
         val dataFolderLocations: List<FolderLocation> = emptyList(),
         val notificationShowErrors: Boolean = true,
         val notificationShowDisabledScheduled: Boolean = true
 ) : Serializable
+
+object ListViewMode {
+    const val LIST = "list"
+    const val CARDS = "cards"
+    const val BIG_CARDS = "big_cards"
+}
 
 /**
  * Sorting method setting can be changed directly, or in dual controls. In the latter case they are:

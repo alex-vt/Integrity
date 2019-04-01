@@ -23,6 +23,8 @@ import androidx.core.view.LayoutInflaterCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import co.zsmb.materialdrawerkt.builders.drawer
 import co.zsmb.materialdrawerkt.builders.footer
 import co.zsmb.materialdrawerkt.draweritems.badgeable.primaryItem
@@ -297,7 +299,10 @@ class MainActivity : ThemedActivity() {
                     onClickMoreListener = { artifactId, _, many ->
                         if (many) vm.viewMoreOfArtifact(artifactId) else vm.addSnapshot(artifactId)
                     }
-            ) }.let { snapshotsSection.update(it) }
+            ) }.let {
+                rvSnapshotList.layoutManager = GridLayoutManager(this, vm.getSnapshotViewColumnCount())
+                snapshotsSection.update(it)
+            }
         })
 
         vm.inputStateData.observe(this, androidx.lifecycle.Observer {

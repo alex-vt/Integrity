@@ -45,7 +45,7 @@
                     tools:text="Title"
                     android:textColor="?android:attr/textColorPrimary"
                     android:layout_below="@+id/ivPreview"
-                    android:maxLines="3"
+                    android:maxLines="1"
                     android:ellipsize="end"
                     />
 

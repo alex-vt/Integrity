@@ -547,6 +547,11 @@ class MainScreenViewModel @Inject constructor(
             0
     ) // default 0
 
+    fun getSnapshotViewColumnCount() = when(settingsRepository.get().snapshotListViewMode) {
+        ListViewMode.CARDS -> 2
+        else -> 1
+    }
+
     /**
      * If searching of doing artifact filtering, these should be reset.
      */

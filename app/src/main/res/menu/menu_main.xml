@@ -15,5 +15,20 @@
         app:ico_icon="cmd-view-carousel"
         app:ico_size="20dp"
         app:ico_color="@color/colorWhite"
-        app:showAsAction="always" />
+        app:showAsAction="always"
+        >
+
+        <menu>
+            <group android:id="@+id/group_view_mode"
+                android:checkableBehavior="single"
+                >
+                <item android:id="@+id/menu_view_list"
+                    android:title="List"/>
+                <item android:id="@+id/menu_view_cards"
+                    android:title="Cards"/>
+                <item android:id="@+id/menu_view_big_cards"
+                    android:title="Big Cards"/>
+            </group>
+        </menu>
+    </item>
 </menu>

@@ -718,15 +718,18 @@ class MainActivity : ThemedActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         IconicsMenuInflaterUtil.inflate(menuInflater, this, R.menu.menu_main, menu)
+        menu.getItem(0).subMenu.getItem(vm.getCurrentViewOptionIndex()).isChecked = true
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.action_select_view -> {
-            // todo show list view selection (for snapshots or search results)
-            true
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) { // todo add programmatically based on model
+            R.id.menu_view_list -> vm.clickViewOption(0)
+            R.id.menu_view_cards -> vm.clickViewOption(1)
+            R.id.menu_view_big_cards -> vm.clickViewOption(2)
         }
-        else -> super.onOptionsItemSelected(item)
+        item.isChecked = true
+        return true
     }
 
     override fun onBackPressed() = vm.pressBackButton()

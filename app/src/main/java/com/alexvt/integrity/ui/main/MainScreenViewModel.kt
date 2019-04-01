@@ -15,6 +15,7 @@ import com.alexvt.integrity.core.search.SortingUtil
 import com.alexvt.integrity.core.settings.IntegrityAppSettings
 import com.alexvt.integrity.core.settings.SortingMethod
 import com.alexvt.integrity.core.operations.SnapshotOperationManager
+import com.alexvt.integrity.core.settings.ListViewMode
 import com.alexvt.integrity.core.settings.SettingsRepository
 import com.alexvt.integrity.core.types.DataTypeRepository
 import com.alexvt.integrity.lib.IntegrityLib
@@ -532,9 +533,19 @@ class MainScreenViewModel @Inject constructor(
 
     // menus user action
 
-    fun clickViewOptionsIcon() {
-        // todo
+    fun clickViewOption(index: Int) {
+        val snapshotListViewTypeName = getAllViewOptionNames()[index]
+        settingsRepository.set(settingsRepository.get()
+                .copy(snapshotListViewMode = snapshotListViewTypeName))
     }
+
+    private fun getAllViewOptionNames()
+            = listOf(ListViewMode.LIST, ListViewMode.CARDS, ListViewMode.BIG_CARDS)
+
+    fun getCurrentViewOptionIndex() = Math.max(
+            getAllViewOptionNames().indexOf(settingsRepository.get().snapshotListViewMode),
+            0
+    ) // default 0
 
     /**
      * If searching of doing artifact filtering, these should be reset.

@@ -19,7 +19,7 @@
 
     <application
         android:allowBackup="true"
-        android:name=".App"
+        android:name=".android.App"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -28,7 +28,7 @@
         >
 
 
-        <activity android:name=".ui.splash.SplashScreenActivity"
+        <activity android:name="com.alexvt.integrity.android.ui.splash.SplashScreenActivity"
             android:theme="@style/AppTheme.NoActionBar.Splash"
             android:launchMode="singleTop"
             >
@@ -40,7 +40,7 @@
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.ui.main.MainActivity"
+            android:name="com.alexvt.integrity.android.ui.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:launchMode="singleTop"
             >
@@ -52,7 +52,7 @@
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.ui.log.LogViewActivity"
+            android:name="com.alexvt.integrity.android.ui.log.LogViewActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:taskAffinity=""
             android:excludeFromRecents="true"
@@ -60,68 +60,60 @@
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.type.blog.ui.BlogTypeActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="com.alexvt.integrity.ACTION_VIEW" />
-            </intent-filter>
-        </activity>
-
-        <activity
             android:exported="true"
-            android:name="com.alexvt.integrity.ui.destinations.DestinationsActivity"
+            android:name="com.alexvt.integrity.android.ui.destinations.DestinationsActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
             android:exported="true"
-            android:name="com.alexvt.integrity.ui.tags.TagsActivity"
+            android:name="com.alexvt.integrity.android.ui.tags.TagsActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.ui.destinations.local.LocalDestinationActivity"
+            android:name="com.alexvt.integrity.android.ui.destinations.local.LocalDestinationActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.ui.destinations.samba.SambaDestinationActivity"
+            android:name="com.alexvt.integrity.android.ui.destinations.samba.SambaDestinationActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.ui.settings.SettingsActivity"
+            android:name="com.alexvt.integrity.android.ui.settings.SettingsActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.ui.recovery.RecoveryActivity"
+            android:name="com.alexvt.integrity.android.ui.recovery.RecoveryActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.ui.info.HelpInfoActivity"
+            android:name="com.alexvt.integrity.android.ui.info.HelpInfoActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <activity
-            android:name="com.alexvt.integrity.ui.info.LegalInfoActivity"
+            android:name="com.alexvt.integrity.android.ui.info.LegalInfoActivity"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
-        <receiver android:name="com.alexvt.integrity.core.operations.AndroidSnapshotOperationManager$SnapshotProgressReceiver" >
+        <receiver android:name="com.alexvt.integrity.android.operations.snapshots.AndroidSnapshotOperationManager$SnapshotProgressReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.SNAPSHOT_DOWNLOAD_PROGRESS" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.core.log.LogEventReceiver$LogEntryReceiver" >
+        <receiver android:name="com.alexvt.integrity.android.data.log.LogEventReceiver$LogEntryReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.LOG_ENTRY_ADDED" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.lib.log.LoggingUtil$LogEntryRecoveryReceiver"
+        <receiver android:name="com.alexvt.integrity.lib.android.operations.log.AndroidLogManager$LogEntryRecoveryReceiver"
             android:process=":recovery"
             >
             <intent-filter>
@@ -129,25 +121,25 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.core.log.LogEventReceiver$LogReadReceiver" >
+        <receiver android:name="com.alexvt.integrity.android.data.log.LogEventReceiver$LogReadReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.LOG_READ" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".core.jobs.ScheduledJobsEnableReceiver" >
+        <receiver android:name="com.alexvt.integrity.android.operations.notifications.ScheduledJobsEnableReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.ENABLE_SCHEDULED_JOBS" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.ui.recovery.AppOpenReceiver" >
+        <receiver android:name="com.alexvt.integrity.android.util.AppOpenReceiver" >
             <intent-filter>
                 <action android:name="com.alexvt.integrity.APP_OPEN" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.ui.recovery.AppReopenReceiver"
+        <receiver android:name="com.alexvt.integrity.android.util.AppReopenReceiver"
             android:process=":restart"
             >
             <intent-filter>
@@ -155,7 +147,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.core.util.AutoStartUtil$AutoStartReceiver"
+        <receiver android:name="com.alexvt.integrity.android.AutoStartReceiver"
             >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -163,8 +155,19 @@
             </intent-filter>
         </receiver>
 
+
+        <!-- Included data types -->
+
+        <activity
+            android:name=".android.ui.types.blog.BlogTypeActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="com.alexvt.integrity.ACTION_VIEW" />
+            </intent-filter>
+        </activity>
+
         <service
-            android:name="com.alexvt.integrity.type.blog.BlogTypeService"
+            android:name="com.alexvt.integrity.android.operations.types.blog.BlogTypeService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             >
             <intent-filter>

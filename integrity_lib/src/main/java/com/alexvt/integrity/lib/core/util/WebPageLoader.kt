@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.lib.core.operations.types.blog
+package com.alexvt.integrity.lib.core.util
 
 interface WebPageLoader {
 

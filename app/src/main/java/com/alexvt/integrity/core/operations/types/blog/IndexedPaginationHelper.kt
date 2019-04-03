@@ -11,16 +11,16 @@ import com.alexvt.integrity.lib.core.util.LinkUtil
 import com.alexvt.integrity.lib.core.util.WebArchiveFilesUtil
 import com.alexvt.integrity.core.data.types.blog.BlogTypeMetadata
 import com.alexvt.integrity.core.data.types.blog.IndexedPagination
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import com.alexvt.integrity.lib.core.operations.snapshots.DownloadProgressReporter
-import com.alexvt.integrity.lib.core.operations.types.blog.WebPageLoader
+import com.alexvt.integrity.lib.core.util.WebPageLoader
 
 internal class IndexedPaginationHelper(
-        override val filesystemManager: FilesystemManager,
+        override val fileRepository: FileRepository,
         override val webArchiveFilesUtil: WebArchiveFilesUtil,
         override val webPageLoader: WebPageLoader,
         override val downloadProgressReporter: DownloadProgressReporter
-) : CommonPaginationHelper(filesystemManager, webArchiveFilesUtil, webPageLoader,
+) : CommonPaginationHelper(fileRepository, webArchiveFilesUtil, webPageLoader,
         downloadProgressReporter) {
 
     /**
@@ -35,7 +35,6 @@ internal class IndexedPaginationHelper(
     override fun downloadPages(dl: BlogMetadataDownload): Boolean {
         while (isRunning(dl) && hasNextPageLink(dl)) {
             val currentPageLink = getNextPageLink(dl)
-            android.util.Log.v("IndexedPaginationHelper", "downloadPages: $currentPageLink")
             val additionalLinksOnPage = getAdditionalLinksOnPage(currentPageLink, dl)
             saveArchivesAndAddToSearchIndex(currentPageLink, additionalLinksOnPage, dl)
             persistPaginationProgress(currentPageLink, dl)

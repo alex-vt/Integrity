@@ -24,16 +24,14 @@ data class LogEntry(val orderId: String = "",
 ) : Serializable
 
 /**
- * Standard names for log data values
+ * Standard names for build data values
  */
 object LogKey {
     const val ARTIFACT_ID = "artifact_id"
     const val SNAPSHOT_DATE = "snapshot_date"
-    const val SNAPSHOT_METADATA = "snapshot_metadata"
     const val PACKAGE = "package"
     const val THREAD = "thread"
     const val PROCESS = "process"
-    const val DATA_TYPE = "data_type"
 }
 
 object LogEntryType {

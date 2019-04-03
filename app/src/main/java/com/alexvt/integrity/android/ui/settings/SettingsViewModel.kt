@@ -12,11 +12,11 @@ import com.alexvt.integrity.core.data.settings.IntegrityAppSettings
 import com.alexvt.integrity.core.data.settings.ListViewMode
 import com.alexvt.integrity.core.data.settings.SettingsRepository
 import com.alexvt.integrity.core.data.types.DataTypeRepository
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import com.alexvt.integrity.lib.android.util.FontUtil
-import com.alexvt.integrity.lib.android.util.ThemeUtil
 import com.alexvt.integrity.android.ui.common.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.android.ui.common.SingleLiveEvent
+import com.alexvt.integrity.lib.core.util.ColorUtil
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -38,7 +38,7 @@ class SettingsViewModel @Inject constructor(
         @Named("colorsPalette") val colorsPalette: IntArray,
         @Named("packageName") val packageName: String,
         override val settingsRepository: SettingsRepository,
-        private val filesystemManager: FilesystemManager,
+        private val fileRepository: FileRepository,
         private val dataTypeRepository: DataTypeRepository, // todo listen to changes
         @Named("destinationsScreenClass") val destinationsScreenClass: String,
         @Named("recoveryScreenClass") val recoveryScreenClass: String,
@@ -78,17 +78,17 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun saveColorBackground(intColor: Int) {
-        settingsRepository.set(settingsRepository.get().copy(colorBackground = ThemeUtil.getHexColor(intColor)))
+        settingsRepository.set(settingsRepository.get().copy(colorBackground = ColorUtil.getHexColor(intColor)))
         navigateApplyTheme()
     }
 
     fun saveColorPrimary(intColor: Int) {
-        settingsRepository.set(settingsRepository.get().copy(colorPrimary = ThemeUtil.getHexColor(intColor)))
+        settingsRepository.set(settingsRepository.get().copy(colorPrimary = ColorUtil.getHexColor(intColor)))
         navigateApplyTheme()
     }
 
     fun saveColorAccent(intColor: Int) {
-        settingsRepository.set(settingsRepository.get().copy(colorAccent = ThemeUtil.getHexColor(intColor)))
+        settingsRepository.set(settingsRepository.get().copy(colorAccent = ColorUtil.getHexColor(intColor)))
         navigateApplyTheme()
     }
 
@@ -156,7 +156,7 @@ class SettingsViewModel @Inject constructor(
     }
 
 
-    val pathPrefix = filesystemManager.getRootFolder() + "/"
+    val pathPrefix = fileRepository.getRootFolder() + "/"
 
     fun getCurrentDataFolderRelativePath() = settingsRepository.get().dataFolderPath
             .removePrefix(pathPrefix)

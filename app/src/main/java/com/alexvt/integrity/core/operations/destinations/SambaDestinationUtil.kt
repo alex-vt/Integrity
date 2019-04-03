@@ -9,9 +9,8 @@ package com.alexvt.integrity.core.operations.destinations
 import com.alexvt.integrity.core.data.credentials.CredentialsRepository
 import com.alexvt.integrity.lib.core.data.destinations.SambaFolderLocation
 import com.alexvt.integrity.lib.core.data.destinations.SambaFolderLocationCredentials
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
-import com.alexvt.integrity.lib.core.operations.log.Log
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import java.io.File
 import jcifs.smb.SmbFile
 import jcifs.smb.NtlmPasswordAuthentication
@@ -21,8 +20,8 @@ import javax.inject.Inject
 
 class SambaDestinationUtil @Inject constructor(
         private val credentialsRepository: CredentialsRepository,
-        private val filesystemManager: FilesystemManager,
-        private val logManager: LogManager
+        private val fileRepository: FileRepository,
+        private val logger: Logger
 ) : DestinationUtil<SambaFolderLocation> {
 
     override fun writeArchive(sourceArchivePath: String, sourceHashPath: String,
@@ -55,7 +54,7 @@ class SambaDestinationUtil @Inject constructor(
 
     private fun copyFileToSamba(sourcePath: String, sambaAuth: NtlmPasswordAuthentication,
                                 sambaDestination: String) {
-        val sourceFileBytes = filesystemManager.getBytes(sourcePath)
+        val sourceFileBytes = fileRepository.getBytes(sourcePath)
 
         val smbFile = SmbFile(sambaDestination, sambaAuth)
 
@@ -64,8 +63,7 @@ class SambaDestinationUtil @Inject constructor(
             out.write(sourceFileBytes) // todo buffering
             out.close()
         } catch (e: Exception) {
-            Log(logManager, "Failed to write Samba file from $sourcePath to $sambaDestination")
-                    .logError(e)
+            logger.logError("Failed to write Samba file from $sourcePath to $sambaDestination")
         }
     }
 

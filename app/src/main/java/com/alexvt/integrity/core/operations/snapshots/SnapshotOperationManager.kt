@@ -14,11 +14,10 @@ import com.alexvt.integrity.core.operations.destinations.DestinationUtilManager
 import com.alexvt.integrity.lib.core.operations.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.core.data.jobs.JobProgress
 import com.alexvt.integrity.lib.core.data.jobs.RunningJobRepository
-import com.alexvt.integrity.lib.core.operations.log.Log
 import com.alexvt.integrity.lib.core.data.metadata.Snapshot
 import com.alexvt.integrity.lib.core.data.metadata.SnapshotStatus
 import com.alexvt.integrity.lib.core.data.search.DataChunks
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import com.alexvt.integrity.lib.core.util.JsonSerializerUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -36,7 +35,7 @@ abstract class SnapshotOperationManager(
         private val settingsRepository: SettingsRepository,
         private val archiveManager: ArchiveManager,
         private val deviceInfoRepository: DeviceInfoRepository,
-        private val logManager: LogManager,
+        private val logger: Logger,
         private val destinationUtilManager: DestinationUtilManager
 ) {
 
@@ -116,15 +115,13 @@ abstract class SnapshotOperationManager(
         val batteryStateForbidsDownload = !snapshot.downloadSchedule.allowOnLowBattery
                 && !deviceInfoRepository.isBatteryChargeMoreThan(20) // todo setting
         if (batteryStateForbidsDownload) {
-            Log(logManager, "Battery charge is too low to download snapshot ${snapshot.title}")
-                    .logError()
+            logger.logError("Battery charge is too low to download snapshot ${snapshot.title}")
             return false
         }
         val wifiStateForbidsDownload = snapshot.downloadSchedule.allowOnWifiOnly
                 && !deviceInfoRepository.isOnWifi()
         if (wifiStateForbidsDownload) {
-            Log(logManager, "WiFi connection is needed to download snapshot ${snapshot.title}")
-                    .logError()
+            logger.logError("WiFi connection is needed to download snapshot ${snapshot.title}")
             return false
         }
         return true
@@ -267,7 +264,7 @@ abstract class SnapshotOperationManager(
     }
 
     fun postSnapshotDownloadProgress(snapshot: Snapshot, message: String) {
-        logProgress(message, snapshot)
+        logger.v(message, snapshot)
         GlobalScope.launch(Dispatchers.Main) {
             runningJobRepository.invokeJobProgressListener(snapshot, JobProgress(
                     progressMessage = message
@@ -281,17 +278,13 @@ abstract class SnapshotOperationManager(
     protected fun getDataFolderPath() = settingsRepository.get().dataFolderPath
 
     private fun postSnapshotDownloadResult(result: Snapshot) {
-        logProgress("Snapshot download complete", result)
+        logger.log("Snapshot download complete", result)
         GlobalScope.launch(Dispatchers.Main) {
             runningJobRepository.invokeJobProgressListener(result, JobProgress(
                     result = result
             ))
             runningJobRepository.removeJob(result)
         }
-    }
-
-    private fun logProgress(text: String, snapshot: Snapshot) {
-        Log(logManager, text).snapshot(snapshot).log()
     }
 
     /**

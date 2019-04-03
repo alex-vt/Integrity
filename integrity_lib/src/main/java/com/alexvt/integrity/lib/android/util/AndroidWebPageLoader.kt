@@ -19,9 +19,9 @@ import java.util.*
 import kotlin.concurrent.schedule
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import com.alexvt.integrity.lib.android.operations.filesystem.AndroidFilesystemManager
+import com.alexvt.integrity.lib.android.data.filesystem.AndroidFileRepository
 import com.alexvt.integrity.lib.core.operations.filesystem.DataFolderManager
-import com.alexvt.integrity.lib.core.operations.types.blog.WebPageLoader
+import com.alexvt.integrity.lib.core.util.WebPageLoader
 import java.io.ByteArrayOutputStream
 
 /**
@@ -165,7 +165,7 @@ class AndroidWebPageLoader(
                             GlobalScope.launch(Dispatchers.Main) {
                                 delay(delayMillis)
                                 val previewBitmap = getPageBitmap(webView, screenshotSize)
-                                DataFolderManager(AndroidFilesystemManager(view.context))
+                                DataFolderManager(AndroidFileRepository(view.context))
                                         .writeFile(getBytes(previewBitmap), screenshotSavePath)
                                 this@AndroidWebPageLoader.pageLoadListener.invoke("")
                                 android.util.Log.v("WebPageLoader", "captured screenshot")

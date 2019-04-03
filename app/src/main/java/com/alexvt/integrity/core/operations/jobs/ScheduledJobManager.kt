@@ -9,17 +9,15 @@ package com.alexvt.integrity.core.operations.jobs
 import com.alexvt.integrity.core.data.metadata.MetadataRepository
 import com.alexvt.integrity.core.data.settings.SettingsRepository
 import com.alexvt.integrity.core.operations.snapshots.SnapshotOperationManager
-import com.alexvt.integrity.lib.core.operations.log.Log
 import com.alexvt.integrity.lib.core.data.metadata.Snapshot
 import com.alexvt.integrity.lib.core.data.metadata.SnapshotStatus
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.inject.Inject
 import kotlin.concurrent.schedule
 
 /**
@@ -30,7 +28,7 @@ abstract class ScheduledJobManager(
         protected val metadataRepository: MetadataRepository,
         protected val settingsRepository: SettingsRepository,
         private val snapshotOperationManager: SnapshotOperationManager,
-        private val logManager: LogManager
+        private val logger: Logger
 ) {
 
     private var scheduledJobsListenerMap: Map<String, ((List<Pair<Long, String>>) -> Unit)> = emptyMap()
@@ -111,8 +109,8 @@ abstract class ScheduledJobManager(
         }.let {
             platformScheduleJobs(it)
             invokeListenersWithCurrentData()
-            Log(logManager, "Updated future jobs schedule: enabled = " +
-                    "${settingsRepository.get().jobsEnableScheduled}, ${it.size} jobs scheduled").log()
+            logger.log("Updated future jobs schedule: enabled = " +
+                    "${settingsRepository.get().jobsEnableScheduled}, ${it.size} jobs scheduled")
         }
     }.let { /* no return type */ }
 
@@ -120,9 +118,9 @@ abstract class ScheduledJobManager(
      * Invoke in subclasses when platform scheduler wait time expires for a snapshot.
      */
     protected fun startDownloadSnapshotData(artifactId: Long, date: String) {
-        // todo Log(context, "Beginning scheduled job").snapshot(artifactId, date).log()
+        // todo Log(context, "Beginning scheduled job").snapshot(artifactId, date).build()
 
-        // Starting creating snapshot async. Use RunningJobManager to get status
+        // Starting creating snapshot async. Use RunningJobManager to build status
         val latestSnapshot = metadataRepository.getSnapshotMetadataBlocking(artifactId, date)
         snapshotOperationManager.saveSnapshot( // todo pass in constructor
                 latestSnapshot.copy(status = SnapshotStatus.IN_PROGRESS))

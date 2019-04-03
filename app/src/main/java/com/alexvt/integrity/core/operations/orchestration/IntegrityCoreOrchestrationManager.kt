@@ -6,7 +6,6 @@
 
 package com.alexvt.integrity.core.operations.orchestration
 
-import com.alexvt.integrity.lib.core.operations.log.Log
 import com.alexvt.integrity.core.data.metadata.MetadataRepository
 import com.alexvt.integrity.core.operations.jobs.ScheduledJobManager
 import com.alexvt.integrity.core.data.log.LogRepository
@@ -15,7 +14,7 @@ import com.alexvt.integrity.core.data.settings.SettingsRepository
 import com.alexvt.integrity.core.operations.notifications.DisabledScheduledJobsNotifier
 import com.alexvt.integrity.core.operations.notifications.ErrorNotifier
 import com.alexvt.integrity.lib.core.data.log.LogEntry
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,7 +29,7 @@ class IntegrityCoreOrchestrationManager @Inject constructor(
         private val scheduledJobManager: ScheduledJobManager,
         private val errorNotifier: ErrorNotifier,
         private val disabledScheduledJobsNotifier: DisabledScheduledJobsNotifier,
-        private val logManager: LogManager
+        private val logger: Logger
 ) {
     /**
      * Should be called before using any other functions.
@@ -45,7 +44,7 @@ class IntegrityCoreOrchestrationManager @Inject constructor(
 
         resetInProgressSnapshotStatuses()
 
-        Log(logManager, "IntegrityCore initialized").log()
+        logger.log("IntegrityCore initialized")
     }
 
     private fun resetInProgressSnapshotStatuses() {

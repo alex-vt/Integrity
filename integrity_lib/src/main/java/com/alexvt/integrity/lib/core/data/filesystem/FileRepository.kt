@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.lib.core.operations.filesystem
+package com.alexvt.integrity.lib.core.data.filesystem
 
 import java.io.File
 
-interface FilesystemManager {
+interface FileRepository {
 
     fun getRootFolder(): String
 

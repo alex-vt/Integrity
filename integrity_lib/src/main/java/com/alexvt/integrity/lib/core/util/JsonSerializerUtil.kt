@@ -41,14 +41,12 @@ object JsonSerializerUtil {
     fun toJson(`object`: Any): String {
         val timestamp = System.currentTimeMillis()
         val returnValue = getMapper().writeValueAsString(`object`)
-        android.util.Log.v(TAG, "Serialization took " + (System.currentTimeMillis() - timestamp) + " millis")
         return returnValue
     }
 
     fun <T> fromJson(jsonString: String, type: Class<T>): T {
         val timestamp = System.currentTimeMillis()
         val returnValue = getMapper().readValue(jsonString, type)
-        android.util.Log.v(TAG, "Deserialization took " + (System.currentTimeMillis() - timestamp) + " millis")
         return returnValue
     }
 }

@@ -27,13 +27,11 @@ class InMemoryRunningJobRepository : RunningJobRepository {
         jobStatusMap = jobStatusMap.minus(getId(snapshot)) // replacing
         jobStatusMap = jobStatusMap.plus(Pair(getId(snapshot), true))
         invokeJobListListeners()
-        android.util.Log.v(tag, "Job ${getJobDescriptionText(snapshot)} added")
     }
 
     override fun isRunning(artifactId: Long, date: String): Boolean {
         val isRunning = jobStatusMap.containsKey(getId(artifactId, date))
                 && jobStatusMap[getId(artifactId, date)] == true
-        android.util.Log.v(tag, "Job ${getJobDescriptionText(artifactId, date)} running: $isRunning")
         return isRunning
     }
 
@@ -54,7 +52,6 @@ class InMemoryRunningJobRepository : RunningJobRepository {
     override fun markJobCanceled(artifactId: Long, date: String) {
         jobStatusMap = jobStatusMap.minus(getId(artifactId, date))
         invokeJobListListeners()
-        android.util.Log.v(tag, "Job ${getJobDescriptionText(artifactId, date)} marked canceled")
     }
 
     override fun removeJob(snapshot: Snapshot) {
@@ -62,7 +59,6 @@ class InMemoryRunningJobRepository : RunningJobRepository {
         invokeJobListListeners()
         jobProgressListenerMap = jobProgressListenerMap.minus(getId(snapshot))
         recentJobProgressMap = recentJobProgressMap.minus(getId(snapshot))
-        android.util.Log.v(tag, "Job ${getJobDescriptionText(snapshot)} removed")
     }
 
 
@@ -111,11 +107,4 @@ class InMemoryRunningJobRepository : RunningJobRepository {
             uniqueId.substringBefore('_').toLong(),
             uniqueId.substringAfter('_')
     )
-
-    private fun getJobDescriptionText(snapshot: Snapshot)
-            = getJobDescriptionText(snapshot.artifactId, snapshot.date)
-
-    private fun getJobDescriptionText(artifactId: Long, date: String)
-            = getId(artifactId, date) + "_pid" + android.os.Process.myPid()
-
 }

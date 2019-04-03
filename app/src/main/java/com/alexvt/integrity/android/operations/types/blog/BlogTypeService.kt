@@ -13,19 +13,19 @@ import com.alexvt.integrity.lib.android.util.AndroidWebPageLoader
 import com.alexvt.integrity.core.data.types.blog.BlogTypeMetadata
 import com.alexvt.integrity.core.operations.types.blog.IndexedPaginationHelper
 import com.alexvt.integrity.core.operations.types.blog.LinkedPaginationHelper
-import com.alexvt.integrity.lib.android.operations.filesystem.AndroidFilesystemManager
+import com.alexvt.integrity.lib.android.data.filesystem.AndroidFileRepository
 import com.alexvt.integrity.lib.android.operations.snapshots.AndroidDownloadProgressReporter
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import com.alexvt.integrity.lib.core.operations.snapshots.DownloadProgressReporter
-import com.alexvt.integrity.lib.core.operations.types.blog.WebPageLoader
+import com.alexvt.integrity.lib.core.util.WebPageLoader
 
 class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
 
-    private val filesystemManager: FilesystemManager by lazy {
-        AndroidFilesystemManager(this)
+    private val fileRepository: FileRepository by lazy {
+        AndroidFileRepository(this)
     }
     private val webArchiveFilesUtil: WebArchiveFilesUtil by lazy {
-        WebArchiveFilesUtil(dataFolderManager)
+        WebArchiveFilesUtil(dataFolderManager, logger)
     }
     private val webPageLoader: WebPageLoader by lazy {
         AndroidWebPageLoader(this)
@@ -49,9 +49,9 @@ class BlogTypeService: DataTypeService<BlogTypeMetadata>() {
                 snapshotPath = snapshotPath // todo remove as calculable
         )
 
-        if (!LinkedPaginationHelper(filesystemManager, webArchiveFilesUtil, webPageLoader,
+        if (!LinkedPaginationHelper(fileRepository, webArchiveFilesUtil, webPageLoader,
                         downloadProgressReporter).downloadPages(dl)) {
-            IndexedPaginationHelper(filesystemManager, webArchiveFilesUtil, webPageLoader,
+            IndexedPaginationHelper(fileRepository, webArchiveFilesUtil, webPageLoader,
                     downloadProgressReporter).downloadPages(dl)
         }
 

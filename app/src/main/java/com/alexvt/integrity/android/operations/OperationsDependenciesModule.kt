@@ -30,13 +30,13 @@ import com.alexvt.integrity.core.operations.notifications.ErrorNotifier
 import com.alexvt.integrity.core.operations.snapshots.ArchiveManager
 import com.alexvt.integrity.lib.android.data.destinations.AndroidDestinationNameRepository
 import com.alexvt.integrity.lib.core.data.jobs.GlobalRunningJobs
-import com.alexvt.integrity.lib.android.operations.filesystem.AndroidFilesystemManager
-import com.alexvt.integrity.lib.android.operations.log.AndroidLogManager
+import com.alexvt.integrity.lib.android.data.filesystem.AndroidFileRepository
+import com.alexvt.integrity.lib.android.operations.log.AndroidLogger
 import com.alexvt.integrity.lib.core.data.destinations.DestinationNameRepository
 import com.alexvt.integrity.lib.core.operations.filesystem.DataFolderManager
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import com.alexvt.integrity.lib.core.data.jobs.RunningJobRepository
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
@@ -76,13 +76,13 @@ class OperationsDependenciesModule {
 
     @Provides
     @Singleton
-    fun provideDataFolderManager(filesystemManager: FilesystemManager): DataFolderManager
-            = DataFolderManager(filesystemManager)
+    fun provideDataFolderManager(fileRepository: FileRepository): DataFolderManager
+            = DataFolderManager(fileRepository)
 
     @Provides
     @Singleton
-    fun provideFilesystemManager(context: Context): FilesystemManager
-            = AndroidFilesystemManager(context)
+    fun provideFilesystemManager(context: Context): FileRepository
+            = AndroidFileRepository(context)
 
     @Provides
     @Singleton
@@ -100,11 +100,11 @@ class OperationsDependenciesModule {
             settingsRepository: SettingsRepository,
             archiveManager: ArchiveManager,
             deviceInfoRepository: DeviceInfoRepository,
-            logManager: LogManager,
+            logger: Logger,
             destinationUtilManager: DestinationUtilManager
     ): SnapshotOperationManager = AndroidSnapshotOperationManager(context, metadataRepository,
             searchIndexRepository, dataFolderManager, runningJobRepository,
-            settingsRepository, archiveManager, deviceInfoRepository, logManager,
+            settingsRepository, archiveManager, deviceInfoRepository, logger,
             destinationUtilManager)
 
     @Provides
@@ -113,16 +113,17 @@ class OperationsDependenciesModule {
             metadataRepository: MetadataRepository,
             settingsRepository: SettingsRepository,
             snapshotOperationManager: SnapshotOperationManager,
-            logManager: LogManager
+            logger: Logger
     ): ScheduledJobManager = AndroidScheduledJobManager(metadataRepository, settingsRepository,
-            snapshotOperationManager, logManager)
+            snapshotOperationManager, logger)
 
     @Provides
     @Singleton
     fun provideLogOperationManager(
             logRepository: LogRepository,
-            errorNotifier: ErrorNotifier
-    ): LogReadMarker = LogReadMarker(logRepository, errorNotifier)
+            errorNotifier: ErrorNotifier,
+            logger: Logger
+    ): LogReadMarker = LogReadMarker(logRepository, errorNotifier, logger)
 
     @Provides
     @Singleton
@@ -140,5 +141,5 @@ class OperationsDependenciesModule {
 
     @Provides
     @Singleton
-    fun provideLogManager(context: Context): LogManager = AndroidLogManager(context)
+    fun provideLogManager(context: Context): Logger = AndroidLogger(context)
 }

@@ -6,19 +6,19 @@
 
 package com.alexvt.integrity.core.operations.snapshots
 
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import com.alexvt.integrity.lib.core.data.metadata.SnapshotMetadata
 import org.zeroturnaround.zip.ZipUtil
 import java.io.File
 import javax.inject.Inject
 
 class ArchiveManager @Inject constructor(
-        private val filesystemManager: FilesystemManager
+        private val fileRepository: FileRepository
 ) {
 
     fun packSnapshot(dataCacheFolderPath: String): String {
         // todo watch job cancellation, split archive
-        filesystemManager.createFolder(dataCacheFolderPath)
+        fileRepository.createFolder(dataCacheFolderPath)
 
         val archivePath = "$dataCacheFolderPath.zip"
         ZipUtil.pack(File(dataCacheFolderPath), File(archivePath));
@@ -32,7 +32,7 @@ class ArchiveManager @Inject constructor(
 
     fun addHashToArchivePath(archivePathWithoutHash: String, hash: String): String {
         val archivePathWithHash = archivePathWithoutHash.replaceLast(".zip", "_" + hash + ".zip")
-        filesystemManager.renameFile(archivePathWithoutHash, archivePathWithHash)
+        fileRepository.renameFile(archivePathWithoutHash, archivePathWithHash)
         return archivePathWithHash
     }
 

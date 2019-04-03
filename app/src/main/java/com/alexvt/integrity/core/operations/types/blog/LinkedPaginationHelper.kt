@@ -10,16 +10,16 @@ import com.alexvt.integrity.core.data.types.blog.BlogMetadataDownload
 import com.alexvt.integrity.lib.core.util.LinkUtil
 import com.alexvt.integrity.lib.core.util.WebArchiveFilesUtil
 import com.alexvt.integrity.core.data.types.blog.LinkedPagination
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import com.alexvt.integrity.lib.core.operations.snapshots.DownloadProgressReporter
-import com.alexvt.integrity.lib.core.operations.types.blog.WebPageLoader
+import com.alexvt.integrity.lib.core.util.WebPageLoader
 
 internal class LinkedPaginationHelper(
-        override val filesystemManager: FilesystemManager,
+        override val fileRepository: FileRepository,
         override val webArchiveFilesUtil: WebArchiveFilesUtil,
         override val webPageLoader: WebPageLoader,
         override val downloadProgressReporter: DownloadProgressReporter
-) : CommonPaginationHelper(filesystemManager, webArchiveFilesUtil, webPageLoader,
+) : CommonPaginationHelper(fileRepository, webArchiveFilesUtil, webPageLoader,
         downloadProgressReporter) {
 
     /**
@@ -38,7 +38,7 @@ internal class LinkedPaginationHelper(
 
     /**
      * Recursive linked pagination:
-     * do obtain page to get related links and possible next page link,
+     * do obtain page to build related links and possible next page link,
      * then page is archived,
      * continue while next page can be determined from metadata and current page contents.
      *
@@ -54,7 +54,6 @@ internal class LinkedPaginationHelper(
             return true // interrupted - no more pages
         }
         persistPaginationProgress(currentPageLink, dl)
-        android.util.Log.v("LinkedPaginationHelper", "downloadPages: $currentPageLink")
         val pageContents = getPageContents(currentPageLink, dl) // always needed to look for next page link
         val additionalLinksOnPage = getAdditionalLinksOnPage(currentPageLink, pageContents, dl)
         saveArchivesAndAddToSearchIndex(currentPageLink, additionalLinksOnPage, dl)
@@ -115,7 +114,6 @@ internal class LinkedPaginationHelper(
     private fun hasNextPageLink(currentPageHtml: String, dl: BlogMetadataDownload): Boolean {
         val nextPageLinks = LinkUtil.getMatchedLinks(currentPageHtml,
                 (dl.metadata.pagination as LinkedPagination).nextPageLinkFilter)
-        android.util.Log.v("LinkedPaginationHelper", "hasNextPageLink: $nextPageLinks")
         return webArchiveFilesUtil.getPageIndexArchiveLinks(dl.snapshotPath).size < dl.metadata.pagination.limit
                 && nextPageLinks.isNotEmpty()
     }

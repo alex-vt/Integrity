@@ -8,15 +8,17 @@ package com.alexvt.integrity.core.operations.log
 
 import com.alexvt.integrity.core.data.log.LogRepository
 import com.alexvt.integrity.core.operations.notifications.ErrorNotifier
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import javax.inject.Inject
 
 class LogReadMarker @Inject constructor(
         private val logRepository: LogRepository,
-        private val errorNotifier: ErrorNotifier
+        private val errorNotifier: ErrorNotifier,
+        private val logger: Logger
 ) {
 
     fun markErrorsRead() {
-        android.util.Log.v("IntegrityCore", "Errors marked read")
+        logger.v("Errors marked read")
         logRepository.markAllRead()
         errorNotifier.removeNotification()
     }

@@ -8,8 +8,8 @@ package com.alexvt.integrity.android.ui.common
 
 import androidx.lifecycle.ViewModel
 import com.alexvt.integrity.core.data.settings.SettingsRepository
-import com.alexvt.integrity.lib.android.util.ThemeColors
-import com.alexvt.integrity.lib.android.util.ThemeUtil
+import com.alexvt.integrity.lib.core.util.ColorUtil
+import com.alexvt.integrity.lib.core.util.ThemeColors
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 
@@ -43,21 +43,21 @@ abstract class RxAutoDisposeThemedViewModel : ViewModel() {
 
     fun getFont() = settingsRepository.get().textFont
 
-    fun computeColorPrimary() = ThemeUtil.getColorPrimary(getThemeColors())
+    fun computeColorPrimary() = ColorUtil.getColorPrimary(getThemeColors())
 
-    fun computeColorPrimaryDark() = ThemeUtil.getColorPrimaryDark(getThemeColors())
+    fun computeColorPrimaryDark() = ColorUtil.getColorPrimaryDark(getThemeColors())
 
-    fun computeTextColorPrimary() = ThemeUtil.getTextColorPrimary(getThemeColors())
+    fun computeTextColorPrimary() = ColorUtil.getTextColorPrimary(getThemeColors())
 
-    fun computeTextColorSecondary() = ThemeUtil.getTextColorSecondary(getThemeColors())
+    fun computeTextColorSecondary() = ColorUtil.getTextColorSecondary(getThemeColors())
 
-    fun computeColorAccent() = ThemeUtil.getColorAccent(getThemeColors())
+    fun computeColorAccent() = ColorUtil.getColorAccent(getThemeColors())
 
-    fun computeColorBackground() = ThemeUtil.getColorBackground(getThemeColors())
+    fun computeColorBackground() = ColorUtil.getColorBackground(getThemeColors())
 
-    fun computeColorBackgroundSecondary() = ThemeUtil.getColorBackgroundSecondary(getThemeColors())
+    fun computeColorBackgroundSecondary() = ColorUtil.getColorBackgroundSecondary(getThemeColors())
 
-    fun computeColorBackgroundBleached() = ThemeUtil.getColorBackgroundBleached(getThemeColors())
+    fun computeColorBackgroundBleached() = ColorUtil.getColorBackgroundBleached(getThemeColors())
 
     fun getThemeColors() = with(settingsRepository.get()) {
         ThemeColors(colorBackground, colorPrimary, colorAccent)

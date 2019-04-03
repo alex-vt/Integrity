@@ -60,7 +60,6 @@ class ThrottledFunction(private val coolingOffPeriodMillis: Long,
     }
 
     private fun invoke() {
-        android.util.Log.v("FastDebounceFunction", "Invoking $function")
         GlobalScope.launch (Dispatchers.Main) {
             function.invoke()
         }

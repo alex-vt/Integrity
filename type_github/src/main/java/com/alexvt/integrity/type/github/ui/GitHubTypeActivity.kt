@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
+import com.alexvt.integrity.lib.android.operations.log.AndroidLogger
 import com.alexvt.integrity.type.github.databinding.GitHubTypeContentBinding
 import com.alexvt.integrity.type.github.databinding.GitHubTypeControlsBinding
 import com.alexvt.integrity.type.github.databinding.GitHubTypeFilterBinding
@@ -19,6 +20,7 @@ import com.alexvt.integrity.lib.core.util.LinkUtil
 import com.alexvt.integrity.lib.core.util.WebArchiveFilesUtil
 import com.alexvt.integrity.lib.android.util.AndroidWebPageLoader
 import com.alexvt.integrity.lib.core.data.metadata.SnapshotMetadata
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import com.alexvt.integrity.type.github.GitHubTypeMetadata
 import com.alexvt.integrity.type.github.R
 import kotlinx.android.synthetic.main.git_hub_type_content.view.*
@@ -34,7 +36,6 @@ class GitHubTypeActivity : DataTypeActivity() {
     private lateinit var content : GitHubTypeContentBinding
     private lateinit var controls : GitHubTypeControlsBinding
     private lateinit var filter : GitHubTypeFilterBinding
-
 
     // Type implementation
 
@@ -82,7 +83,7 @@ class GitHubTypeActivity : DataTypeActivity() {
             content.webView.stopLoading()
             val snapshotPath = dataFolderManager.getSnapshotFolderPath(
                     getDataFolderName(), snapshot.artifactId, snapshot.date)
-            val linkToArchivePathRedirectMap = WebArchiveFilesUtil(dataFolderManager)
+            val linkToArchivePathRedirectMap = WebArchiveFilesUtil(dataFolderManager, logger)
                     .getPageIndexLinkToArchivePathMap(snapshotPath,
                             "file://$snapshotPath/")
             val firstArchivePath = linkToArchivePathRedirectMap.entries.firstOrNull()?.value

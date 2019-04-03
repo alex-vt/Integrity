@@ -9,18 +9,17 @@ package com.alexvt.integrity.android
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.alexvt.integrity.lib.core.operations.log.Log
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import dagger.android.AndroidInjection
 import javax.inject.Inject
 
 class AutoStartReceiver : BroadcastReceiver() {
     @Inject
-    lateinit var logManager: LogManager
+    lateinit var logger: Logger
 
     override fun onReceive(context: Context, intent: Intent) {
         AndroidInjection.inject(this, context)
-        Log(logManager, "Auto start").log()
+        logger.log("Auto start")
         // IntegrityCore initialized in App onStart
     }
 }

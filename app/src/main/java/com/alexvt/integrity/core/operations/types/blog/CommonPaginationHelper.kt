@@ -12,12 +12,12 @@ import com.alexvt.integrity.lib.core.operations.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.core.data.jobs.GlobalRunningJobs
 import com.alexvt.integrity.lib.core.util.LinkUtil
 import com.alexvt.integrity.lib.core.util.WebArchiveFilesUtil
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import com.alexvt.integrity.lib.core.operations.snapshots.DownloadProgressReporter
-import com.alexvt.integrity.lib.core.operations.types.blog.WebPageLoader
+import com.alexvt.integrity.lib.core.util.WebPageLoader
 
 internal abstract class CommonPaginationHelper(
-        open val filesystemManager: FilesystemManager,
+        open val fileRepository: FileRepository,
         open val webArchiveFilesUtil: WebArchiveFilesUtil,
         open val webPageLoader: WebPageLoader,
         open val downloadProgressReporter: DownloadProgressReporter
@@ -42,7 +42,6 @@ internal abstract class CommonPaginationHelper(
                                 + linksToArchive.size + "\n"
                                 + getPaginationProgressText(currentPageLink, dl))
                 val webArchivePath = "${dl.snapshotPath}/${webArchiveFilesUtil.getArchivePath(pageIndex, linkIndex)}"
-                android.util.Log.v("WebPageLoader", "getHtml, url = $link")
                 val pageHtml = webPageLoader.getHtml(url = link,
                         loadImages = dl.metadata.loadImages, desktopSite = dl.metadata.desktopSite,
                         archiveSavePath = webArchivePath, screenshotSavePath = null,
@@ -54,7 +53,7 @@ internal abstract class CommonPaginationHelper(
                         "Indexing page text " + (linkIndex + 1) + " of "
                                 + linksToArchive.size + "\n"
                                 + getPaginationProgressText(currentPageLink, dl))
-                SearchIndexAdder(DataFolderManager(filesystemManager))
+                SearchIndexAdder(DataFolderManager(fileRepository))
                         .addDataForSearchIndex(
                         dl.dataFolderName, dl.artifactId, dl.date,
                         LinkUtil.getVisibleTextWithLinks(pageHtml), "${pageIndex}_$linkIndex",

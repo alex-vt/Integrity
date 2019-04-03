@@ -11,23 +11,23 @@ import com.alexvt.integrity.lib.core.data.destinations.DestinationNameRepository
 import com.alexvt.integrity.lib.core.data.destinations.LocalFolderLocation
 import com.alexvt.integrity.lib.core.data.destinations.SambaFolderLocation
 import com.alexvt.integrity.lib.core.data.metadata.FolderLocation
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class DestinationUtilManager @Inject constructor(
         credentialsRepository: CredentialsRepository,
-        filesystemManager: FilesystemManager,
-        logManager: LogManager,
+        fileRepository: FileRepository,
+        logger: Logger,
         private val destinationNameRepository: DestinationNameRepository
 ) {
 
     private val destinationMap = linkedMapOf(
-            LocalFolderLocation::class.java to LocalDestinationUtil(filesystemManager),
+            LocalFolderLocation::class.java to LocalDestinationUtil(fileRepository),
             SambaFolderLocation::class.java to SambaDestinationUtil(credentialsRepository,
-                    filesystemManager, logManager)
+                    fileRepository, logger)
     )
 
     fun getDestinationClasses() = destinationMap.keys.toList()

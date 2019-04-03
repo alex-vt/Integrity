@@ -22,7 +22,7 @@ import com.alexvt.integrity.lib.core.data.jobs.RunningJobRepository
 import com.alexvt.integrity.lib.android.operations.snapshots.SnapshotDownloadCancelRequest
 import com.alexvt.integrity.lib.android.operations.snapshots.SnapshotDownloadStartRequest
 import com.alexvt.integrity.lib.android.util.IntentUtil
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import dagger.android.AndroidInjection
 import javax.inject.Inject
 
@@ -38,10 +38,10 @@ class AndroidSnapshotOperationManager @Inject constructor(
         settingsRepository: SettingsRepository,
         archiveManager: ArchiveManager,
         deviceInfoRepository: DeviceInfoRepository,
-        logManager: LogManager,
+        logger: Logger,
         destinationUtilManager: DestinationUtilManager
 ) : SnapshotOperationManager(metadataRepository, searchIndexRepository, dataFolderManager,
-        runningJobRepository, settingsRepository, archiveManager, deviceInfoRepository, logManager,
+        runningJobRepository, settingsRepository, archiveManager, deviceInfoRepository, logger,
         destinationUtilManager) {
 
     override fun terminateDownload(snapshot: Snapshot) {

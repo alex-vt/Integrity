@@ -12,7 +12,7 @@ import com.alexvt.integrity.core.data.metadata.MetadataRepository
 import com.alexvt.integrity.core.data.search.SearchIndexRepository
 import com.alexvt.integrity.core.data.settings.SettingsRepository
 import com.alexvt.integrity.lib.core.operations.filesystem.DataFolderManager
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import com.alexvt.integrity.android.ui.common.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.android.ui.common.SingleLiveEvent
 import javax.inject.Inject
@@ -36,7 +36,7 @@ class RecoveryViewModel @Inject constructor(
         val searchIndexRepository: SearchIndexRepository,
         @Named("searchIndexRepositoryName") val searchIndexRepositoryName: String,
         val dataFolderManager: DataFolderManager,
-        val filesystemManager: FilesystemManager,
+        val fileRepository: FileRepository,
         @Named("recoveryIssue") val recoveryIssue: String?
         ) : RxAutoDisposeThemedViewModel() {
 
@@ -46,7 +46,7 @@ class RecoveryViewModel @Inject constructor(
     private fun getSnapshotsFolderPath() = settingsRepository.get().dataFolderPath
 
     fun getSnapshotsFolderName() = getSnapshotsFolderPath()
-            .removePrefix(filesystemManager.getRootFolder())
+            .removePrefix(fileRepository.getRootFolder())
 
     private val namedRepositories = listOf(
             metadataRepository to metadataRepositoryName,

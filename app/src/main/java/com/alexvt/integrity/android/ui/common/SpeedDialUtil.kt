@@ -12,7 +12,7 @@ import android.view.Gravity
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.doOnNextLayout
-import com.alexvt.integrity.lib.android.util.ThemeColors
+import com.alexvt.integrity.lib.core.util.ThemeColors
 import com.alexvt.integrity.lib.android.util.ThemeUtil
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import com.leinardi.android.speeddial.SpeedDialView

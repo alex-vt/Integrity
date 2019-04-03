@@ -13,9 +13,9 @@ import android.content.Intent
 import com.alexvt.integrity.lib.core.data.log.LogEntry
 import com.alexvt.integrity.lib.core.data.log.LogEntryType
 import com.alexvt.integrity.lib.android.util.IntentUtil
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 
-class AndroidLogManager(private val context: Context) : LogManager() {
+class AndroidLogger(private val context: Context) : Logger() {
 
     override fun printInConsole(logEntry: LogEntry) {
         if (logEntry.type == LogEntryType.ERROR || logEntry.type == LogEntryType.CRASH) {
@@ -59,13 +59,13 @@ class AndroidLogManager(private val context: Context) : LogManager() {
     }
 
     // Using a broadcast receiver in a temporary separate recovery process
-    // to receive crash log entry from the faulty process (which then is terminated)
+    // to receive crash build entry from the faulty process (which then is terminated)
     // and sending it to the main process (starts again if it was terminated or not running).
     inner class LogEntryRecoveryReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            android.util.Log.e(AndroidLogManager::class.java.simpleName,
+            android.util.Log.e(AndroidLogger::class.java.simpleName,
                     "LogEntryRecoveryReceiver in the recovery process is re-broadcasting " +
-                            "crash log entry to the (newly created if needed) main app process...")
+                            "crash build entry to the (newly created if needed) main app process...")
             writeToLog(context, IntentUtil.getLogEntry(intent), false)
             Runtime.getRuntime().exit(0) // recovery process not needed anymore
         }

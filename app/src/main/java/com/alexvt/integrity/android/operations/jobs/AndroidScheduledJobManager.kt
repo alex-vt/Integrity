@@ -13,7 +13,7 @@ import com.alexvt.integrity.core.operations.snapshots.SnapshotOperationManager
 import com.alexvt.integrity.core.data.settings.SettingsRepository
 import com.alexvt.integrity.core.operations.jobs.ScheduledJobManager
 import com.alexvt.integrity.core.operations.jobs.SnapshotDataDownloadScheduledJob
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -25,8 +25,8 @@ class AndroidScheduledJobManager @Inject constructor(
         metadataRepository: MetadataRepository,
         settingsRepository: SettingsRepository,
         snapshotOperationManager: SnapshotOperationManager,
-        logManager: LogManager
-) : ScheduledJobManager(metadataRepository, settingsRepository, snapshotOperationManager, logManager) {
+        logger: Logger
+) : ScheduledJobManager(metadataRepository, settingsRepository, snapshotOperationManager, logger) {
 
     /**
      * Schedules jobs eligible for scheduling at the moment of calling

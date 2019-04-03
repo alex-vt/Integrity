@@ -22,13 +22,17 @@ import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.list.listItems
 import com.alexvt.integrity.lib.R
 import com.alexvt.integrity.lib.android.data.destinations.AndroidDestinationNameRepository
-import com.alexvt.integrity.lib.android.operations.filesystem.AndroidFilesystemManager
+import com.alexvt.integrity.lib.android.data.filesystem.AndroidFileRepository
+import com.alexvt.integrity.lib.android.operations.log.AndroidLogger
 import com.alexvt.integrity.lib.android.util.*
 import com.alexvt.integrity.lib.core.data.destinations.DestinationNameRepository
 import com.alexvt.integrity.lib.core.data.metadata.*
 import com.alexvt.integrity.lib.core.operations.filesystem.DataFolderManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import com.alexvt.integrity.lib.core.util.JsonSerializerUtil
-import com.alexvt.integrity.lib.core.util.TypeSpecificMetadataConverter
+import com.alexvt.integrity.lib.android.util.TypeSpecificMetadataConverter
+import com.alexvt.integrity.lib.core.util.ColorUtil
+import com.alexvt.integrity.lib.core.util.ThemeColors
 import com.alexvt.integrity.lib.databinding.ActivityDataTypeBinding
 import com.alexvt.integrity.lib.databinding.ViewColorEditBinding
 import com.bumptech.glide.Glide
@@ -48,10 +52,13 @@ abstract class DataTypeActivity : ThemedActivity() {
     private lateinit var snapshot: SnapshotMetadata
 
     protected val dataFolderManager: DataFolderManager by lazy {
-        DataFolderManager(AndroidFilesystemManager(this))
+        DataFolderManager(AndroidFileRepository(this))
     }
     protected val destinationNameRepository: DestinationNameRepository by lazy {
         AndroidDestinationNameRepository()
+    }
+    protected val logger: Logger by lazy {
+        AndroidLogger(this)
     }
 
     // Data type methods for implementation
@@ -188,9 +195,9 @@ abstract class DataTypeActivity : ThemedActivity() {
 
         FontUtil.setFont(this, IntentUtil.getFontName(intent))
         val colors = getColors()
-        binding.content.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(colors))
-        binding.llBottomSheet.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(colors))
-        binding.nvFilter.setBackgroundColor(ThemeUtil.getColorBackgroundSecondary(colors))
+        binding.content.setBackgroundColor(ColorUtil.getColorBackgroundSecondary(colors))
+        binding.llBottomSheet.setBackgroundColor(ColorUtil.getColorBackgroundSecondary(colors))
+        binding.nvFilter.setBackgroundColor(ColorUtil.getColorBackgroundSecondary(colors))
     }
 
     final override fun onCreateOptionsMenu(menu: Menu): Boolean {

@@ -173,7 +173,7 @@ class BlogTypeActivity : DataTypeActivity() {
             content.webView.stopLoading()
             val snapshotPath = dataFolderManager.getSnapshotFolderPath(
                     getDataFolderName(), snapshot.artifactId, snapshot.date)
-            val linkToArchivePathRedirectMap = WebArchiveFilesUtil(dataFolderManager)
+            val linkToArchivePathRedirectMap = WebArchiveFilesUtil(dataFolderManager, logger)
                     .getPageIndexLinkToArchivePathMap(snapshotPath,
                             "file://$snapshotPath/")
             (filter.rvOfflineLinkList.adapter as OfflineLinkRecyclerAdapter)

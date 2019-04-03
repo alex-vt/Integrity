@@ -6,12 +6,13 @@
 
 package com.alexvt.integrity.lib.core.operations.filesystem
 
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import java.io.File
 
 /**
  * Manages data files to be temporarily available in local storage
  */
-class DataFolderManager(private val filesystemManager: FilesystemManager) {
+class DataFolderManager(private val fileRepository: FileRepository) {
 
     fun getSnapshotPreviewPath(dataFolderName: String, artifactId: Long, date: String)
             = getSnapshotFolderPath(dataFolderName, artifactId, date) + "/_preview.png"
@@ -27,7 +28,7 @@ class DataFolderManager(private val filesystemManager: FilesystemManager) {
 
     fun getSnapshotFileSimpleNames(dataFolderName: String, artifactId: Long,
                                    date: String): Set<String> {
-        return filesystemManager.getFiles(getSnapshotFolderPath(dataFolderName,
+        return fileRepository.getFiles(getSnapshotFolderPath(dataFolderName,
                 artifactId, date))
                 .filter { it.isFile }
                 .map { it.nameWithoutExtension }
@@ -37,17 +38,17 @@ class DataFolderManager(private val filesystemManager: FilesystemManager) {
     fun ensureSnapshotFolder(dataFolderName: String, artifactId: Long,
                              date: String): String {
         val snapshotDataDirectory = getSnapshotFolderPath(dataFolderName, artifactId, date)
-        filesystemManager.createFolder(snapshotDataDirectory)
+        fileRepository.createFolder(snapshotDataDirectory)
         return snapshotDataDirectory
     }
 
     fun clearFiles(dataFolderName: String) {
-        deleteFiles(filesystemManager.getFiles(getDataCacheDirectory(dataFolderName))
+        deleteFiles(fileRepository.getFiles(getDataCacheDirectory(dataFolderName))
                 .filter { it.isFile })
     }
 
     fun clear(dataFolderName: String, artifactId: Long, date: String) {
-        deleteFiles(filesystemManager.getFiles(getDataCacheDirectory(dataFolderName))
+        deleteFiles(fileRepository.getFiles(getDataCacheDirectory(dataFolderName))
                 .filter {
                     it.name.contains("artifact_" + artifactId)
                             && it.name.contains(date)
@@ -55,56 +56,56 @@ class DataFolderManager(private val filesystemManager: FilesystemManager) {
     }
 
     fun clear(dataFolderName: String, artifactId: Long) {
-        deleteFiles(filesystemManager.getFiles(getDataCacheDirectory(dataFolderName))
+        deleteFiles(fileRepository.getFiles(getDataCacheDirectory(dataFolderName))
                 .filter { it.name.contains("artifact_" + artifactId) })
     }
 
     fun clear(dataFolderName: String) {
-        deleteFiles(filesystemManager.getFiles(getDataCacheDirectory(dataFolderName)))
+        deleteFiles(fileRepository.getFiles(getDataCacheDirectory(dataFolderName)))
     }
 
     fun deleteFolder(dataFolderName: String) {
-        filesystemManager.delete(getDataCacheDirectory(dataFolderName))
+        fileRepository.delete(getDataCacheDirectory(dataFolderName))
     }
 
     fun writeTextToFile(text: String, path: String) {
-        filesystemManager.writeFile(path, text.toByteArray())
+        fileRepository.writeFile(path, text.toByteArray())
     }
 
     fun writeFile(bytes: ByteArray, path: String) {
-        filesystemManager.writeFile(path, bytes)
+        fileRepository.writeFile(path, bytes)
     }
 
     fun addTextToFile(text: String, path: String) {
         if (!fileExists(path)) {
-            filesystemManager.writeFile(path, "".toByteArray())
+            fileRepository.writeFile(path, "".toByteArray())
         }
-        filesystemManager.appendFile(path, text.toByteArray())
+        fileRepository.appendFile(path, text.toByteArray())
     }
 
-    fun fileExists(path: String) = filesystemManager.fileExists(path)
+    fun fileExists(path: String) = fileRepository.fileExists(path)
 
-    fun readTextFromFile(path: String) = filesystemManager.getText(path)
+    fun readTextFromFile(path: String) = fileRepository.getText(path)
 
     fun moveDataCacheFolder(sourceFolderName: String,
                             destinationFolderName: String) {
-        val sourcePath = filesystemManager.getRootFolder() + File.separator + sourceFolderName
-        val destinationPath = filesystemManager.getRootFolder() + File.separator + destinationFolderName
-        filesystemManager.moveFolder(sourcePath, destinationPath)
+        val sourcePath = fileRepository.getRootFolder() + File.separator + sourceFolderName
+        val destinationPath = fileRepository.getRootFolder() + File.separator + destinationFolderName
+        fileRepository.moveFolder(sourcePath, destinationPath)
     }
 
     private fun deleteFiles(filesToDelete: List<File>) {
         for (fileToDelete in filesToDelete) {
-            filesystemManager.delete(fileToDelete.absolutePath)
+            fileRepository.delete(fileToDelete.absolutePath)
         }
     }
 
     private fun getDataCacheDirectory(dataFolderName: String): String {
-        val integrityDirectory = filesystemManager.getRootFolder() + File.separator + dataFolderName
-        filesystemManager.createFolder(integrityDirectory)
+        val integrityDirectory = fileRepository.getRootFolder() + File.separator + dataFolderName
+        fileRepository.createFolder(integrityDirectory)
 
         val dataDirectory = integrityDirectory + File.separator + "_DataCache"
-        filesystemManager.createFolder(dataDirectory)
+        fileRepository.createFolder(dataDirectory)
         return dataDirectory
     }
 

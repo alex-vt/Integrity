@@ -15,9 +15,8 @@ import androidx.fragment.app.Fragment
 import com.alexvt.integrity.core.operations.orchestration.IntegrityCoreOrchestrationManager
 import com.alexvt.integrity.core.data.settings.SettingsRepository
 import com.alexvt.integrity.lib.android.util.ThemeUtil
-import com.alexvt.integrity.lib.core.operations.log.Log
-import com.alexvt.integrity.lib.android.util.ThemeColors
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.util.ThemeColors
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import dagger.Lazy
 import dagger.android.*
 import dagger.android.support.HasSupportFragmentInjector
@@ -47,7 +46,7 @@ class App : Application(), HasActivityInjector, HasSupportFragmentInjector, HasB
     @Inject
     lateinit var integrityCoreOrchestrationManager: Lazy<IntegrityCoreOrchestrationManager>
     @Inject
-    lateinit var logManager: LogManager
+    lateinit var logger: Logger
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
@@ -73,7 +72,7 @@ class App : Application(), HasActivityInjector, HasSupportFragmentInjector, HasB
                 ThemeColors(colorBackground, colorPrimary, colorAccent)
             })
         } catch (throwable: Throwable) {
-            Log(logManager, "Failed to start Integrity app").logError(throwable)
+            logger.logError("Failed to start Integrity app", throwable)
             throw throwable
         }
 
@@ -96,9 +95,8 @@ class App : Application(), HasActivityInjector, HasSupportFragmentInjector, HasB
     private fun handleUncaughtExceptions() {
         Thread.setDefaultUncaughtExceptionHandler {
             thread, throwable ->
-            Log(logManager, throwable.message
-                    ?: "Uncaught exception (null message)")
-                    .thread(thread).logCrash(throwable)
+            logger.logCrash(throwable.message
+                    ?: "Uncaught exception (null message)", throwable, thread)
             Runtime.getRuntime().exit(1)
         }
     }

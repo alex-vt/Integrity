@@ -113,7 +113,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.alexvt.integrity.lib.android.operations.log.AndroidLogManager$LogEntryRecoveryReceiver"
+        <receiver android:name="com.alexvt.integrity.lib.android.operations.log.AndroidLogger$LogEntryRecoveryReceiver"
             android:process=":recovery"
             >
             <intent-filter>

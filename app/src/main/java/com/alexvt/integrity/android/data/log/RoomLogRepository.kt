@@ -19,7 +19,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
- * Manager of repository of app log entries, using Room.
+ * Manager of repository of app build entries, using Room.
  */
 class RoomLogRepository(context: Context) : LogRepository {
 
@@ -114,7 +114,7 @@ class RoomLogRepository(context: Context) : LogRepository {
             "LogEntryDb").build()
 
     /**
-     * Adds the entry to the log.
+     * Adds the entry to the build.
      */
     override fun addEntry(logEntry: LogEntry) {
         GlobalScope.launch(Dispatchers.Default) {
@@ -123,7 +123,7 @@ class RoomLogRepository(context: Context) : LogRepository {
     }
 
     /**
-     * Gets log entries ordered by addition time descending.
+     * Gets build entries ordered by addition time descending.
      */
     override fun getRecentEntriesFlowable(limit: Int): Flowable<List<LogEntry>> = db.logEntryDao()
             .getRecentEntriesFlowable(limit)
@@ -134,7 +134,7 @@ class RoomLogRepository(context: Context) : LogRepository {
             .map { EntityConverters.fromDbEntity(it) }
 
     /**
-     * Gets unread error and crash type log entries ordered by addition time descending.
+     * Gets unread error and crash type build entries ordered by addition time descending.
      */
     override fun getUnreadErrorsFlowable(limit: Int): Flowable<List<LogEntry>> = db.logEntryDao()
             .getUnreadErrorsFlowable(limit)
@@ -145,7 +145,7 @@ class RoomLogRepository(context: Context) : LogRepository {
             .map { EntityConverters.fromDbEntity(it) }
 
     /**
-     * Sets all log entries read.
+     * Sets all build entries read.
      */
     override fun markAllRead() {
         GlobalScope.launch(Dispatchers.Default) {
@@ -154,7 +154,7 @@ class RoomLogRepository(context: Context) : LogRepository {
     }
 
     /**
-     * Deletes all log entries from database
+     * Deletes all build entries from database
      */
     override fun clear() {
         GlobalScope.launch(Dispatchers.Default) {

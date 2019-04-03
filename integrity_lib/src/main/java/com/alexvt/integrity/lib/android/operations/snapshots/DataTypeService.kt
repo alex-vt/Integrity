@@ -8,16 +8,18 @@ package com.alexvt.integrity.lib.android.operations.snapshots
 
 import android.content.Intent
 import androidx.core.app.JobIntentService
-import com.alexvt.integrity.lib.android.operations.filesystem.AndroidFilesystemManager
+import com.alexvt.integrity.lib.android.data.filesystem.AndroidFileRepository
+import com.alexvt.integrity.lib.android.operations.log.AndroidLogger
 import com.alexvt.integrity.lib.core.operations.filesystem.DataFolderManager
 import com.alexvt.integrity.lib.core.data.metadata.Snapshot
 import com.alexvt.integrity.lib.core.data.metadata.TypeMetadata
 import com.alexvt.integrity.lib.core.data.jobs.GlobalRunningJobs
 import com.alexvt.integrity.lib.android.util.IntentUtil
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import com.alexvt.integrity.lib.core.operations.snapshots.DataTypeDownloader
 import com.alexvt.integrity.lib.core.operations.snapshots.DownloadProgressReporter
 import com.alexvt.integrity.lib.core.util.JsonSerializerUtil
-import com.alexvt.integrity.lib.core.util.TypeSpecificMetadataConverter
+import com.alexvt.integrity.lib.android.util.TypeSpecificMetadataConverter
 
 /**
  * Data manipulation contract for a data type, based on Android services (and activities).
@@ -30,10 +32,13 @@ import com.alexvt.integrity.lib.core.util.TypeSpecificMetadataConverter
 abstract class DataTypeService<T: TypeMetadata>: JobIntentService(), DataTypeDownloader<T> {
 
     protected val dataFolderManager: DataFolderManager by lazy {
-        DataFolderManager(AndroidFilesystemManager(this))
+        DataFolderManager(AndroidFileRepository(this))
     }
     private val downloadProgressReporter: DownloadProgressReporter by lazy {
         AndroidDownloadProgressReporter(this)
+    }
+    protected val logger: Logger by lazy {
+        AndroidLogger(this)
     }
 
     /**

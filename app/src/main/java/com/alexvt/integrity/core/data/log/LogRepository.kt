@@ -11,36 +11,36 @@ import com.alexvt.integrity.lib.core.data.log.LogEntry
 import io.reactivex.Flowable
 
 /**
- * Manager of repository of app log entries.
+ * Manager of repository of app build entries.
  */
 interface LogRepository : Clearable {
 
     /**
-     * Adds the entry to the log.
+     * Adds the entry to the build.
      */
     fun addEntry(logEntry: LogEntry)
 
     /**
-     * Gets log entries ordered by time descending.
+     * Gets build entries ordered by time descending.
      */
     fun getRecentEntriesBlocking(limit: Int): List<LogEntry>
 
     fun getRecentEntriesFlowable(limit: Int): Flowable<List<LogEntry>>
 
     /**
-     * Gets unread error and crash type log entries ordered by time descending.
+     * Gets unread error and crash type build entries ordered by time descending.
      */
     fun getUnreadErrorsBlocking(limit: Int): List<LogEntry>
 
     fun getUnreadErrorsFlowable(limit: Int): Flowable<List<LogEntry>>
 
     /**
-     * Sets all log entries read.
+     * Sets all build entries read.
      */
     fun markAllRead()
 
     /**
-     * Deletes all log entries from database
+     * Deletes all build entries from database
      */
     override fun clear()
 }

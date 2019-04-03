@@ -145,7 +145,6 @@ Stage 2
 * UI design
 * Advanced search
 * Version migration
-* Conventional architecture
 * Testing
 * Data analyzers
 

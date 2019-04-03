@@ -27,7 +27,7 @@ class AndroidErrorNotifier @Inject constructor(
     override fun notifyAboutErrors(errorLogEntries: List<LogEntry>) {
         val logViewPendingIntent = PendingIntent.getActivity(context, 0, Intent().apply {
             component = ComponentName("com.alexvt.integrity",
-                    "com.alexvt.integrity.android.ui.log.LogViewActivity") // todo resolve
+                    "com.alexvt.integrity.android.ui.build.LogViewActivity") // todo resolve
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or
                     Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
         }, 0)
@@ -44,7 +44,7 @@ class AndroidErrorNotifier @Inject constructor(
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(logViewPendingIntent)
                 .addAction(0, "OK", logReadPendingIntent)
-                .addAction(0, "View log", logViewPendingIntent)
+                .addAction(0, "View build", logViewPendingIntent)
                 .setAutoCancel(true)
 
         with(NotificationManagerCompat.from(context)) {

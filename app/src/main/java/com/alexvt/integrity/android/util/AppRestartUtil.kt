@@ -9,9 +9,8 @@ package com.alexvt.integrity.android.util
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.alexvt.integrity.lib.core.operations.log.Log
 import com.alexvt.integrity.android.ui.splash.SplashScreenActivity
-import com.alexvt.integrity.lib.core.operations.log.LogManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 import dagger.android.AndroidInjection
 import javax.inject.Inject
 
@@ -28,7 +27,7 @@ object AppRestartUtil {
 
 class AppReopenReceiver : BroadcastReceiver() {
     @Inject
-    lateinit var logManager: LogManager
+    lateinit var logger: Logger
 
     override fun onReceive(context: Context, intent: Intent) {
         AndroidInjection.inject(this, context)
@@ -44,11 +43,11 @@ class AppReopenReceiver : BroadcastReceiver() {
 
 class AppOpenReceiver : BroadcastReceiver() {
     @Inject
-    lateinit var logManager: LogManager
+    lateinit var logger: Logger
 
     override fun onReceive(context: Context, intent: Intent) {
         AndroidInjection.inject(this, context)
-        Log(logManager, "App was (re)started explicitly").log()
+        logger.log("App was (re)started explicitly")
         context.startActivity(Intent(context, SplashScreenActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })

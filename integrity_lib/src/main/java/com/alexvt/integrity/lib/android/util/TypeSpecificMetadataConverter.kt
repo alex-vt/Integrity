@@ -4,12 +4,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.lib.core.util
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+package com.alexvt.integrity.lib.android.util
 
 import android.content.Context
 import com.alexvt.integrity.lib.core.data.metadata.Snapshot
 import com.alexvt.integrity.lib.core.data.metadata.SnapshotMetadata
 import com.alexvt.integrity.lib.core.data.metadata.TypeMetadata
+import com.alexvt.integrity.lib.core.util.JsonSerializerUtil
 
 object TypeSpecificMetadataConverter {
 

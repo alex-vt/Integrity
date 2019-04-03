@@ -126,14 +126,14 @@ class MainScreenViewModel @Inject constructor(
                 jobProgressArtifactId = null, jobProgressDate = null,
                 jobProgressTitle = "", jobProgressMessage = "")
 
-        // reactive count of error log entries
+        // reactive count of error build entries
         logRepository.getUnreadErrorsFlowable(logErrorLimitToNotify)
                 .map { it.count() }
                 .observeOn(uiScheduler)
                 .subscribe { logErrorCountData.value = it }
                 .untilCleared()
 
-        // settings, jobs, log error count  are listened to in their repositories
+        // settings, jobs, build error count  are listened to in their repositories
         settingsData.value = settingsRepository.get()
         settingsRepository.addChangesListener(this.toString()) {
             val themeChanged = settingsData.value!!.textFont != it.textFont

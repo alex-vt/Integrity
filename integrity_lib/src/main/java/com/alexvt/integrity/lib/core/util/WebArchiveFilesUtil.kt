@@ -7,17 +7,21 @@
 package com.alexvt.integrity.lib.core.util
 
 import com.alexvt.integrity.lib.core.operations.filesystem.DataFolderManager
+import com.alexvt.integrity.lib.core.operations.log.Logger
 
-class WebArchiveFilesUtil(private val dataFolderManager: DataFolderManager) {
+class WebArchiveFilesUtil(
+        private val dataFolderManager: DataFolderManager,
+        private val logger: Logger
+) {
 
     fun savePageLinkToIndex(pageLink: String, snapshotPath: String, pageIndex: Int) {
-        android.util.Log.v("WebArchiveFilesUtil", "savePageLinkToIndex: $pageLink")
+        logger.v("savePageLinkToIndex: $pageLink")
         dataFolderManager.addTextToFile(getLocalHtmlLink(pageLink, pageIndex, 0),
                 getPaginationPath(snapshotPath))
     }
 
     fun saveLinkToIndex(link: String, snapshotPath: String, pageIndex: Int, linkIndex: Int) {
-        android.util.Log.v("WebArchiveFilesUtil", "saveLinkToIndex: $link")
+        logger.v("saveLinkToIndex: $link")
         dataFolderManager.addTextToFile(getLocalHtmlLink(link, pageIndex, linkIndex),
                 getLinksPath(snapshotPath))
     }

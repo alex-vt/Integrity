@@ -7,28 +7,28 @@
 package com.alexvt.integrity.core.operations.destinations
 
 import com.alexvt.integrity.lib.core.data.destinations.LocalFolderLocation
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import java.io.File
 import javax.inject.Inject
 
 class LocalDestinationUtil @Inject constructor(
-        private val filesystemManager: FilesystemManager
+        private val fileRepository: FileRepository
 ) : DestinationUtil<LocalFolderLocation> {
 
     override fun writeArchive(sourceArchivePath: String, sourceHashPath: String,
                               artifactId: Long, artifactAlias: String, date: String,
                               archiveFolderLocation: LocalFolderLocation) {
-        filesystemManager.createFolder(archiveFolderLocation.path)
-        val destinationArtifactFolderPath = filesystemManager.getRootFolder() + File.separator +
+        fileRepository.createFolder(archiveFolderLocation.path)
+        val destinationArtifactFolderPath = fileRepository.getRootFolder() + File.separator +
                 archiveFolderLocation.path + File.separator + artifactAlias + "_" + artifactId
-        filesystemManager.createFolder(destinationArtifactFolderPath)
+        fileRepository.createFolder(destinationArtifactFolderPath)
 
         val destinationArchivePath = destinationArtifactFolderPath + File.separator +
                 "artifact_" + artifactId + "_snapshot_" + date + ".zip"
-        filesystemManager.copyFolder(sourceArchivePath, destinationArchivePath)
+        fileRepository.copyFolder(sourceArchivePath, destinationArchivePath)
 
         val destinationHashPath = "$destinationArchivePath.sha1"
-        filesystemManager.copyFolder(sourceHashPath, destinationHashPath)
+        fileRepository.copyFolder(sourceHashPath, destinationHashPath)
     }
 
     override fun readArchive(archiveFolderLocation: LocalFolderLocation, artifactId: Long,

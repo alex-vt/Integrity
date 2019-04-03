@@ -4,15 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package com.alexvt.integrity.lib.android.operations.filesystem
+package com.alexvt.integrity.lib.android.data.filesystem
 
 import android.content.Context
-import com.alexvt.integrity.lib.core.operations.filesystem.FilesystemManager
+import com.alexvt.integrity.lib.core.data.filesystem.FileRepository
 import com.snatik.storage.Storage
 import org.zeroturnaround.zip.commons.FileUtils
 import java.io.File
 
-class AndroidFilesystemManager(private val context: Context) : FilesystemManager {
+class AndroidFileRepository(private val context: Context) : FileRepository {
 
     private val storage by lazy { Storage(context) }
 

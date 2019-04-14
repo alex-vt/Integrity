@@ -27,7 +27,7 @@ import java.lang.reflect.ParameterizedType
 /**
  * Stores metadata in SQL DB.
  */
-class RoomMetadataRepository(context: Context): MetadataRepository {
+class RoomMetadataRepository(context: Context, dbName: String = "SnapshotDb"): MetadataRepository {
 
     /**
      * Log entry in SQL DB.
@@ -185,7 +185,7 @@ class RoomMetadataRepository(context: Context): MetadataRepository {
     }
 
     private val db = Room.databaseBuilder(context, SnapshotDatabase::class.java,
-            "SnapshotDb").build()
+            dbName).build()
 
 
     override fun addSnapshotMetadata(snapshot: Snapshot) {

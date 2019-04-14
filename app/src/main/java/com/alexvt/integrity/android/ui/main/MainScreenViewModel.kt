@@ -118,6 +118,17 @@ class MainScreenViewModel @Inject constructor(
 
     private val logErrorLimitToNotify = 1000
 
+    private val updateContentCoolingOffMillis = 500L
+    private val contentDataWithCoolingOff = ThrottledFunction(updateContentCoolingOffMillis) {
+        subscribeToSnapshots()
+        subscribeToSearchResults(snapshotSearchResultsData, "searchSnapshots") {
+            searchManager.searchSnapshotTitles(it)
+        }
+        subscribeToSearchResults(textSearchResultsData, "searchText") {
+            searchManager.searchText(it)
+        }
+    }
+
     init {
         // input state  starts as default
         inputStateData.value = MainScreenInputState(searchViewText = "", filteredArtifactId = null,
@@ -193,18 +204,6 @@ class MainScreenViewModel @Inject constructor(
     private fun updateInputState(inputState: MainScreenInputState) {
         inputStateData.value = inputState
         updateContentData() // snapshots, search results  depend on  inputStateData
-    }
-
-
-    private val updateContentCoolingOffMillis = 500L
-    private val contentDataWithCoolingOff = ThrottledFunction(updateContentCoolingOffMillis) {
-        subscribeToSnapshots()
-        subscribeToSearchResults(snapshotSearchResultsData, "searchSnapshots") {
-            searchManager.searchSnapshotTitles(it)
-        }
-        subscribeToSearchResults(textSearchResultsData, "searchText") {
-            searchManager.searchText(it)
-        }
     }
 
     private fun updateContentData() {

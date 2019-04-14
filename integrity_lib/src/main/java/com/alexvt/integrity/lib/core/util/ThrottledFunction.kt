@@ -39,7 +39,9 @@ class ThrottledFunction(private val coolingOffPeriodMillis: Long,
         val coolingOffEndTime = timer.scheduledExecutionTime()
         val timeNow = System.currentTimeMillis()
         val timeUntilCoolingOff = coolingOffEndTime - timeNow
-        return if (timeUntilCoolingOff > 0) timeUntilCoolingOff else 0
+        return if (timeUntilCoolingOff > 0) timeUntilCoolingOff else 10 // todo remove delay
+        // fixes MutableLiveData initial consequent writes squashing
+        // todo replace whole implementation with RxJava
     }
 
     private fun delayInvocation(delayMillis: Long) {

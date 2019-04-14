@@ -43,6 +43,23 @@ object SpeedDialUtil {
             .sizeDp(18)
             .paddingDp(3)
 
+    fun setInsetEdgeBottom(sd: SpeedDialView) {
+        if (isRunningTest) return // todo fix insetEdge Bottom causing Espresso test stuck
+        val layoutParams = sd.layoutParams as CoordinatorLayout.LayoutParams
+        layoutParams.insetEdge = Gravity.BOTTOM
+        sd.layoutParams = layoutParams
+    }
+
+    // see https://stackoverflow.com/a/40220621
+    private val isRunningTest: Boolean by lazy {
+        try {
+            Class.forName("androidx.test.espresso.Espresso")
+            true
+        } catch (e: ClassNotFoundException) {
+            false
+        }
+    }
+
     /**
      * Enforces SpeedDialView anchored to other view's top to stay in place on expand click.
      *

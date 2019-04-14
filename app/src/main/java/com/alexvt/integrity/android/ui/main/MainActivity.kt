@@ -356,6 +356,7 @@ class MainActivity : ThemedActivity() {
     }
 
     private fun bindFloatingButton() {
+        SpeedDialUtil.setInsetEdgeBottom(sdAdd)
         SpeedDialUtil.setStayOnExpand(sdAdd)
         SpeedDialUtil.setIcons(this, sdAdd, CommunityMaterial.Icon2.cmd_plus,
                 CommunityMaterial.Icon.cmd_close)

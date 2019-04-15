@@ -33,8 +33,8 @@ android {
             * signingKeyAlias=<alias>
             * signingKeyPassword=<keyPassword>
              */
-            storeFile file(System.getenv("HOME") ? (System.getenv("HOME") + "/keystores/keystore.jks")
-                    : signingStoreLocation)
+            storeFile file(System.getenv("BITRISEIO_ANDROID_KEYSTORE_URL")
+                    ?: signingStoreLocation)
             storePassword System.getenv("BITRISEIO_ANDROID_KEYSTORE_PASSWORD")
                     ?: signingStorePassword
             keyAlias System.getenv("BITRISEIO_ANDROID_KEYSTORE_ALIAS")

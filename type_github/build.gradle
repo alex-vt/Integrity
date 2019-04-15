@@ -23,24 +23,15 @@ android {
         enabled = true
     }
 
+    Properties signingProperties = new Properties()
+    signingProperties.load(new FileInputStream(file("../signing.properties")))
+
     signingConfigs {
         release {
-            /*
-            * To sign build using keystore, create file gradle.properties:
-            *
-            * signingStoreLocation=<keystorePath>
-            * signingStorePassword=<keystorePassword>
-            * signingKeyAlias=<alias>
-            * signingKeyPassword=<keyPassword>
-             */
-            storeFile file(System.getenv("HOME") ? (System.getenv("HOME") + "/keystores/keystore.jks")
-                    : signingStoreLocation)
-            storePassword System.getenv("BITRISEIO_ANDROID_KEYSTORE_PASSWORD")
-                    ?: signingStorePassword
-            keyAlias System.getenv("BITRISEIO_ANDROID_KEYSTORE_ALIAS")
-                    ?: signingKeyAlias
-            keyPassword System.getenv("BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD")
-                    ?: signingKeyPassword
+            storeFile file(signingProperties["signingStoreLocation"])
+            storePassword signingProperties["signingStorePassword"]
+            keyAlias signingProperties["signingKeyAlias"]
+            keyPassword signingProperties["signingKeyPassword"]
         }
     }
 

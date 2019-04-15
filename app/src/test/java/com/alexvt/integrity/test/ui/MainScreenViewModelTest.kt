@@ -194,7 +194,6 @@ class MainScreenViewModelTest {
     fun `Main screen opened`() {
         verify(settingsObserver).onChanged(IntegrityAppSettings())
         verify(inputStateObserver).onChanged(initialInputState)
-        verify(textSearchResultObserver).onChanged(emptyList())
         argumentCaptor<List<Pair<Snapshot, Int>>> {
             verify(snapshotsObserver, after(20)!!.times(2)).onChanged(capture())
             assertEquals(firstValue, emptyList<Pair<Snapshot, Int>>()) // first the list is empty

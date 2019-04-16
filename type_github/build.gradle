@@ -24,7 +24,8 @@ android {
     }
 
     Properties signingProperties = new Properties()
-    signingProperties.load(new FileInputStream(file("../signing.properties")))
+    File signingPropertiesFile = file("../signing.properties")
+    if (signingPropertiesFile.exists()) signingProperties.load(new FileInputStream(signingPropertiesFile))
 
     signingConfigs {
         release {

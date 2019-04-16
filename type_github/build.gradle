@@ -25,11 +25,12 @@ android {
 
     Properties signingProperties = new Properties()
     File signingPropertiesFile = file("../signing.properties")
-    if (signingPropertiesFile.exists()) signingProperties.load(new FileInputStream(signingPropertiesFile))
+    boolean signingPropertiesExist = signingPropertiesFile.exists()
+    if (signingPropertiesExist) signingProperties.load(new FileInputStream(signingPropertiesFile))
 
     signingConfigs {
         release {
-            storeFile file(signingProperties["signingStoreLocation"])
+            storeFile signingPropertiesExist ? file(signingProperties["signingStoreLocation"]) : null
             storePassword signingProperties["signingStorePassword"]
             keyAlias signingProperties["signingKeyAlias"]
             keyPassword signingProperties["signingKeyPassword"]

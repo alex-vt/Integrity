@@ -30,7 +30,6 @@ import com.nhaarman.mockitokotlin2.*
 import io.reactivex.Flowable
 import io.reactivex.Scheduler
 import io.reactivex.Single
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.setMain
@@ -43,8 +42,10 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.plugins.RxJavaPlugins
+import io.reactivex.schedulers.TestScheduler
 import org.junit.After
 import org.junit.Assert.*
+import java.util.concurrent.TimeUnit
 
 
 @RunWith(JUnit4::class)
@@ -52,7 +53,7 @@ class MainScreenViewModelTest {
 
     // Multithreading & lifecycle
     @get:Rule val instantTaskExecutorRule = InstantTaskExecutorRule()
-    val testRxScheduler = Schedulers.trampoline()
+    val testRxScheduler = TestScheduler()
     @Mock lateinit var lifecycleOwner: LifecycleOwner
     val lifecycleRegistry by lazy { LifecycleRegistry(lifecycleOwner) }
 
@@ -179,9 +180,10 @@ class MainScreenViewModelTest {
         mainScreenViewModel.snapshotsData.value = listOf(Pair(basicSnapshot, 1)) // force load 1
         mainScreenViewModel.snapshotsData.value = emptyList() // force clear
         mainScreenViewModel.snapshotsData.value = listOf(Pair(basicSnapshot, 2)) // force load 2
+        testRxScheduler.advanceTimeBy(1, TimeUnit.MILLISECONDS) // events go through
 
         argumentCaptor<List<Pair<Snapshot, Int>>> {
-            verify(snapshotsObserver, after(20)!!.times(5)).onChanged(capture())
+            verify(snapshotsObserver, times(5)).onChanged(capture())
             assertEquals(allValues[0], emptyList<Pair<Snapshot, Int>>()) // initial
             assertEquals(allValues[1], listOf(Pair(basicSnapshot, 1))) // force load 1
             assertEquals(allValues[2], emptyList<Pair<Snapshot, Int>>()) // force clear
@@ -195,8 +197,9 @@ class MainScreenViewModelTest {
         verify(settingsObserver).onChanged(IntegrityAppSettings())
         verify(inputStateObserver).onChanged(initialInputState)
         verify(textSearchResultObserver).onChanged(emptyList())
+        testRxScheduler.advanceTimeBy(1, TimeUnit.MILLISECONDS) // events go through
         argumentCaptor<List<Pair<Snapshot, Int>>> {
-            verify(snapshotsObserver, after(20)!!.times(2)).onChanged(capture())
+            verify(snapshotsObserver, times(2)).onChanged(capture())
             assertEquals(firstValue, emptyList<Pair<Snapshot, Int>>()) // first the list is empty
             assertEquals(lastValue, listOf(Pair(basicSnapshot, 0))) // data loaded
         }
@@ -204,19 +207,17 @@ class MainScreenViewModelTest {
 
     @Test
     fun `Searching, then clearing search`() {
-        val searchDelayExceedingTimeMillis = 510L
+        val searchDelayTimeMillis = 500L
 
         mainScreenViewModel.setSearchText("test search")
-        Thread.sleep(searchDelayExceedingTimeMillis)
         mainScreenViewModel.setSearchText("")
+        testRxScheduler.advanceTimeBy(searchDelayTimeMillis, TimeUnit.MILLISECONDS)
 
         argumentCaptor<List<TextSearchResult>> {
-            verify(textSearchResultObserver, after(searchDelayExceedingTimeMillis)!!.times(4))
-                    .onChanged(capture())
+            verify(textSearchResultObserver, times(3)).onChanged(capture())
             assertEquals(firstValue, emptyList<TextSearchResult>()) // no search results at start
             assertEquals(secondValue, listOf(basicTextSearchResult)) // search results
-            assertEquals(thirdValue, listOf(basicTextSearchResult)) // search results // todo fix duplicates
-            assertEquals(allValues[3], emptyList<TextSearchResult>()) // search cleared
+            assertEquals(thirdValue, emptyList<TextSearchResult>()) // search cleared
         }
 
         argumentCaptor<MainScreenInputState> {

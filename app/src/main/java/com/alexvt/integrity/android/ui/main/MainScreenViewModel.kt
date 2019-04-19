@@ -20,7 +20,6 @@ import com.alexvt.integrity.core.data.settings.SettingsRepository
 import com.alexvt.integrity.core.data.types.DataTypeRepository
 import com.alexvt.integrity.lib.core.data.jobs.GlobalRunningJobs
 import com.alexvt.integrity.lib.core.operations.filesystem.DataFolderManager
-import com.alexvt.integrity.lib.core.util.ThrottledFunction
 import com.alexvt.integrity.lib.core.data.metadata.Snapshot
 import com.alexvt.integrity.lib.core.data.metadata.SnapshotStatus
 import com.alexvt.integrity.lib.core.data.search.SearchRequest
@@ -29,13 +28,17 @@ import com.alexvt.integrity.lib.core.data.search.SnapshotSearchResult
 import com.alexvt.integrity.lib.core.data.search.TextSearchResult
 import com.alexvt.integrity.android.ui.common.RxAutoDisposeThemedViewModel
 import com.alexvt.integrity.android.ui.common.SingleLiveEvent
+import io.reactivex.BackpressureStrategy
+import io.reactivex.Flowable
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -118,16 +121,8 @@ class MainScreenViewModel @Inject constructor(
 
     private val logErrorLimitToNotify = 1000
 
+    private val searchDataSubject = PublishSubject.create<Unit>()
     private val updateContentCoolingOffMillis = 500L
-    private val contentDataWithCoolingOff = ThrottledFunction(updateContentCoolingOffMillis) {
-        subscribeToSnapshots()
-        subscribeToSearchResults(snapshotSearchResultsData, "searchSnapshots") {
-            searchManager.searchSnapshotTitles(it)
-        }
-        subscribeToSearchResults(textSearchResultsData, "searchText") {
-            searchManager.searchText(it)
-        }
-    }
 
     init {
         // input state  starts as default
@@ -152,7 +147,9 @@ class MainScreenViewModel @Inject constructor(
                     || settingsData.value!!.colorPrimary != it.colorPrimary
                     || settingsData.value!!.colorAccent != it.colorAccent
             settingsData.value = it
-            updateContentData() // snapshots, search results  depend on  settings
+            subscribeToSearchData(isThrottleDebounce(), updateContentCoolingOffMillis)
+            subscribeToSnapshots(isThrottleDebounce(), updateContentCoolingOffMillis)
+
             if (themeChanged) {
                 navigationEventData.value = NavigationEvent(targetPackage = "", targetClass = "",
                         recreate = true)
@@ -203,23 +200,38 @@ class MainScreenViewModel @Inject constructor(
 
     private fun updateInputState(inputState: MainScreenInputState) {
         inputStateData.value = inputState
-        updateContentData() // snapshots, search results  depend on  inputStateData
+        placeSearchRequest()
     }
 
-    private fun updateContentData() {
-        val isFasterMethod = settingsData.value!!.fasterSearchInputs
-        with (contentDataWithCoolingOff) {
-            if (isFasterMethod) requestThrottledLatest() else requestDebounced()
-        }
+    private fun placeSearchRequest() = searchDataSubject.onNext(Unit)
+
+    private fun isThrottleDebounce() = !settingsData.value!!.fasterSearchInputs
+
+    private fun <T> Flowable<T>.throttleLatestOrDebounce(isDebounce: Boolean, timeout: Long, unit: TimeUnit)
+            = if (isDebounce) debounce(timeout, unit) else throttleLatest(timeout, unit)
+
+    private fun subscribeToSearchData(isDebounce: Boolean, throttleTimeMillis: Long) {
+        searchDataSubject.toFlowable(BackpressureStrategy.BUFFER)
+                .throttleLatestOrDebounce(isDebounce, throttleTimeMillis, TimeUnit.MILLISECONDS)
+                .subscribe {
+                    subscribeToSearchResults(snapshotSearchResultsData, "searchSnapshots") {
+                        searchManager.searchSnapshotTitles(it)
+                    }
+                    subscribeToSearchResults(textSearchResultsData, "searchText") {
+                        searchManager.searchText(it)
+                    }
+                }.untilClearedOrUpdated("searchData")
     }
 
-    private fun subscribeToSnapshots() {
+    private fun subscribeToSnapshots(isDebounce: Boolean, throttleTimeMillis: Long) {
         val filteredArtifactId = inputStateData.value!!.filteredArtifactId
         when (filteredArtifactId) {
             null -> metadataRepository.getAllArtifactLatestMetadataFlowable()
             else -> metadataRepository.getArtifactMetadataFlowable(filteredArtifactId)
-        }.subscribeOn(Schedulers.newThread())
-                .map { SortingUtil.sort(it, getSortingMethod()) }
+        }.throttleLatestOrDebounce(isDebounce, throttleTimeMillis, TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.newThread())
+                .map {
+                    SortingUtil.sort(it, getSortingMethod()) }
                 .map { sortedSnapshots ->
                     sortedSnapshots.map { Pair(it, getSnapshotCountBlocking(it.artifactId)) }
                 }.observeOn(uiScheduler)

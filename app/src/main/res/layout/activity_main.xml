@@ -66,8 +66,6 @@
         android:layout_height="wrap_content"
         app:layout_anchor="@+id/llBottomSheet"
         app:layout_anchorGravity="top|end"
-        app:layout_insetEdge="bottom"
-        app:layout_dodgeInsetEdges="bottom"
         android:layout_marginRight="@dimen/fab_margin"
         android:layout_marginBottom="-37dp"
         app:sdExpansionMode="top"
@@ -125,6 +123,7 @@
 
             <LinearLayout
                 android:id="@+id/llFilters"
+                android:visibility="gone"
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

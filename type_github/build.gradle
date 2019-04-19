@@ -23,25 +23,25 @@ android {
         enabled = true
     }
 
+    Properties signingProperties = new Properties()
+    File signingPropertiesFile = file("../signing.properties")
+    boolean signingPropertiesExist = signingPropertiesFile.exists()
+    if (signingPropertiesExist) signingProperties.load(new FileInputStream(signingPropertiesFile))
+
     signingConfigs {
         release {
-            /*
-            * To sign build using keystore, create file gradle.properties:
-            *
-            * signingStoreLocation=<keystorePath>
-            * signingStorePassword=<keystorePassword>
-            * signingKeyAlias=<alias>
-            * signingKeyPassword=<keyPassword>
-             */
-            storeFile file(signingStoreLocation)
-            storePassword signingStorePassword
-            keyAlias signingKeyAlias
-            keyPassword signingKeyPassword
+            storeFile signingPropertiesExist ? file(signingProperties["signingStoreLocation"]) : null
+            storePassword signingProperties["signingStorePassword"]
+            keyAlias signingProperties["signingKeyAlias"]
+            keyPassword signingProperties["signingKeyPassword"]
         }
     }
 
     buildTypes {
         debug {
+            minifyEnabled false
+        }
+        develop {
             signingConfig signingConfigs.release
             minifyEnabled false
         }

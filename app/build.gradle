@@ -18,30 +18,31 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "0.01"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     dataBinding {
         enabled = true
     }
 
+    Properties signingProperties = new Properties()
+    File signingPropertiesFile = file("../signing.properties")
+    boolean signingPropertiesExist = signingPropertiesFile.exists()
+    if (signingPropertiesExist) signingProperties.load(new FileInputStream(signingPropertiesFile))
+
     signingConfigs {
         release {
-            /*
-            * To sign build using keystore, create file gradle.properties:
-            *
-            * signingStoreLocation=<keystorePath>
-            * signingStorePassword=<keystorePassword>
-            * signingKeyAlias=<alias>
-            * signingKeyPassword=<keyPassword>
-             */
-            storeFile file(signingStoreLocation)
-            storePassword signingStorePassword
-            keyAlias signingKeyAlias
-            keyPassword signingKeyPassword
+            storeFile signingPropertiesExist ? file(signingProperties["signingStoreLocation"]) : null
+            storePassword signingProperties["signingStorePassword"]
+            keyAlias signingProperties["signingKeyAlias"]
+            keyPassword signingProperties["signingKeyPassword"]
         }
     }
 
     buildTypes {
         debug {
+            minifyEnabled false
+        }
+        develop {
             signingConfig signingConfigs.release
             minifyEnabled false
         }
@@ -54,6 +55,9 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
     packagingOptions {
         exclude 'META-INF/rxjava.properties'
@@ -73,6 +77,19 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':integrity_lib')
+
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:2.26.0'
+    testImplementation 'org.mockito:mockito-inline:2.26.0'
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0"
+    testImplementation "android.arch.core:core-testing:2.0.0-beta01"
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.1.0'
+
+    androidTestImplementation 'androidx.test:runner:1.1.1'
+    androidTestImplementation 'androidx.test:core:1.1.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test:rules:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.0.2'
@@ -105,6 +122,8 @@ dependencies {
     implementation 'com.google.dagger:dagger-android:2.21'
     implementation 'com.google.dagger:dagger-android-support:2.21'
     kapt 'com.google.dagger:dagger-android-processor:2.21'
+
+    implementation "androidx.lifecycle:lifecycle-extensions:2.0.0-beta01"
 
     implementation 'android.arch.work:work-runtime:1.0.0-beta05'
 
